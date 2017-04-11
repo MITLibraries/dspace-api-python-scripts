@@ -15,6 +15,8 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, data=data).content
 headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
 headerAuthFileUpload = {'accept':'application/json', 'rest-dspace-token':session}
+status = requests.get(baseURL+'/rest/status', headers=headerAuth).json()
+userFullName = status['fullname']
 print 'authenticated'
 
 #Post community
@@ -49,15 +51,15 @@ for itemMetadata in collectionMetadata:
     files = {'file': open(bitstream, 'rb')}
     post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerAuthFileUpload, data=data).json()
 
-    #Create provenance note
+    #Create provenance notes
     provNote = {}
     provNote['key'] = 'dc.description.provenance'
     provNote['language'] = 'en_US'
-    bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=headerAuth).json()
-    bitstreamCount = len(bitstreams)
     utc= datetime.datetime.utcnow()
     utcTime = utc.strftime('%Y-%m-%dT%H:%M:%SZ')
-    provNoteValue = 'Made available in DSpace on '+utcTime+' (GMT). No. of bitstreams: '+str(bitstreamCount)
+    bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=headerAuth).json()
+    bitstreamCount = len(bitstreams)
+    provNoteValue = 'Submitted by '+userFullName+' ('+email+') on '+utcTime+' (GMT). No. of bitstreams: '+str(bitstreamCount)
     for bitstream in bitstreams:
         fileName = bitstream['name']
         size = str(bitstream['sizeBytes'])
@@ -65,9 +67,22 @@ for itemMetadata in collectionMetadata:
         algorithm = bitstream ['checkSum']['checkSumAlgorithm']
         provNoteValue = provNoteValue+' '+fileName+': '+size+' bytes, checkSum: '+checksum+' ('+algorithm+')'
     provNote['value'] = provNoteValue
-    provNote = json.dumps([provNote])
 
-    #Post provenance note
+    provNote2 = {}
+    provNote2['key'] = 'dc.description.provenance'
+    provNote2['language'] = 'en_US'
+
+    provNote2Value = 'Made available in DSpace on '+utcTime+' (GMT). No. of bitstreams: '+str(bitstreamCount)
+    for bitstream in bitstreams:
+        fileName = bitstream['name']
+        size = str(bitstream['sizeBytes'])
+        checksum = bitstream['checkSum']['value']
+        algorithm = bitstream ['checkSum']['checkSumAlgorithm']
+        provNote2Value = provNote2Value+' '+fileName+': '+size+' bytes, checkSum: '+checksum+' ('+algorithm+')'
+    provNote2['value'] = provNote2Value
+
+    #Post provenance notes
+    provNote = json.dumps([provNote, provNote2])
     post = requests.put(baseURL+itemID+'/metadata', headers=headerAuth, data=provNote)
     print post
 
