@@ -12,3 +12,19 @@ filePath = '/Users/dspace_user/dspace-data-collection/data/'
 handlePrefix = 'http://dspace.myuni.edu/handle/'
 ```
 this file will be gitignored.
+
+*Note that all of these scripts skip collection '24' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
+
+Skips collection 24 
+
+        for j in range (0, len (collections)):
+          collectionID = collections[j]['id']
+          if collectionID != 24:
+            offset = 0
+            
+No directories skipped:
+
+        for j in range (0, len (collections)):
+          collectionID = collections[j]['id']
+          if collectionID != 0:
+            offset = 0
