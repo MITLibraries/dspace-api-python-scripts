@@ -30,7 +30,7 @@ with open(filename) as csvfile:
         createMetadataElement('dc.subject', 'photographType', 'en_US')
         createMetadataElement('dc.relation.ispartof', 'location', 'en_US')
         createMetadataElement('dc.identifier', 'identifier', '')
-        createMetadataElement('dc.format', 'size', '')
+        createMetadataElement('dc.format.extent', 'size', '')
         createMetadataElement('dc.format.medium', 'medium', 'en_US')
         createMetadataElement('dc.title', 'title', 'en_US')
         createMetadataElement('dc.subject', 'subjectType', 'en_US')
