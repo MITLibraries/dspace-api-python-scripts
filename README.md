@@ -5,7 +5,7 @@ All of these scripts require a secrets.py file in the same directory that must c
         baseURL='https://dspace.myuni.edu'
         email='dspace_user@.myuni.edu'
         password='my_dspace_password'    
-        filePath = '/Users/dspace_user/dspace-data-collection/data/' # full path to a directory into which to store output files
+        filePath = '/Users/dspace_user/dspace-data-collection/data/' # directory into which to store output files
         handlePrefix = 'http://dspace.myuni.edu/handle/' # handlePrefix may vary from your dspace url (or may not)
 ```
 This secrets.py file will be ignored according to the repository's .gitignore file so that DSpace login details will not be inadvertently exposed through Github
