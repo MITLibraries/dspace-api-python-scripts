@@ -12,7 +12,7 @@ password = secrets.password
 filePath = secrets.filePath
 
 filePathComplete = filePath+'completeValueLists/'
-filePathUnique = filePath+'/uniqueValueLists/'
+filePathUnique = filePath+'uniqueValueLists/'
 
 startTime = time.time()
 data = json.dumps({'email':email,'password':password})
