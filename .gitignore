@@ -45,9 +45,8 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
-
-# project-specific
 secrets.py
 *.pyc
 data/*
 !data/.keep
+.profile
