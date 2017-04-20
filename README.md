@@ -28,3 +28,27 @@ No collections skipped:
           collectionID = collections[j]['id']
           if collectionID != 0:
             offset = 0
+
+#### [addKeyValuePairOnHandleCSV.py](addKeyValuePairOnHandleCSV.py)
+
+#### [checkCommunityForKey.py](checkCommunityForKey.py)
+
+#### [createItemMetadataFromCSV.py](createItemMetadataFromCSV.py)
+
+####[postItem.py](postItem.py)
+
+#### [removeDuplicateKeyValuePairsFromItems.py](removeDuplicateKeyValuePairsFromItems.py)
+
+#### [replaceKey.py](replaceKey.py)
+
+#### [replaceKeyValuePairsFromCSV.py](replaceKeyValuePairsFromCSV.py)
+
+#### [replaceUnnecessarySpaces.py](replaceUnnecessarySpaces.py)
+
+#### [repositoryMetadataBackup.py](repositoryMetadataBackup.py)
+
+#### [repositoryMetadataRestore.py](repositoryMetadataRestore.py)
+
+#### [updateLanguageTagsForKey.py](updateLanguageTagsForKey.py)
+
+#### [uppercaseCheck.py](uppercaseCheck.py)
