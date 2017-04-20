@@ -26,12 +26,16 @@ No collections skipped:
           if collectionID != 0:
             offset = 0
 #### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
+Based on user input, this script extracts the values of two specified keys from a specified community to a CSV file for comparison.
 
 #### [findBogusUris.py](findBogusUris.py)
+This script extracts values for the key "dc.identifier.uri" that do not begin with the handlePrefix specified in the secrets.py file. 
 
 #### [findDuplicateKeys.py](findDuplicateKeys.py)
+Based on user input, this script extracts item IDs where there are multiple instances of the specified key in the item metadata.
 
 #### [getCollectionMetadataJson.py](getCollectionMetadataJson.py)
+Based on user input, this script extracts all of the item metadata from the specified collection to a JSON file.
 
 #### [getCompleteAndUniqueValuesForAllKeys.py](getCompleteAndUniqueValuesForAllKeys.py)
 
