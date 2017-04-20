@@ -29,7 +29,7 @@ No collections skipped:
 Based on user input, this script extracts the values of two specified keys from a specified community to a CSV file for comparison.
 
 #### [findBogusUris.py](findBogusUris.py)
-This script extracts values for the key "dc.identifier.uri" that do not begin with the handlePrefix specified in the secrets.py file. 
+This script extracts values for the key 'dc.identifier.uri' that do not begin with the handlePrefix specified in the secrets.py file. 
 
 #### [findDuplicateKeys.py](findDuplicateKeys.py)
 Based on user input, this script extracts item IDs where there are multiple instances of the specified key in the item metadata.
@@ -38,6 +38,7 @@ Based on user input, this script extracts item IDs where there are multiple inst
 Based on user input, this script extracts all of the item metadata from the specified collection to a JSON file.
 
 #### [getCompleteAndUniqueValuesForAllKeys.py](getCompleteAndUniqueValuesForAllKeys.py)
+This script creates a 'completeValueLists' folder and for all keys used in the repository, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
 
 #### [getGlobalLanguageValues.py](getGlobalLanguageValues.py)
 
