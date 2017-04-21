@@ -5,12 +5,12 @@ All of these scripts require a secrets.py file in the same directory that must c
         baseURL='https://dspace.myuni.edu'
         email='dspace_user@.myuni.edu'
         password='my_dspace_password'    
-        filePath = '/Users/dspace_user/dspace-data-collection/data/' # directory into which to store output files
-        handlePrefix = 'http://dspace.myuni.edu/handle/' # handlePrefix may vary from your dspace url (or may not)
+        filePath = '/Users/dspace_user/dspace-data-collection/data/'
+        handlePrefix = 'http://dspace.myuni.edu/handle/'
 ```
-This secrets.py file will be ignored according to the repository's .gitignore file so that DSpace login details will not be inadvertently exposed through Github
+The 'filePath' is directory into which output files will be written and 'handlePrefix' may or may not vary from your DSpace URL depending on your configuration. This secrets.py file will be ignored according to the repository's .gitignore file so that DSpace login details will not be inadvertently exposed through Github
 
-*Note that all of these scripts skip collection '24' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
+*Note that all of these scripts skip collection '24' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)*
 
 Skips collection 24 
 
