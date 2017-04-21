@@ -46,7 +46,10 @@ Based on user input, this script replaces one specified key with another specifi
 #### [replaceUnnecessarySpaces.py](replaceUnnecessarySpaces.py)
 
 #### [repositoryMetadataBackup.py](repositoryMetadataBackup.py)
+This scripts creates a folder with a timestamp in the folder name and creates a JSON file for every collection in the repository with the metadata for all of the items in that collection.
 
 #### [repositoryMetadataRestore.py](repositoryMetadataRestore.py)
-
+Based on user input, this script restores the metadata from a specified backup folder that was created by the repositoryMetadataBackup.py script.
+repositoryMetadataBackup.py script.
 #### [updateLanguageTagsForKey.py](updateLanguageTagsForKey.py)
+Based on user input, this script updates the language value for the specified key to 'en_us' for all items with that key in the repository.
