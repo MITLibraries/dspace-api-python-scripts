@@ -10,7 +10,8 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 
-handle = raw_input('Enter handle: ')
+communityHandle = raw_input('Enter community handle: ')
+key = raw_input('Enter key: ')
 
 data = json.dumps({'email':email,'password':password})
 header = {'content-type':'application/json','accept':'application/json'}
@@ -19,7 +20,7 @@ headerAuth = {'content-type':'application/json','accept':'application/json', 're
 print 'authenticated'
 startTime = time.time()
 
-endpoint = baseURL+'/rest/handle/'+handle
+endpoint = baseURL+'/rest/handle/'+communityHandle
 community = requests.get(endpoint, headers=headerAuth).json()
 communityID = community['id']
 collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=headerAuth).json()
@@ -39,7 +40,7 @@ for itemID in itemList:
     itemMetadataProcessed = []
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth).json()
     for i in range (0, len (metadata)):
-        if metadata[i]['key'] == 'dc.contributor.advisor' or metadata[i]['key'] == 'dc.contributor.committeeMember':
+        if metadata[i]['key'] == key:
             if '  ' in json.dumps(metadata[i]) or ' ,' in json.dumps(metadata[i]):
                 updatedMetadataElement = json.loads(json.dumps(metadata[i]).replace('   ',' ').replace('  ',' ').replace(' ,',','))
                 itemMetadataProcessed.append(updatedMetadataElement)
