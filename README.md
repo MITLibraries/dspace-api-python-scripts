@@ -56,8 +56,10 @@ Based on user input, this script extracts the ID and URI for all items in the re
 #### [metadataOverview.py](metadataOverview.py)
 This script produces several CSV files containing different information about the structure and metadata of the repository:
 
-|collectionMetadataKeys.csv - A list of all keys used in each collection with collection name, ID, and handle.|
-|dspaceIDs.csv - A list of every item ID along with the IDs of the collection and community that contains that item.|
-|dspaceTypes.csv - A list of all unique values for the key 'dc.type.'|
-|keyCount.csv - A list of all unique keys used in the repository, as well as a count of how many times it appear.|
-|collectionStats.csv - A list of all collections in the repository with the collection name, ID, handle, and number of items.|
+|File Name |Description|
+|--------------------------|--------------------------------------------------------------------------|
+|collectionMetadataKeys.csv | A list of all keys used in each collection with collection name, ID, and handle.|
+|dspaceIDs.csv | A list of every item ID along with the IDs of the collection and community that contains that item.|
+|dspaceTypes.csv | A list of all unique values for the key 'dc.type.'|
+|keyCount.csv | A list of all unique keys used in the repository, as well as a count of how many times it appear.|
+|collectionStats.csv | A list of all collections in the repository with the collection name, ID, handle, and number of items.|
