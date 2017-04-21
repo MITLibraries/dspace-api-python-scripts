@@ -9,6 +9,9 @@ password = secrets.password
 filePath = secrets.filePath
 
 directory = filePath+raw_input('Enter directory name: ')
+fileExtension = '.'+raw_input('Enter file extension: ')
+communityName = raw_input('Enter community name: ')
+collectionName = raw_input('Enter collectionn name: ')
 
 data = json.dumps({'email':email,'password':password})
 header = {'content-type':'application/json','accept':'application/json'}
@@ -20,32 +23,30 @@ userFullName = status['fullname']
 print 'authenticated'
 
 #Post community
-communityName = 'Test Community'
 community = json.dumps({'name': communityName})
 post = requests.post(baseURL+'/rest/communities', headers=headerAuth, data=community).json()
 print json.dumps(post)
 communityID = post['link']
 
 #Post collection
-collectionName = 'Test Collection'
 collection = json.dumps({'name': collectionName})
 post = requests.post(baseURL+communityID+'/collections', headers=headerAuth, data=collection).json()
 print json.dumps(post)
 collectionID = post['link']
 
 #Post items
-collectionMetadata = json.load(open(filePath+'sampleCollectionMetadata.json'))
+collectionMetadata = json.load(open(directory+'/'+'collectionMetadata.json'))
 for itemMetadata in collectionMetadata:
     for element in itemMetadata['metadata']:
         if element['key'] == 'dc.identifier.other':
-            imageIdentifier = element['value']
+            fileIdentifier = element['value']
     itemMetadata = json.dumps(itemMetadata)
     post = requests.post(baseURL+collectionID+'/items', headers=headerAuth, data=itemMetadata).json()
     print json.dumps(post)
     itemID = post['link']
 
     #Post bitstream
-    bitstream = directory+'/'+imageIdentifier+'.jpg'
+    bitstream = directory+'/'+fileIdentifier+fileExtension
     fileName = bitstream[bitstream.rfind('/')+1:]
     data = open(bitstream, 'rb')
     files = {'file': open(bitstream, 'rb')}
