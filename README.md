@@ -50,5 +50,3 @@ Based on user input, this script replaces one specified key with another specifi
 #### [repositoryMetadataRestore.py](repositoryMetadataRestore.py)
 
 #### [updateLanguageTagsForKey.py](updateLanguageTagsForKey.py)
-
-#### [uppercaseCheck.py](uppercaseCheck.py)
