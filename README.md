@@ -30,15 +30,16 @@ No collections skipped:
 
 #### [addKeyValuePairOnHandleCSV.py](addKeyValuePairOnHandleCSV.py)
 
-#### [checkCommunityForKey.py](checkCommunityForKey.py)
-
 #### [createItemMetadataFromCSV.py](createItemMetadataFromCSV.py)
 
 #### [postItem.py](postItem.py)
+Based on user input, this script creates a community with a specified name and collection with a specified name within that community.  In the specified directory (within the filePath set by the secrets.py file), the script creates items and associated metadata based on a 'collectionMetadata.json' file in the directory. Based on the specified file extension, the script then posts each file in the directory  with that extension as a bitstream for the appropriate item, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
 
 #### [removeDuplicateKeyValuePairsFromItems.py](removeDuplicateKeyValuePairsFromItems.py)
+This script finds all items with duplicate key-value pairs and removes the duplicates. A CSV log is written with all of the items that were edited and a 'dc.description.provenance' note describing the change is added to the item metadata.
 
 #### [replaceKey.py](replaceKey.py)
+Based on user input, this script replaces one specified key with another specified key in all item metadata across the repository. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the item metadata. 
 
 #### [replaceKeyValuePairsFromCSV.py](replaceKeyValuePairsFromCSV.py)
 
