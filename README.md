@@ -12,7 +12,7 @@ The 'filePath' is directory into which output files will be written and 'handleP
 
 **Note**: All of these scripts skip collection '24' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
 
-        Skips collection 24 
+Skips collection 24 
 
                 for j in range (0, len (collections)):
                         collectionID = collections[j]['id']
@@ -20,7 +20,7 @@ The 'filePath' is directory into which output files will be written and 'handleP
                         offset = 0
             
             
-        No collections skipped:
+No collections skipped:
 
                 for j in range (0, len (collections)):
                         collectionID = collections[j]['id']
