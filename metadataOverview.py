@@ -5,22 +5,33 @@ import time
 import csv
 from collections import Counter
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+
 #login info kept in secrets.py file
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
+verify = secrets.verify
+
+requests.packages.urllib3.disable_warnings()
 
 #authentication
 data = json.dumps({'email':email,'password':password})
 header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, data=data).content
+session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, data=data).content
 headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
 
 startTime = time.time()
 
 endpoint = baseURL+'/rest/communities'
-communities = requests.get(endpoint, headers=headerAuth).json()
+communities = requests.get(endpoint, headers=headerAuth, verify=verify).json()
 
 #create list of all item IDs
 itemList = []
@@ -29,7 +40,7 @@ f.writerow(['Name']+['collectionID']+['collectionHandle']+['numberOfItems'])
 for i in range (0, len (communities)):
     communityID = communities[i]['id']
     communityName = communities[i]['name'].encode('utf-8')
-    collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=headerAuth).json()
+    collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=headerAuth, verify=verify).json()
     for j in range (0, len (collections)):
         collectionID = collections[j]['id']
         numberItems = collections[j]['numberItems']
@@ -40,11 +51,11 @@ for i in range (0, len (communities)):
             print 'Levy Collection - skipped'
         else:
             f.writerow([fullName]+[collectionID]+[collectionHandle]+[str(numberItems).zfill(6)])
-            items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=headerAuth)
+            items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=headerAuth, verify=verify)
             while items.status_code != 200:
                 time.sleep(5)
                 print 'collection:', collectionID, '# of items:',len(items), 'fail'
-                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=headerAuth)
+                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=headerAuth, verify=verify)
             items = items.json()
             print 'collection:', collectionID,', Number of items:',len(items)
             for i in range (0, len (items)):
@@ -65,7 +76,7 @@ for concat in itemList:
     f.writerow([communityID]+[collectionID]+[itemID])
     concat = concat[:concat.find('|')]
     print itemID
-    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth).json()
+    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify).json()
     for i in range (0, len (metadata)):
         key = metadata[i]['key']
         keyCount.append(key)
@@ -97,9 +108,9 @@ for concat in keyList:
     communityID = concat[:concat.find(':')]
     collectionID = concat[concat.find(':')+1:concat.find('|')]
     key = concat[concat.rfind('|')+1:]
-    additionalDataCommunity = requests.get(baseURL+'/rest/communities/'+str(communityID), headers=headerAuth).json()
+    additionalDataCommunity = requests.get(baseURL+'/rest/communities/'+str(communityID), headers=headerAuth, verify=verify).json()
     communityName = additionalDataCommunity['name'].encode('utf-8')
-    additionalDataCollection = requests.get(baseURL+'/rest/collections/'+str(collectionID), headers=headerAuth).json()
+    additionalDataCollection = requests.get(baseURL+'/rest/collections/'+str(collectionID), headers=headerAuth, verify=verify).json()
     collectionName = additionalDataCollection['name'].encode('utf-8')
     collectionHandle = additionalDataCollection['handle']
     fullName = communityName+' - '+collectionName
@@ -110,4 +121,4 @@ m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print "%d:%02d:%02d" % (h, m, s)
 
-logout = requests.post(baseURL+'/rest/logout', headers=headerAuth)
+logout = requests.post(baseURL+'/rest/logout', headers=headerAuth, verify=verify)
