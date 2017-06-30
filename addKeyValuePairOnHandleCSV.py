@@ -5,14 +5,25 @@ import time
 import csv
 from datetime import datetime
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
+verify = secrets.verify
+
+requests.packages.urllib3.disable_warnings()
 
 data = json.dumps({'email':email,'password':password})
 header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, data=data).content
+session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, data=data).content
 headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
 
 filename = filePath+raw_input('Enter filename (including \'.csv\'): ')
@@ -32,9 +43,9 @@ with open(filename) as csvfile:
         addedMetadataElement['value'] = unicode(addedValue)
         addedMetadataElement['language'] = 'en_us'
         endpoint = baseURL+'/rest/handle/'+handle
-        item = requests.get(endpoint, headers=header).json()
+        item = requests.get(endpoint, headers=headerAuth, verify=verify).json()
         itemID = item['id']
-        itemMetadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth).json()
+        itemMetadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify).json()
         itemMetadata.append(addedMetadataElement)
         itemMetadataProcessed = itemMetadata
 
@@ -46,8 +57,8 @@ with open(filename) as csvfile:
         itemMetadataProcessed.append(provNoteElement)
 
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth)
+        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify)
         print delete
-        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, data=itemMetadataProcessed)
+        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify, data=itemMetadataProcessed)
         print post
         f.writerow([itemID]+[addedMetadataElement['key']]+[addedMetadataElement['value'].encode('utf-8')]+[delete]+[post])

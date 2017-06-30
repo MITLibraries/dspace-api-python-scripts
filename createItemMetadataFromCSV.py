@@ -2,8 +2,8 @@
 import json
 import csv
 
-def createMetadataElement (key, value, language):
-    value = row[value]
+def createMetadataElementCSV (key, valueSource, language):
+    value = row[valueSource]
     if value != '':
         if language != '':
             metadataElement = {'key': key, 'language': language, 'value': value}
@@ -14,6 +14,14 @@ def createMetadataElement (key, value, language):
     else:
         pass
 
+def createMetadataElementDirect (key, value, language):
+    if language != '':
+        metadataElement = {'key': key, 'language': language, 'value': value}
+        metadata.append(metadataElement)
+    else:
+        metadataElement = {'key': key, 'value': value}
+        metadata.append(metadataElement)
+
 filename = raw_input('Enter filename (including \'.csv\'): ')
 
 with open(filename) as csvfile:
@@ -22,18 +30,18 @@ with open(filename) as csvfile:
     metadataGroup = []
     for row in reader:
         metadata = []
-        createMetadataElement('dc.creator', 'creator', '')
-        createMetadataElement('dc.date', 'date', '')
-        createMetadataElement('dc.subject', 'decade', 'en_US')
-        createMetadataElement('dc.description.abstract', 'description', 'en_US')
-        createMetadataElement('dc.description', 'notes', 'en_US')
-        createMetadataElement('dc.subject', 'photographType', 'en_US')
-        createMetadataElement('dc.relation.ispartof', 'location', 'en_US')
-        createMetadataElement('dc.identifier', 'identifier', '')
-        createMetadataElement('dc.format.extent', 'size', '')
-        createMetadataElement('dc.format.medium', 'medium', 'en_US')
-        createMetadataElement('dc.title', 'title', 'en_US')
-        createMetadataElement('dc.subject', 'subjectType', 'en_US')
+        createMetadataElementCSV('dc.creator', 'creator', '')
+        createMetadataElementCSV('dc.date', 'date', '')
+        createMetadataElementCSV('dc.subject', 'decade', 'en_US')
+        createMetadataElementCSV('dc.description.abstract', 'description', 'en_US')
+        createMetadataElementCSV('dc.description', 'notes', 'en_US')
+        createMetadataElementCSV('dc.subject', 'photographType', 'en_US')
+        createMetadataElementCSV('dc.relation.ispartof', 'location', 'en_US')
+        createMetadataElementCSV('dc.identifier', 'identifier', '')
+        createMetadataElementCSV('dc.format.extent', 'size', '')
+        createMetadataElementCSV('dc.format.medium', 'medium', 'en_US')
+        createMetadataElementCSV('dc.title', 'title', 'en_US')
+        createMetadataElementCSV('dc.subject', 'subjectType', 'en_US')
 
         item = {'metadata': metadata}
         metadataGroup.append(item)
