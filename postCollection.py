@@ -12,7 +12,9 @@ if secretsVersion != '':
         print 'Editing Production'
     except ImportError:
         print 'Editing Stage'
-
+else:
+    print 'Editing Stage'
+    
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
@@ -74,14 +76,6 @@ for itemMetadata in collectionMetadata:
     data = open(bitstream, 'rb')
     files = {'file': open(bitstream, 'rb')}
     post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerAuthFileUpload, verify=verify, data=data).json()
-
-
-    # #Post bitstream
-    # bitstream = directory+'/'+fileIdentifier+fileExtension
-    # fileName = bitstream[bitstream.rfind('/')+1:]
-    # data = open(bitstream, 'rb')
-    # files = {'file': open(bitstream, 'rb')}
-    # post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerAuthFileUpload, verify=verify, data=data).json()
 
     #Create provenance notes
     provNote = {}
