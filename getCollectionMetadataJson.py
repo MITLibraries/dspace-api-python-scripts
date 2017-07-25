@@ -10,7 +10,9 @@ if secretsVersion != '':
         print 'Editing Production'
     except ImportError:
         print 'Editing Stage'
-
+else:
+    print 'Editing Stage'
+    
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password

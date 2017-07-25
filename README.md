@@ -7,33 +7,38 @@ All of these scripts require a secrets.py file in the same directory that must c
         password='my_dspace_password'    
         filePath = '/Users/dspace_user/dspace-data-collection/data/'
         handlePrefix = 'http://dspace.myuni.edu/handle/'
+        verify = True or False (no quotes). Use False if using an SSH tunnel to connect to the DSpace API
 ```
-The 'filePath' is directory into which output files will be written and 'handlePrefix' may or may not vary from your DSpace URL depending on your configuration. This secrets.py file will be ignored according to the repository's .gitignore file so that DSpace login details will not be inadvertently exposed through Github
+The 'filePath' is directory into which output files will be written and 'handlePrefix' may or may not vary from your DSpace URL depending on your configuration. This secrets.py file will be ignored according to the repository's .gitignore file so that DSpace login details will not be inadvertently exposed through Github.
+
+If you are using both a development server and a production server, you can create a separate secrets.py file with a different name (e.g. secretsProd.py) and containing the production server information. When running each of these scripts, you will be prompted to enter the file name (e.g 'secretsProd' without '.py') of an alternate secrets file. If you skip the prompt or incorrectly type the file name, the scripts will default to the information in the secrets.py file. This ensures that you will only access the production server if you really intend to.
+
+The command 'requests.packages.urllib3.disable_warnings()' is used to disable the excessive warnings that will be produced if the 'verify' variable is set to False, which necessary if you are using an SSH tunnel to connect to the DSpace API.
 
 **Note**: All of these scripts skip collection '24' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
 
 
-Skips collection 24: 
+Skips collection 24:
 
                 for j in range (0, len (collections)):
                         collectionID = collections[j]['id']
                         if collectionID != 24:
                         offset = 0
-            
-            
+
+
 No collections skipped:
 
                 for j in range (0, len (collections)):
                         collectionID = collections[j]['id']
                         if collectionID != 0:
                         offset = 0
-            
-            
+
+
 #### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
 Based on user input, this script extracts the values of two specified keys from a specified community to a CSV file for comparison.
 
 #### [findBogusUris.py](findBogusUris.py)
-This script extracts the item ID and the value of the key 'dc.identifier.uri' to a CSV file when the value does not begin with the handlePrefix specified in the secrets.py file. 
+This script extracts the item ID and the value of the key 'dc.identifier.uri' to a CSV file when the value does not begin with the handlePrefix specified in the secrets.py file.
 
 #### [findDuplicateKeys.py](findDuplicateKeys.py)
 Based on user input, this script extracts item IDs to a CSV file where there are multiple instances of the specified key in the item metadata.

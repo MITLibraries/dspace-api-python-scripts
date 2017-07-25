@@ -29,7 +29,7 @@ data = json.dumps({'email':email,'password':password})
 header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, data=data).content
 headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
-
+print 'authenticated'
 startTime = time.time()
 
 endpoint = baseURL+'/rest/communities'
@@ -37,22 +37,17 @@ communities = requests.get(endpoint, headers=headerAuth, verify=verify).json()
 
 #create list of all item IDs
 itemList = []
-f=csv.writer(open(filePath+'collectionStats.csv', 'wb'))
-f.writerow(['Name']+['collectionID']+['collectionHandle']+['numberOfItems'])
 for i in range (0, len (communities)):
     communityID = communities[i]['id']
     communityName = communities[i]['name'].encode('utf-8')
     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=headerAuth, verify=verify).json()
     for j in range (0, len (collections)):
         collectionID = collections[j]['id']
-        numberItems = collections[j]['numberItems']
         collectionName = collections[j]['name'].encode('utf-8')
-        collectionHandle = collections[j]['handle']
         fullName = communityName+' - '+collectionName
         if collectionID == 24:
             print 'Levy Collection - skipped'
         else:
-            f.writerow([fullName]+[collectionID]+[collectionHandle]+[str(numberItems).zfill(6)])
             items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=headerAuth, verify=verify)
             while items.status_code != 200:
                 time.sleep(5)
@@ -62,61 +57,69 @@ for i in range (0, len (communities)):
             print 'collection:', collectionID,', Number of items:',len(items)
             for i in range (0, len (items)):
                 itemID = items[i]['id']
-                concat = str(communityID)+':'+str(collectionID)+'|'+str(itemID)
-                itemList.append(concat)
+                itemList.append(itemID)
 
 #retrieve metadata from all items
 keyList = []
-dcTypeList = []
-keyCount = []
-f=csv.writer(open(filePath+'dspaceIDs.csv', 'wb'))
-f.writerow(['communityID']+['collectionID']+['itemID'])
-for concat in itemList:
-    communityID = concat[:concat.find(':')]
-    collectionID = concat[concat.find(':')+1:concat.find('|')]
-    itemID = concat[concat.find('|')+1:]
-    f.writerow([communityID]+[collectionID]+[itemID])
-    concat = concat[:concat.find('|')]
+for itemID in itemList:
     print itemID
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify).json()
     for i in range (0, len (metadata)):
         key = metadata[i]['key']
-        keyCount.append(key)
-        keyConcat = concat+'|'+ metadata[i]['key']
-        if keyConcat not in keyList:
-            keyList.append(keyConcat)
-        if metadata[i]['key'] == 'dc.type':
-            dcType = metadata[i]['value']
-            if dcType not in dcTypeList:
-                dcTypeList.append(dcType)
+        if key not in keyList:
+            keyList.append(key)
 
-print 'writing types'
-f=csv.writer(open(filePath+'dspaceTypes.csv', 'wb'))
-f.writerow(['type'])
-for dcType in dcTypeList:
-    f.writerow([dcType])
+keyListHeader = ['collectionNameColumn']
+keyList.sort()
+keyListHeader = keyListHeader + keyList
+f=csv.writer(open('collectionsKeysMatrix.csv', 'wb'))
+f.writerow(keyListHeader)
 
-print 'writing global key counts'
-f=csv.writer(open(filePath+'keyCount.csv', 'wb'))
-f.writerow(['key']+['count'])
-countDict = Counter(keyCount)
-for key, value in countDict.items():
-    f.writerow([key]+[str(value).zfill(6)])
+for i in range (0, len (communities)):
+    communityID = communities[i]['id']
+    communityName = communities[i]['name'].encode('utf-8')
+    collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=headerAuth, verify=verify).json()
+    for j in range (0, len (collections)):
+        collectionID = collections[j]['id']
+        if collectionID == 24:
+            print 'Levy Collection - skipped'
+        else:
+            collectionItemList = []
+            collectionName = collections[j]['name'].encode('utf-8')
+            fullName = communityName+' - '+collectionName
+            items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=headerAuth, verify=verify)
+            while items.status_code != 200:
+                time.sleep(5)
+                print 'collection:', collectionID, '# of items:',len(items), 'fail'
+                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=headerAuth, verify=verify)
+            items = items.json()
+            for i in range (0, len (items)):
+                itemID = items[i]['id']
+                collectionItemList.append(itemID)
 
-print 'writing collection metadata keys'
-f=csv.writer(open(filePath+'collectionMetadataKeys.csv', 'wb'))
-f.writerow(['fullName']+['collectionID']+['collectionHandle']+['key'])
-for concat in keyList:
-    communityID = concat[:concat.find(':')]
-    collectionID = concat[concat.find(':')+1:concat.find('|')]
-    key = concat[concat.rfind('|')+1:]
-    additionalDataCommunity = requests.get(baseURL+'/rest/communities/'+str(communityID), headers=headerAuth, verify=verify).json()
-    communityName = additionalDataCommunity['name'].encode('utf-8')
-    additionalDataCollection = requests.get(baseURL+'/rest/collections/'+str(collectionID), headers=headerAuth, verify=verify).json()
-    collectionName = additionalDataCollection['name'].encode('utf-8')
-    collectionHandle = additionalDataCollection['handle']
-    fullName = communityName+' - '+collectionName
-    f.writerow([fullName]+[collectionID]+[collectionHandle]+[key])
+            collectionKeyCount = {}
+            for key in keyList:
+                collectionKeyCount[key] = 0
+            for itemID in collectionItemList:
+                print itemID
+                metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify).json()
+                for i in range (0, len (metadata)):
+                    itemKey = metadata[i]['key']
+                    for key in keyList:
+                        if itemKey == key:
+                            collectionKeyCount[key] = collectionKeyCount[key]+1
+
+            collectionKeyCountList = []
+            for k, v in collectionKeyCount.items():
+                collectionKeyCountList.append(k+' '+str(v))
+            collectionKeyCountList.sort()
+            updatedCollectionKeyCountList = []
+            for entry in collectionKeyCountList:
+                count = entry[entry.index(' ')+1:]
+                updatedCollectionKeyCountList.append(count)
+            fullName = [fullName]
+            updatedCollectionKeyCountList = fullName + updatedCollectionKeyCountList
+            f.writerow(updatedCollectionKeyCountList)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)

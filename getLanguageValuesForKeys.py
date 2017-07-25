@@ -4,10 +4,23 @@ import secrets
 import csv
 import time
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+else:
+    print 'Editing Stage'
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
+verify = secrets.verify
+
+requests.packages.urllib3.disable_warnings()
 
 startTime = time.time()
 data = json.dumps({'email':email,'password':password})
