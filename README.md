@@ -42,9 +42,9 @@ Based on user input, this script uses a specified CSV file of DSpace item handle
 
 #### [createItemMetadataFromCSV.py](createItemMetadataFromCSV.py)
 Based on user input, this script created a JSON file of metadata that can be added to a DSpace item from the specified CSV file. The 'createMetadataElement' function in the script is used to create the desired metadata elements based on three variables:
-        ..*'key' - The Dublin Core property to be used for the element.
-        ..*'value' - The column in the CSV that contains the data for the element.
-        ..*'language' - The desired language value for the element
+        *'key' - The Dublin Core property to be used for the element.
+        *'value' - The column in the CSV that contains the data for the element.
+        *'language' - The desired language value for the element
         
 
 #### [deleteKeyFromCollection.py](deleteKeyFromCollection.py)
