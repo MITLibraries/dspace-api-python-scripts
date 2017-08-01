@@ -39,15 +39,23 @@ No collections skipped:
 Based on user input, this script uses a specified CSV file of DSpace item handles and the value to be added to that item using the specified key. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
 #### [addKeyValuePairToCollection.py](addKeyValuePairToCollection.py)
+Based on user input, this script adds a specified key-value pair with a specified language value to every item in the collection with the specified handle.
 
 #### [createItemMetadataFromCSV.py](createItemMetadataFromCSV.py)
-Based on user input, this script created a JSON file of metadata that can be added to a DSpace item from the specified CSV file. The 'createMetadataElement' function in the script is used to create the desired metadata elements based on three variables:
-        *'key' - The Dublin Core property to be used for the element.
-        *'value' - The column in the CSV that contains the data for the element.
-        *'language' - The desired language value for the element
-        
+Based on user input, this script created a JSON file of metadata that can be added to a DSpace item from the specified CSV file or from values directly specified in the script. The 'createMetadataElementCSV' function in the script is used to create a metadata element from the specified CSV file and has three variables:
+
+- 'key' - The Dublin Core property to be used for the element.
+- 'value' - The column in the specified CSV file that contains the data for the element.
+- 'language' - The desired language value for the element
+
+The 'createMetadataElementDirect' function in the script is used to create a metadata element without a CSV file (intended for metadata elements that will be constant across all items in a collection) and has three variables:
+
+- 'key' - The Dublin Core property to be used for the element.
+- 'value' - The actual value of the element.
+- 'language' - The desired language value for the element.
 
 #### [deleteKeyFromCollection.py](deleteKeyFromCollection.py)
+Based on user input, this script removes all key-value pairs with the specified key for every item in the collection with the specified handle.
 
 #### [postCollection.py](postCollection.py)
 Based on user input, this script creates a community with a specified name and collection with a specified name within that community.  In the specified directory (within the filePath set by the secrets.py file), the script creates items and associated metadata based on a 'collectionMetadata.json' file in the directory. Based on the specified file extension, the script then posts each file in the directory  with that extension as a bitstream for the appropriate item, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
