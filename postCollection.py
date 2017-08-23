@@ -4,6 +4,7 @@ import secrets
 import datetime
 import time
 import os
+import csv
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
@@ -14,7 +15,7 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
-    
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
@@ -48,25 +49,37 @@ collection = json.dumps({'name': collectionName})
 post = requests.post(baseURL+'/rest/communities/'+communityID+'/collections', headers=headerAuth, verify=verify, data=collection).json()
 collectionID = post['link']
 
-#Post items
+#create file list and export csv
 fileList = {}
 for root, dirs, files in os.walk(directory, topdown=True):
     for file in files:
         if file.endswith(fileExtension):
-            fileList[file.replace('.pdf','')] = os.path.join(root, file).replace('\\','/')
+            fileList[file[:file.index('.')]] = os.path.join(root, file).replace('\\','/')
             print file
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print 'File list creation time: ','%d:%02d:%02d' % (h, m, s)
 
+f=csv.writer(open(collectionName.replace(' ','')+'fileList.csv', 'wb'))
+f.writerow(['itemID'])
+
+for k,v in fileList.items():
+    f.writerow([v[v.rindex('/')+1:]])
+print fileList
+# Post items
 collectionMetadata = json.load(open(directory+'/'+'metadata.json'))
 for itemMetadata in collectionMetadata:
+    updatedItemMetadata = {}
+    updatedItemMetadataList = []
     for element in itemMetadata['metadata']:
-        if element['key'] == 'dc.identifier.other':
+        if element['key'] == 'fileIdentifier':
             fileIdentifier = element['value']
-    itemMetadata = json.dumps(itemMetadata)
-    post = requests.post(baseURL+collectionID+'/items', headers=headerAuth, verify=verify, data=itemMetadata).json()
+        else:
+            updatedItemMetadataList.append(element)
+    updatedItemMetadata['metadata'] = updatedItemMetadataList
+    updatedItemMetadata = json.dumps(updatedItemMetadata)
+    post = requests.post(baseURL+collectionID+'/items', headers=headerAuth, verify=verify, data=updatedItemMetadata).json()
     print json.dumps(post)
     itemID = post['link']
 
