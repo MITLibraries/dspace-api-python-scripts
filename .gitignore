@@ -51,3 +51,5 @@ secretsProd.py
 data/*
 !data/.keep
 .profile
+*.csv
+*.json
