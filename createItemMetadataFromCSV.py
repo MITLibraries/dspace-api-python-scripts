@@ -33,7 +33,7 @@ with open(filename) as csvfile:
         createMetadataElementCSV('fileIdentifier', '????', '')
         createMetadataElementCSV('dc.contributor.author', '????', '')
         createMetadataElementCSV('dc.contributor.other', '????', '')
-        createMetadataElementCSV('dc.date.issued', '????', '')
+        createMetadataElementCSV('dc.date.created', '????', '')
         createMetadataElementCSV('dc.description.abstract', '????', 'en_US')
         createMetadataElementCSV('dc.format.extent', '????', '')
         createMetadataElementDirect('dc.format.mimetype', '????', 'en_US')
