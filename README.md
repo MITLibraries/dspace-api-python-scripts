@@ -49,6 +49,9 @@ Based on user input, this script extracts all of the item metadata from the spec
 #### [getCompleteAndUniqueValuesForAllKeys.py](getCompleteAndUniqueValuesForAllKeys.py)
 This script creates a 'completeValueLists' folder and for all keys used in the repository, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
 
+#### [getHandlesAndBitstreamsFromCollection.py](getHandlesAndBitstreamsFromCollection.py)
+Based on user input, this script extracts all the handles and bitstreams associated with the items in the specified collection to a CSV file.
+
 #### [getGlobalLanguageValues.py](getGlobalLanguageValues.py)
 This script extracts all unique language values used by metadata entries in the repository to a CSV file.
 
