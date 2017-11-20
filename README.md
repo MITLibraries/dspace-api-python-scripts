@@ -64,6 +64,9 @@ Based on user input, this script extracts the ID and URI for all items in the re
 #### [getRecordsWithKeyAndValue.py](getRecordsWithKeyAndValue.py)
 Based on user input, this script extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
 
+#### [metadataCollectionsKeysMatrix.py](metadataCollectionsKeysMatrix.py)
+This script creates a matrix containing a count of each time a key appears in each collection in the repository.
+
 #### [metadataOverview.py](metadataOverview.py)
 This script produces several CSV files containing different information about the structure and metadata of the repository:
 
