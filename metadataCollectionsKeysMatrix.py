@@ -72,7 +72,7 @@ for itemID in itemList:
 keyListHeader = ['collectionNameColumn']
 keyList.sort()
 keyListHeader = keyListHeader + keyList
-f=csv.writer(open('collectionsKeysMatrix.csv', 'wb'))
+f=csv.writer(open(filePath+'collectionsKeysMatrix.csv', 'wb'))
 f.writerow(keyListHeader)
 
 for i in range (0, len (communities)):
