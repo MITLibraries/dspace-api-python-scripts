@@ -14,7 +14,7 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
-    
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
