@@ -66,6 +66,8 @@ This script finds all items with duplicate key-value pairs and removes the dupli
 #### [replaceKey.py](replaceKey.py)
 Based on user input, this script replaces one specified key with another specified key in all item metadata across the repository. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
+#### [replaceKeyForCollection.py](replaceKeyForCollection.py)
+
 #### [replaceKeyValuePairsFromCSV.py](replaceKeyValuePairsFromCSV.py)
 Based on user input, this scripts updates key-value pairs from the specified CSV file with the columns: 'replacedKey,' 'replacementKey,'replacedValue,' and 'replacementValue.' A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
