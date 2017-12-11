@@ -40,7 +40,7 @@ with open(filename) as csvfile:
         createMetadataElementDirect('dc.identifier.other', '????','')
         createMetadataElementDirect('dc.language.iso', '????', 'en_US')
         createMetadataElementDirect('dc.publisher', 'Johns Hopkins University Sheridan Libraries', 'en_US')
-        createMetadataElementDirect('dc.relation', 'Access the finding aid for the full ???? collection at ?????', '')
+        createMetadataElementDirect('dc.relation', 'Access the finding aid for the full ???? collection at ?????.', '')
         createMetadataElementCSV('dc.relation.ispartof', '????', 'en_US')
         createMetadataElementDirect('dc.rights', '????', 'en_US')
         createMetadataElementDirect('dc.subject', '????', 'en_US')
