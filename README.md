@@ -61,6 +61,9 @@ This script extracts all unique pairs of keys and language values used by metada
 #### [getRecordsAndValuesForKey.py](getRecordsAndValuesForKey.py)
 Based on user input, this script extracts the ID and URI for all items in the repository with the specified key, as well as the value of the specified key, to a CSV file.
 
+#### [getRecordsAndValuesForKeyInCollection.py](getRecordsAndValuesForKeyInCollection.py)
+Based on user input, this script extracts the ID and URI for all items in the specified collection with the specified key, as well as the value of the specified key, to a CSV file.
+
 #### [getRecordsWithKeyAndValue.py](getRecordsWithKeyAndValue.py)
 Based on user input, this script extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
 
