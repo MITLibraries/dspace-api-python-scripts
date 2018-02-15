@@ -49,10 +49,12 @@ secrets.py
 secretsProd.py
 *.pyc
 data/*
+local/*
 !data/.keep
 .profile
 *.csv
 *.json
+createItemMetadataFromCSV_*
 
 # Environments
 .env
