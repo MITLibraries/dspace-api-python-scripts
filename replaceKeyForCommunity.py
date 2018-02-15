@@ -23,9 +23,9 @@ verify = secrets.verify
 
 requests.packages.urllib3.disable_warnings()
 
+handle = raw_input('Enter community handle: ')
 oldKey = raw_input('Enter old key: ')
 newKey = raw_input('Enter new key: ')
-handle = raw_input('Enter community handle: ')
 
 startTime = time.time()
 data = json.dumps({'email':email,'password':password})
