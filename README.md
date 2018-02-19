@@ -33,6 +33,7 @@ No collections skipped:
                         if collectionID != 0:
                         offset = 0
 
+#### [allUppercaseValueCheck.py](allUppercaseValueCheck.py)
 
 #### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
 Based on user input, this script extracts the values of two specified keys from a specified community to a CSV file for comparison.
@@ -48,6 +49,8 @@ Based on user input, this script extracts all of the item metadata from the spec
 
 #### [getCompleteAndUniqueValuesForAllKeys.py](getCompleteAndUniqueValuesForAllKeys.py)
 This script creates a 'completeValueLists' folder and for all keys used in the repository, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
+
+#### [getCompleteAndUniqueValuesForAllKeysInCommunity.py](getCompleteAndUniqueValuesForAllKeysInCommunity.py)
 
 #### [getGlobalLanguageValues.py](getGlobalLanguageValues.py)
 This script extracts all unique language values used by metadata entries in the repository to a CSV file.
@@ -66,6 +69,12 @@ Based on user input, this script extracts the ID and URI for all items in the sp
 
 #### [getRecordsWithKeyAndValue.py](getRecordsWithKeyAndValue.py)
 Based on user input, this script extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
+
+#### [identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py](identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py)
+
+#### [identifyItemWithDuplicateKeysInCommunity.py](identifyItemWithDuplicateKeysInCommunity.py)
+
+#### [identifyItemsMissingKeyInCommunity.py](identifyItemsMissingKeyInCommunity.py)
 
 #### [metadataCollectionsKeysMatrix.py](metadataCollectionsKeysMatrix.py)
 This script creates a matrix containing a count of each time a key appears in each collection in the repository.
