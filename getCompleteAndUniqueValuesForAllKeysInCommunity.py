@@ -23,10 +23,11 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
+handle = raw_input('Enter community handle: ')
+
 requests.packages.urllib3.disable_warnings()
 
-filePathComplete = filePath+'completeValueLists'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'/'
-filePathUnique = filePath+'uniqueValueLists'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'/'
+
 
 startTime = time.time()
 data = json.dumps({'email':email,'password':password})
@@ -36,26 +37,30 @@ headerAuth = {'content-type':'application/json','accept':'application/json', 're
 print 'authenticated'
 
 itemList = []
-endpoint = baseURL+'/rest/communities'
-communities = requests.get(endpoint, headers=headerAuth, verify=verify).json()
-for i in range (0, len (communities)):
-    communityID = communities[i]['id']
-    collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=headerAuth, verify=verify).json()
-    for j in range (0, len (collections)):
-        collectionID = collections[j]['id']
-        if collectionID != 24:
-            offset = 0
-            items = ''
-            while items != []:
+endpoint = baseURL+'/rest/handle/'+handle
+community = requests.get(endpoint, headers=headerAuth, verify=verify).json()
+communityName = community['name'].replace(' ','')
+communityID = community['id']
+
+filePathComplete = filePath+'completeValueLists'+communityName+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'/'
+filePathUnique = filePath+'uniqueValueLists'+communityName+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'/'
+
+collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=headerAuth, verify=verify).json()
+for j in range (0, len (collections)):
+    collectionID = collections[j]['id']
+    if collectionID != 24:
+        offset = 0
+        items = ''
+        while items != []:
+            items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=1000&offset='+str(offset), headers=headerAuth, verify=verify)
+            while items.status_code != 200:
+                time.sleep(5)
                 items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=1000&offset='+str(offset), headers=headerAuth, verify=verify)
-                while items.status_code != 200:
-                    time.sleep(5)
-                    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=1000&offset='+str(offset), headers=headerAuth, verify=verify)
-                items = items.json()
-                for k in range (0, len (items)):
-                    itemID = items[k]['id']
-                    itemList.append(itemID)
-                offset = offset + 1000
+            items = items.json()
+            for k in range (0, len (items)):
+                itemID = items[k]['id']
+                itemList.append(itemID)
+            offset = offset + 1000
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)

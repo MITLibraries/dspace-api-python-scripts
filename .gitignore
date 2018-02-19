@@ -49,6 +49,7 @@ secrets.py
 secretsProd.py
 *.pyc
 data/*
+local/*
 !data/.keep
 .profile
 *.csv

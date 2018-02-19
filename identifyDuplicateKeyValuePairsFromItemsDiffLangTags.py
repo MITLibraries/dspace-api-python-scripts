@@ -1,10 +1,8 @@
 import json
 import requests
 import secrets
-import csv
 import time
-import os.path
-from collections import Counter
+import csv
 from datetime import datetime
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
@@ -24,9 +22,6 @@ filePath = secrets.filePath
 verify = secrets.verify
 
 requests.packages.urllib3.disable_warnings()
-
-filePathComplete = filePath+'completeValueLists'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'/'
-filePathUnique = filePath+'uniqueValueLists'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'/'
 
 startTime = time.time()
 data = json.dumps({'email':email,'password':password})
@@ -61,40 +56,21 @@ m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
 
-os.mkdir(filePathComplete)
-os.mkdir(filePathUnique)
+f=csv.writer(open(filePath+'DuplicatesRecordsDiffLangTags'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f.writerow(['itemID']+['key:value'])
 for number, itemID in enumerate(itemList):
+    itemMetadataProcessed = []
     itemsRemaining = len(itemList) - number
     print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify).json()
-    for l in range (0, len (metadata)):
-        if metadata[l]['key'] != 'dc.description.provenance':
-            key = metadata[l]['key']
-            value = metadata[l]['value'].encode('utf-8')
-            if os.path.isfile(filePathComplete+key+'ValuesComplete.csv') == False:
-                f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'wb'))
-                f.writerow(['itemID']+['value'])
-                f.writerow([itemID]+[value])
-            else:
-                f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'a'))
-                f.writerow([itemID]+[value])
-
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print 'Complete value list creation time: ','%d:%02d:%02d' % (h, m, s)
-
-for fileName in os.listdir(filePathComplete):
-    reader = csv.DictReader(open(filePathComplete+fileName))
-    fileName = fileName.replace('Complete', 'Unique')
-    valueList = []
-    for row in reader:
-        valueList.append(row['value'])
-    valueListCount = Counter(valueList)
-    f=csv.writer(open(filePathUnique+fileName, 'wb'))
-    f.writerow(['value']+['count'])
-    for key, value in valueListCount.items():
-        f.writerow([key]+[str(value).zfill(6)])
+    for metadataElement in metadata:
+        key = metadataElement['key']
+        value = metadataElement['value']
+        keyValue = key+':'+value
+        if key+':'+value not in itemMetadataProcessed:
+            itemMetadataProcessed.append(keyValue)
+        else:
+            f.writerow([itemID]+[keyValue])
 
 logout = requests.post(baseURL+'/rest/logout', headers=headerAuth, verify=verify)
 
