@@ -40,7 +40,6 @@ endpoint = baseURL+'/rest/handle/'+handle
 collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 collectionID = collection['uuid']
 collectionTitle = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
-endpoint = baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000'
 itemList = []
 offset = 0
 items = ''
