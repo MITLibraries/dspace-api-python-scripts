@@ -3,6 +3,9 @@ import requests
 import secrets
 import time
 import csv
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
@@ -20,38 +23,52 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-requests.packages.urllib3.disable_warnings()
-
 handle = raw_input('Enter handle: ')
 
-data = json.dumps({'email':email,'password':password})
-header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, data=data).content
-headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
-print 'authenticated'
 startTime = time.time()
+data = {'email':email,'password':password}
+header = {'content-type':'application/json','accept':'application/json'}
+session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
+cookies = {'JSESSIONID': session}
+headerFileUpload = {'accept':'application/json'}
+cookiesFileUpload = cookies
+status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+userFullName = status['fullname']
+print 'authenticated'
 
 endpoint = baseURL+'/rest/handle/'+handle
-collection = requests.get(endpoint, headers=headerAuth, verify=verify).json()
-collectionID = collection['id']
-collectionTitle = requests.get(endpoint, headers=headerAuth, verify=verify).json()
+collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+collectionID = collection['uuid']
+collectionTitle = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 endpoint = baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000'
-itemList = requests.get(endpoint, headers=headerAuth, verify=verify).json()
+itemList = []
+offset = 0
+items = ''
+while items != []:
+    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
+    while items.status_code != 200:
+        time.sleep(5)
+        items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
+    items = items.json()
+    for k in range (0, len (items)):
+        itemID = items[k]['uuid']
+        itemID = '/rest/items/'+itemID
+        itemHandle = items[k]['handle']
+        itemList.append(itemID)
+    offset = offset + 200
+    print offset
 
 f=csv.writer(open(filePath+'handlesAndBitstreams.csv', 'wb'))
 f.writerow(['bitstream']+['handle'])
 
 for item in itemList:
-    itemHandle = item['handle']
-    itemID = str(item['link'])
-
-    bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=headerAuth, verify=verify).json()
+    bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=header, cookies=cookies, verify=verify).json()
     for bitstream in bitstreams:
         fileName = bitstream['name']
         fileName.replace('.pdf','')
         f.writerow([fileName]+[itemHandle])
 
-logout = requests.post(baseURL+'/rest/logout', headers=headerAuth, verify=verify)
+logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
