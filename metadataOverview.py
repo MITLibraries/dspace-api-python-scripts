@@ -37,39 +37,6 @@ status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, v
 userFullName = status['fullname']
 print 'authenticated'
 
-# endpoint = baseURL+'/rest/communities'
-# communities = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
-
-#create list of all item IDs
-#itemList = []
-# f=csv.writer(open(filePath+'collectionStats.csv', 'wb'))
-# f.writerow(['Name']+['collectionID']+['collectionHandle']+['numberOfItems'])
-# for i in range (0, len (communities)):
-#     communityID = communities[i]['uuid']
-#     communityName = communities[i]['name'].encode('utf-8')
-#     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
-    # for j in range (0, len (collections)):
-    #     collectionID = collections[j]['uuid']
-    #     numberItems = collections[j]['numberItems']
-    #     collectionName = collections[j]['name'].encode('utf-8')
-    #     collectionHandle = collections[j]['handle']
-    #     fullName = communityName+' - '+collectionName
-    #     if collectionID == '4dccec82-4cfb-4583-a728-2cb823b15ef0':
-    #         print 'Levy Collection - skipped'
-    #     else:
-            # f.writerow([fullName]+[collectionID]+[collectionHandle]+[str(numberItems).zfill(6)])
-            # items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=header, cookies=cookies, verify=verify)
-            # while items.status_code != 200:
-            #     time.sleep(5)
-            #     print 'collection:', collectionID, '# of items:',len(items), 'fail'
-            #     items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=header, cookies=cookies, verify=verify)
-            # items = items.json()
-            # print 'collection:', collectionID,', Number of items:',len(items)
-            # for i in range (0, len (items)):
-            #     itemID = items[i]['uuid']
-            #     concat = str(communityID)+':'+str(collectionID)+'|'+str(itemID)
-            #     itemList.append(concat)
-
 f=csv.writer(open(filePath+'collectionStats.csv', 'wb'))
 f.writerow(['Name']+['collectionID']+['collectionHandle']+['numberOfItems'])
 
@@ -104,7 +71,6 @@ for i in range (0, len (communities)):
                     itemList.append(concat)
                 offset = offset + 200
                 print offset
-
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)

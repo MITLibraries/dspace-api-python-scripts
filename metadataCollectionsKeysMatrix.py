@@ -4,6 +4,9 @@ import secrets
 import time
 import csv
 from collections import Counter
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
@@ -21,8 +24,6 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-
-requests.packages.urllib3.disable_warnings()
 
 #authentication
 startTime = time.time()
