@@ -23,7 +23,7 @@ Skips collection 4dccec82-4cfb-4583-a728-2cb823b15ef0:
                 for j in range (0, len (collections)):
                         collectionID = collections[j]['uuid']
                         if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
-                        offset = 0
+                                offset = 0
 
 
 No collections skipped:
@@ -31,7 +31,7 @@ No collections skipped:
                 for j in range (0, len (collections)):
                         collectionID = collections[j]['uuid']
                         if collectionID != 0:
-                        offset = 0
+                                offset = 0
 
 #### [allUppercaseValueCheck.py](allUppercaseValueCheck.py)
 
