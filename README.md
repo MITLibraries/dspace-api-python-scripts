@@ -1,5 +1,7 @@
 # dspace-editing
 
+**Note**: These scripts were updated in 05/2018 for the new authentication method used by DSpace 6.x
+
 All of these scripts require a secrets.py file in the same directory that must contain the following text:
 ```
         baseURL='https://dspace.myuni.edu'
@@ -13,27 +15,23 @@ The 'filePath' is directory into which output files will be written and 'handleP
 
 If you are using both a development server and a production server, you can create a separate secrets.py file with a different name (e.g. secretsProd.py) and containing the production server information. When running each of these scripts, you will be prompted to enter the file name (e.g 'secretsProd' without '.py') of an alternate secrets file. If you skip the prompt or incorrectly type the file name, the scripts will default to the information in the secrets.py file. This ensures that you will only edit the production server if you really intend to.
 
-The command 'requests.packages.urllib3.disable_warnings()' is used to disable the excessive warnings that will be produced if the 'verify' variable is set to False, which necessary if you are using an SSH tunnel to connect to the DSpace API.
+**Note**: All of these scripts skip collection '4dccec82-4cfb-4583-a728-2cb823b15ef0' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
 
 
-
-**Note**: All of these scripts skip collection '24' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
-
-
-Skips collection 24:
+Skips collection 4dccec82-4cfb-4583-a728-2cb823b15ef0:
 
                 for j in range (0, len (collections)):
-                        collectionID = collections[j]['id']
-                        if collectionID != 24:
-                        offset = 0
+                        collectionID = collections[j]['uuid']
+                        if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
+                                offset = 0
 
 
 No collections skipped:
 
                 for j in range (0, len (collections)):
-                        collectionID = collections[j]['id']
+                        collectionID = collections[j]['uuid']
                         if collectionID != 0:
-                        offset = 0
+                                offset = 0
 
 #### [addKeyValuePairOnHandleCSV.py](addKeyValuePairOnHandleCSV.py)
 Based on user input, this script uses a specified CSV file of DSpace item handles and the value to be added to that item using the specified key. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.

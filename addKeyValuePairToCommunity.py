@@ -25,8 +25,10 @@ filePath = secrets.filePath
 verify = secrets.verify
 
 handle = raw_input('Enter community handle: ')
-oldKey = raw_input('Enter old key: ')
-newKey = raw_input('Enter new key: ')
+addedKey = raw_input('Enter key: ')
+addedValue = raw_input('Enter value: ')
+addedLanguage = raw_input('Enter language: ')
+confirm = raw_input('Hit enter to proceed')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -65,45 +67,32 @@ h, m = divmod(m, 60)
 print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
 
 recordsEdited = 0
-elementsEdited = 0
-f=csv.writer(open(filePath+'replaceKey'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
-f.writerow(['itemID']+['replacedKey']+['replacedValue']+['delete']+['post'])
+f=csv.writer(open(filePath+'addKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f.writerow(['itemID']+['addedKey']+['addedValue']+['delete']+['post'])
 for number, itemID in enumerate(itemList):
-    replacedElement = ''
-    itemMetadataProcessed = []
     itemsRemaining = len(itemList) - number
     print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-    for l in range (0, len (metadata)):
-        if metadata[l]['key'] == oldKey:
-            replacedElement = metadata[l]
-            updatedMetadataElement = {}
-            updatedMetadataElement['key'] = newKey
-            updatedMetadataElement['value'] = unicode(replacedElement['value'])
-            updatedMetadataElement['language'] = unicode(replacedElement['language'])
-            print updatedMetadataElement
-            itemMetadataProcessed.append(updatedMetadataElement)
-            provNote = '\''+oldKey+'\' was replaced by \''+newKey+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
-            provNoteElement = {}
-            provNoteElement['key'] = 'dc.description.provenance'
-            provNoteElement['value'] = unicode(provNote)
-            provNoteElement['language'] = 'en_US'
-            itemMetadataProcessed.append(provNoteElement)
-            elementsEdited = elementsEdited + 1
-        else:
-            if metadata[l] not in itemMetadataProcessed:
-                itemMetadataProcessed.append(metadata[l])
-    if replacedElement != '':
-        recordsEdited = recordsEdited + 1
-        itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemID, recordsEdited, elementsEdited
-        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
-        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
-        f.writerow([itemID]+[replacedElement['key']]+[replacedElement['value'].encode('utf-8')]+[delete]+[post])
-    else:
-        print 'not updated', itemID
+    itemMetadataProcessed = metadata
+    addedMetadataElement = {}
+    addedMetadataElement['key'] = addedKey
+    addedMetadataElement['value'] = unicode(addedValue)
+    addedMetadataElement['language'] = unicode(addedLanguage)
+    itemMetadataProcessed.append(addedMetadataElement)
+    provNote = '\''+addedKey+': '+addedValue+'\' was added through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+    provNoteElement = {}
+    provNoteElement['key'] = 'dc.description.provenance'
+    provNoteElement['value'] = unicode(provNote)
+    provNoteElement['language'] = 'en_US'
+    itemMetadataProcessed.append(provNoteElement)
+    recordsEdited = recordsEdited + 1
+    itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+    print 'updated', itemID, recordsEdited
+    delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
+    print delete
+    post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+    print post
+    f.writerow([itemID]+[addedKey]+[addedValue]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

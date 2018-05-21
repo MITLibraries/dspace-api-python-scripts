@@ -4,6 +4,9 @@ import secrets
 import time
 import csv
 from datetime import datetime
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
@@ -14,14 +17,12 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
-    
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-
-requests.packages.urllib3.disable_warnings()
 
 collectionHandle = raw_input('Enter collection handle: ')
 addedKey = raw_input('Enter key: ')
@@ -30,28 +31,31 @@ addedLanguage = raw_input('Enter language: ')
 confirm = raw_input('Hit enter to proceed')
 
 startTime = time.time()
-data = json.dumps({'email':email,'password':password})
+data = {'email':email,'password':password}
 header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, data=data).content
-headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
+session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
+cookies = {'JSESSIONID': session}
+headerFileUpload = {'accept':'application/json'}
+cookiesFileUpload = cookies
+status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 print 'authenticated'
 
 itemList = []
 endpoint = baseURL+'/rest/handle/'+collectionHandle
-collection = requests.get(endpoint, headers=header, verify=verify).json()
-collectionID = collection['id']
+collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+collectionID = collection['uuid']
 offset = 0
 items = ''
 while items != []:
-    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=1000&offset='+str(offset), headers=headerAuth, verify=verify)
+    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
     while items.status_code != 200:
         time.sleep(5)
-        items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=1000&offset='+str(offset), headers=headerAuth, verify=verify)
+        items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
     items = items.json()
     for k in range (0, len (items)):
-        itemID = items[k]['id']
+        itemID = items[k]['uuid']
         itemList.append(itemID)
-    offset = offset + 1000
+    offset = offset + 200
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
@@ -63,7 +67,7 @@ f.writerow(['itemID']+['addedKey']+['addedValue']+['delete']+['post'])
 for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
     print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
-    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify).json()
+    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     itemMetadataProcessed = metadata
     addedMetadataElement = {}
     addedMetadataElement['key'] = addedKey
@@ -79,13 +83,13 @@ for number, itemID in enumerate(itemList):
     recordsEdited = recordsEdited + 1
     itemMetadataProcessed = json.dumps(itemMetadataProcessed)
     print 'updated', itemID, recordsEdited
-    delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify)
+    delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
     print delete
-    post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify, data=itemMetadataProcessed)
+    post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
     print post
     f.writerow([itemID]+[addedKey]+[addedValue]+[delete]+[post])
 
-logout = requests.post(baseURL+'/rest/logout', headers=headerAuth, verify=verify)
+logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)

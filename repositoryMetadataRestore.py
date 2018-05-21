@@ -13,7 +13,7 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
-    
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
@@ -27,10 +27,14 @@ directory = filePath+raw_input('Enter directory name: ')
 
 startTime = time.time()
 
-data = json.dumps({'email':email,'password':password})
+startTime = time.time()
+data = {'email':email,'password':password}
 header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, data=data).content
-headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
+session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
+cookies = {'JSESSIONID': session}
+headerFileUpload = {'accept':'application/json'}
+cookiesFileUpload = cookies
+status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 print 'authenticated'
 
 for fileName in os.listdir(directory):
@@ -44,14 +48,14 @@ for fileName in os.listdir(directory):
                 handle = metadata[j]['value'].replace(handlePrefix,'')
                 print handle
                 endpoint = baseURL+'/rest/handle/'+handle
-                item = requests.get(endpoint, headers=headerAuth, verify=verify).json()
-                itemID = item['id']
+                item = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+                itemID = item['uuid']
                 print fileName, itemID
-                delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify)
+                delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
                 print delete
-                post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify, data=itemMetadata)
+                post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadata)
                 print post
-logout = requests.post(baseURL+'/rest/logout', headers=headerAuth, verify=verify)
+logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)

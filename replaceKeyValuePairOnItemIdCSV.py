@@ -4,6 +4,9 @@ import secrets
 import time
 import csv
 from datetime import datetime
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
@@ -21,17 +24,19 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-requests.packages.urllib3.disable_warnings()
-
-data = json.dumps({'email':email,'password':password})
+startTime = time.time()
+data = {'email':email,'password':password}
 header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, data=data).content
-headerAuth = {'content-type':'application/json','accept':'application/json', 'rest-dspace-token':session}
+session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
+cookies = {'JSESSIONID': session}
+headerFileUpload = {'accept':'application/json'}
+cookiesFileUpload = cookies
+status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+print 'authenticated'
 
 filename = filePath+raw_input('Enter filename (including \'.csv\'): ')
 replacedKey = raw_input('Enter key: ')
 replacementKey = replacedKey
-startTime = time.time()
 
 f=csv.writer(open(filePath+'replacedKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
 f.writerow(['itemID']+['replacedKey']+['replacedValue']+['replacementValue']+['delete']+['post'])
@@ -43,7 +48,7 @@ with open(filename) as csvfile:
         itemID = row['itemID']
         replacedValue = row['replacedValue'].decode('utf-8')
         replacementValue = row['replacementValue'].decode('utf-8')
-        itemMetadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify).json()
+        itemMetadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
         for element in itemMetadata:
             languageValue = element['language']
             if element['key'] == replacedKey and element['value'] == replacedValue:
@@ -64,8 +69,8 @@ with open(filename) as csvfile:
         print itemMetadata
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
 
-        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify)
+        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
         print delete
-        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=headerAuth, verify=verify, data=itemMetadataProcessed)
+        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
         print post
         f.writerow([itemID]+[replacedKey.encode('utf-8')]+[replacedValue.encode('utf-8')]+[replacementValue.encode('utf-8')]+[delete]+[post])

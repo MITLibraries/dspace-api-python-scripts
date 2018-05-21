@@ -24,8 +24,8 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-oldKey = raw_input('Enter old key: ')
-newKey = raw_input('Enter new key: ')
+key = raw_input('Enter key: ')
+collectionHandle = raw_input('Enter collection handle: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -38,69 +38,56 @@ status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, v
 print 'authenticated'
 
 itemList = []
-endpoint = baseURL+'/rest/communities'
-communities = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
-for i in range (0, len (communities)):
-    communityID = communities[i]['uuid']
-    collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
-    for j in range (0, len (collections)):
-        collectionID = collections[j]['uuid']
-        if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
-            offset = 0
-            items = ''
-            while items != []:
-                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                while items.status_code != 200:
-                    time.sleep(5)
-                    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                items = items.json()
-                for k in range (0, len (items)):
-                    itemID = items[k]['uuid']
-                    itemList.append(itemID)
-                offset = offset + 200
+endpoint = baseURL+'/rest/handle/'+collectionHandle
+collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+collectionID = collection['uuid']
+offset = 0
+items = ''
+while items != []:
+    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
+    while items.status_code != 200:
+        time.sleep(5)
+        items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
+    items = items.json()
+    for k in range (0, len (items)):
+        itemID = items[k]['uuid']
+        itemList.append(itemID)
+    offset = offset + 200
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
 
-recordsEdited = 0
-elementsEdited = 0
-f=csv.writer(open(filePath+'replaceKey'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
-f.writerow(['itemID']+['replacedKey']+['replacedValue']+['delete']+['post'])
+f=csv.writer(open(filePath+'languageTagUpdate'+key+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f.writerow(['itemID']+['key'])
 for number, itemID in enumerate(itemList):
-    replacedElement = ''
     itemMetadataProcessed = []
     itemsRemaining = len(itemList) - number
     print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
-        if metadata[l]['key'] == oldKey:
-            replacedElement = metadata[l]
+        if metadata[l]['key'] == key and metadata[l]['language'] == '':
             updatedMetadataElement = {}
-            updatedMetadataElement['key'] = newKey
-            updatedMetadataElement['value'] = unicode(replacedElement['value'])
-            updatedMetadataElement['language'] = unicode(replacedElement['language'])
-            print updatedMetadataElement
+            updatedMetadataElement['key'] = metadata[l]['key']
+            updatedMetadataElement['value'] = metadata[l]['value']
+            updatedMetadataElement['language'] = 'en_US'
             itemMetadataProcessed.append(updatedMetadataElement)
-            provNote = '\''+oldKey+'\' was replaced by \''+newKey+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+            provNote = 'The language tag for \''+metadata[l]['key']+': '+metadata[l]['value']+'\' was changed from \'null\' to \'en_US\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
             provNoteElement = {}
             provNoteElement['key'] = 'dc.description.provenance'
             provNoteElement['value'] = unicode(provNote)
             provNoteElement['language'] = 'en_US'
             itemMetadataProcessed.append(provNoteElement)
-            elementsEdited = elementsEdited + 1
         else:
-            if metadata[l] not in itemMetadataProcessed:
-                itemMetadataProcessed.append(metadata[l])
-    if replacedElement != '':
-        recordsEdited = recordsEdited + 1
+            itemMetadataProcessed.append(metadata[l])
+    if 'The language tag for \''+key in json.dumps(itemMetadataProcessed):
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemID, recordsEdited, elementsEdited
+        print 'updated', itemID
         delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
         print delete
         post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
         print post
-        f.writerow([itemID]+[replacedElement['key']]+[replacedElement['value'].encode('utf-8')]+[delete]+[post])
+        f.writerow([itemID]+[key])
     else:
         print 'not updated', itemID
 
