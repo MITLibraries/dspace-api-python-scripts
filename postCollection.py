@@ -25,15 +25,10 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-# directory = raw_input('Enter directory name: ')
-# fileExtension = '.'+raw_input('Enter file extension: ')
-# communityHandle = raw_input('Enter community handle: ')
-# collectionName = raw_input('Enter collection name: ')
-
-directory = 'C:/Users/ehanson8/Documents/GitHub/dspace-editing/test'
-fileExtension = '.jpg'
-communityHandle = '1774.2/2'
-collectionName = 'Test collection'
+directory = raw_input('Enter directory name: ')
+fileExtension = '.'+raw_input('Enter file extension: ')
+communityHandle = raw_input('Enter community handle: ')
+collectionName = raw_input('Enter collection name: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
