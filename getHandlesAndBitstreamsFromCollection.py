@@ -40,7 +40,7 @@ endpoint = baseURL+'/rest/handle/'+handle
 collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 collectionID = collection['uuid']
 collectionTitle = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
-itemList = []
+itemList = {}
 offset = 0
 items = ''
 while items != []:
@@ -53,18 +53,22 @@ while items != []:
         itemID = items[k]['uuid']
         itemID = '/rest/items/'+itemID
         itemHandle = items[k]['handle']
-        itemList.append(itemID)
+        itemList[itemID] = itemHandle
     offset = offset + 200
     print offset
 
-f=csv.writer(open(filePath+'handlesAndBitstreams.csv', 'wb'))
+handle = handle.replace('/','-')
+f=csv.writer(open(filePath+handle+'handlesAndBitstreams.csv', 'wb'))
 f.writerow(['bitstream']+['handle'])
 
-for item in itemList:
+for k,v in itemList.items():
+    itemID = k
+    itemHandle = v
     bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=header, cookies=cookies, verify=verify).json()
     for bitstream in bitstreams:
+        print json.dumps(bitstream)
         fileName = bitstream['name']
-        fileName.replace('.pdf','')
+        fileName.replace('.jpg','')
         f.writerow([fileName]+[itemHandle])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
