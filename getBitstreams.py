@@ -15,11 +15,11 @@ limit = 100
 # begin: argument parsing
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-v", "--verbose", action="store_true",
-                    help="increase output verbosity")
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='increase output verbosity')
 
-parser.add_argument("-i", "--handle",
-                    help="handle of the object to retreive. optional - if not provided, the script will ask for input")
+parser.add_argument('-i', '--handle',
+                    help='handle of the object to retreive. optional - if not provided, the script will ask for input')
 
 # bitstream formats:
 # REM: set number of args
@@ -28,16 +28,16 @@ parser.add_argument("-i", "--handle",
 # '?' == 0 or 1.
 # An int is an explicit number of arguments to accept.
 parser.add_argument('-f', '--formats', nargs='*',
-                    help="optional list of bitstream formats. will return all formats if not provided")
+                    help='optional list of bitstream formats. will return all formats if not provided')
 
-parser.add_argument("-dl", "--download", action="store_true",
-                    help="download bitstreams (rather than just retreive metadata about them). default: false")
+parser.add_argument('-dl', '--download', action='store_true',
+                    help='download bitstreams (rather than just retreive metadata about them). default: false')
 
-parser.add_argument("-rt", "--rtimeout", type=int,
-                    help="response timeout - number of seconds to wait for a response. not a timeout for a download or run of the entire script. default: " + str(response_timeout))
+parser.add_argument('-rt', '--rtimeout', type=int,
+                    help='response timeout - number of seconds to wait for a response. not a timeout for a download or run of the entire script. default: ' + str(response_timeout))
 
-parser.add_argument("-l", "--limit", type=int,
-                    help="limit to the number of objects to return in a given request. default = " + str(limit))
+parser.add_argument('-l', '--limit', type=int,
+                    help='limit to the number of objects to return in a given request. default = ' + str(limit))
 
 args = parser.parse_args()
 
@@ -48,21 +48,21 @@ if args.limit:
     limit = args.limit
 
 if args.verbose:
-    print "verbosity turned on"
+    print('verbosity turned on')
 
     if args.handle:
-        print("retreiving object with handle {}").format(args.handle)
+        print('retreiving object with handle {}').format(args.handle)
 
     if args.formats:
-        print('filtering results to the following bitstream formats: %s' % str(args.formats))
+        print('filtering results to the following bitstream formats: {}').format(args.formats)
     else:
-        print 'returning bitstreams of any format'
+        print('returning bitstreams of any format')
 
     if args.download:
-        print "downloading bitstreams"
+        print('downloading bitstreams')
 
     if args.rtimeout:
-        print 'response_timeout set to ' + str(response_timeout)
+        print('response_timeout set to {}').format(response_timeout)
 
 # end: argument parsing
 
@@ -72,11 +72,11 @@ secretsVersion = raw_input('To edit production server, enter the name of the sec
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Accessing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Accessing Stage')
 else:
-    print 'Editing Stage'
+    print('Accessing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -136,7 +136,7 @@ if dsObject['type'] == 'collection':
             f.writerow([fileName]+[itemHandle])
 
 elif dsObject['type'] == 'item':
-    if args.verbose: print dsObject['type']
+    if args.verbose: print(dsObject['type'])
 
     itemHandle = dsObject['handle']
 
@@ -157,7 +157,7 @@ elif dsObject['type'] == 'item':
         bitstreams = bitstreams.json()
         for bitstream in bitstreams:
             if args.formats and bitstream['format'] in args.formats or not args.formats:
-                if args.verbose: print bitstream
+                if args.verbose: print(bitstream)
                 sequenceId = str(bitstream['sequenceId'])
                 fileName = bitstream['name']
                 fileFormat = bitstream['format']
@@ -172,11 +172,11 @@ elif dsObject['type'] == 'item':
     for dlBitstream in dlBitstreams:
         response = requests.get(baseURL + str(dlBitstream['retrieveLink']), headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
         response.raise_for_status()  # ensure we notice bad responses
-        file = open(filePath + dlBitstream['name'], "wb")
+        file = open(filePath + dlBitstream['name'], 'wb')
         file.write(response.content)
         file.close()
 else:
-    print 'object is of an invalid type for this script (' + dsObject['type'] + '). please enter the handle of an item or a collection.'
+    print('object is of an invalid type for this script ({}). please enter the handle of an item or a collection.').format(dsObject['type'])
 
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
@@ -184,4 +184,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: {:01.0f}:{:02.0f}:{:02.0f}').format(h, m, s)
