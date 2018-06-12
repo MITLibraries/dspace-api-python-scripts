@@ -102,6 +102,7 @@ def main():
     # NOTE: expanding bitstreams to get the count, in case this is an item
     endpoint = baseURL+'/rest/handle/'+handle+'?expand=bitstreams'
     dsObject = requests.get(endpoint, headers=header, cookies=cookies, verify=verify, timeout=response_timeout).json()
+    dsObject.raise_for_status()  # ensure we notice bad responses
     if args.verbose: print dsObject
     dsObjectID = dsObject['uuid']
     # TODO: extend
