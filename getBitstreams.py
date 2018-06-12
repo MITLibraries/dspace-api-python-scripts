@@ -4,6 +4,8 @@ import time
 import csv
 import urllib3
 import argparse
+import os
+import re
 
 
 def main():
@@ -139,8 +141,12 @@ def main():
         if args.verbose: print(dsObject['type'])
 
         itemHandle = dsObject['handle']
+        handleID = re.sub(r'.*\/', '', itemHandle)
+        itemPath = filePath + '/' + handleID + '/'
+        if not os.path.exists(itemPath):
+            os.makedirs(itemPath)
 
-        f = csv.writer(open(filePath+itemHandle.replace('/', '-')+'_bitstreams.csv', 'wb'))
+        f = csv.writer(open(itemPath + handleID + '_bitstreams.csv', 'wb'))
         f.writerow(['sequenceId']+['name']+['format']+['bundleName'])
 
         bitstreamCount = len(dsObject['bitstreams'])
@@ -171,11 +177,12 @@ def main():
             bitstreamCount -= limit
 
         for dlBitstream in dlBitstreams:
-            response = requests.get(baseURL + str(dlBitstream['retrieveLink']), headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
-            response.raise_for_status()  # ensure we notice bad responses
-            file = open(filePath + dlBitstream['name'], 'wb')
-            file.write(response.content)
-            file.close()
+            if not os.path.isfile(itemPath + dlBitstream['name']):
+                response = requests.get(baseURL + str(dlBitstream['retrieveLink']), headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
+                response.raise_for_status()  # ensure we notice bad responses
+                file = open(itemPath + dlBitstream['name'], 'wb')
+                file.write(response.content)
+                file.close()
     else:
         print('object is of an invalid type for this script ({}). please enter the handle of an item or a collection.').format(dsObject['type'])
 
