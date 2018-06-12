@@ -96,10 +96,7 @@ def main():
     header = {'content-type': 'application/json', 'accept': 'application/json'}
     session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data, timeout=response_timeout).cookies['JSESSIONID']
     cookies = {'JSESSIONID': session}
-    headerFileUpload = {'accept': 'application/json'}
-    cookiesFileUpload = cookies
     status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify, timeout=response_timeout).json()
-    userFullName = status['fullname']
     print 'authenticated'
 
     # NOTE: expanding bitstreams to get the count, in case this is an item
