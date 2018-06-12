@@ -103,8 +103,9 @@ def main():
 
     # NOTE: expanding bitstreams to get the count, in case this is an item
     endpoint = baseURL+'/rest/handle/'+handle+'?expand=bitstreams'
-    dsObject = requests.get(endpoint, headers=header, cookies=cookies, verify=verify, timeout=response_timeout).json()
+    dsObject = requests.get(endpoint, headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
     dsObject.raise_for_status()  # ensure we notice bad responses
+    dsObject = dsObject.json()
     if args.verbose: print dsObject
     dsObjectID = dsObject['uuid']
     # TODO: extend
@@ -131,7 +132,9 @@ def main():
         f.writerow(['bitstream']+['handle'])
 
         for item in itemList:
-            bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=header, cookies=cookies, verify=verify, timeout=response_timeout).json()
+            bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
+            bitstreams.raise_for_status()  # ensure we notice bad responses
+            bitstreams = bitstreams.json()
             for bitstream in bitstreams:
                 fileName = bitstream['name']
                 fileName.replace('.pdf', '')
