@@ -38,6 +38,9 @@ def main():
     parser.add_argument('-f', '--formats', nargs='*',
                         help='optional list of bitstream formats. will return all formats if not provided')
 
+    parser.add_argument('-b', '--bundles', nargs='*',
+                        help='optional list of bundles (e.g. ORIGINAL or LICENSE). will return all bundles if not provided')
+
     parser.add_argument('-dl', '--download', action='store_true',
                         help='download bitstreams (rather than just retreive metadata about them). default: false')
 
@@ -74,10 +77,10 @@ def main():
     else:
         print('Accessing Stage')
 
-    if args.rtimeout:
+    if not args.rtimeout:
         args.rtimeout = default_response_timeout
 
-    if args.limit:
+    if not args.limit:
         args.limit = default_limit
 
     if not args.baseURL:
@@ -110,6 +113,11 @@ def main():
             print('filtering results to the following bitstream formats: {}').format(args.formats)
         else:
             print('returning bitstreams of any format')
+
+        if args.bundles:
+            print('filtering results to the following bundles: {}').format(args.bundles)
+        else:
+            print('returning bitstreams from any bundle')
 
         if args.download:
             print('downloading bitstreams')
@@ -190,7 +198,8 @@ def processItem(dsObject, args):
         bitstreams.raise_for_status()  # ensure we notice bad responses
         bitstreams = bitstreams.json()
         for bitstream in bitstreams:
-            if args.formats and bitstream['format'] in args.formats or not args.formats:
+            if (args.formats and bitstream['format'] in args.formats or not args.formats
+                    and args.bundles and bitstream['bundleName'] in args.bundles or not args.bundles):
                 if args.verbose: print(bitstream)
                 sequenceId = str(bitstream['sequenceId'])
                 fileName = bitstream['name']
