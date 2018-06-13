@@ -13,8 +13,12 @@ def main():
     import secrets
 
     # define defaults
-    response_timeout = 1
-    limit = 100
+    default_response_timeout = 1
+    default_limit = 100
+
+    # define globals for requests, so we needn't pass too many arguments to our functions
+    global header
+    global cookies
 
     # begin: argument parsing
     parser = argparse.ArgumentParser()
@@ -38,18 +42,63 @@ def main():
                         help='download bitstreams (rather than just retreive metadata about them). default: false')
 
     parser.add_argument('-rt', '--rtimeout', type=int,
-                        help='response timeout - number of seconds to wait for a response. not a timeout for a download or run of the entire script. default: ' + str(response_timeout))
+                        help='response timeout - number of seconds to wait for a response. not a timeout for a download or run of the entire script. default: ' + str(default_response_timeout))
 
     parser.add_argument('-l', '--limit', type=int,
-                        help='limit to the number of objects to return in a given request. default: ' + str(limit))
+                        help='limit to the number of objects to return in a given request. default: ' + str(default_limit))
+
+    parser.add_argument('-u', '--baseURL',
+                        help='url of the dspace instance. can be read from the secrets file')
+
+    parser.add_argument('-e', '--email',
+                        help='email of an authorized dspace user. can be read from the secrets file')
+
+    parser.add_argument('-p', '--password',
+                        help='password of an authorized dspace user. can be read from the secrets file')
+
+    parser.add_argument('-d', '--filePath',
+                        help='directory into which output files will be written. can be read from the secrets file')
+
+    parser.add_argument('-s', '--verify',
+                        help='ssl verification enabled (boolean) OR the path to a CA_BUNDLE file or directory with certificates of trusted CAs. use false if using an ssh tunnel to connect to the dspace api. can be read from the secrets file')
 
     args = parser.parse_args()
 
+    secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+    if secretsVersion != '':
+        try:
+            secrets = __import__(secretsVersion)
+            print('Accessing Production')
+        except ImportError:
+            print('Accessing Stage')
+    else:
+        print('Accessing Stage')
+
     if args.rtimeout:
-        response_timeout = args.rtimeout
+        args.rtimeout = default_response_timeout
 
     if args.limit:
-        limit = args.limit
+        args.limit = default_limit
+
+    if not args.baseURL:
+        args.baseURL = secrets.baseURL
+
+    if not args.email:
+        args.email = secrets.email
+
+    if not args.password:
+        args.password = secrets.password
+
+    if not args.filePath:
+        args.filePath = secrets.filePath
+
+    if not args.verify:
+        args.verify = secrets.verify
+
+    if args.handle:
+        handle = args.handle
+    else:
+        handle = raw_input('Enter handle: ')
 
     if args.verbose:
         print('verbosity turned on')
@@ -66,44 +115,22 @@ def main():
             print('downloading bitstreams')
 
         if args.rtimeout:
-            print('response_timeout set to {}').format(response_timeout)
+            print('response_timeout set to {}').format(args.rtimeout)
 
     # end: argument parsing
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
-    if secretsVersion != '':
-        try:
-            secrets = __import__(secretsVersion)
-            print('Accessing Production')
-        except ImportError:
-            print('Accessing Stage')
-    else:
-        print('Accessing Stage')
-
-    baseURL = secrets.baseURL
-    email = secrets.email
-    password = secrets.password
-    filePath = secrets.filePath
-    verify = secrets.verify
-
-    if args.handle:
-        handle = args.handle
-    else:
-        handle = raw_input('Enter handle: ')
-
     startTime = time.time()
-    data = {'email': email, 'password': password}
+    data = {'email': args.email, 'password': args.password}
     header = {'content-type': 'application/json', 'accept': 'application/json'}
-    session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data, timeout=response_timeout).cookies['JSESSIONID']
+    session = requests.post(args.baseURL+'/rest/login', headers=header, verify=args.verify, params=data, timeout=args.rtimeout).cookies['JSESSIONID']
     cookies = {'JSESSIONID': session}
-    status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify, timeout=response_timeout).json()
     print 'authenticated'
 
-    # NOTE: expanding bitstreams to get the count, in case this is an item
-    endpoint = baseURL+'/rest/handle/'+handle+'?expand=bitstreams'
-    dsObject = requests.get(endpoint, headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
+    # NOTE: expanding items (of collections) and bitstreams (of items) to get the count
+    endpoint = args.baseURL+'/rest/handle/'+handle+'?expand=items,bitstreams'
+    dsObject = requests.get(endpoint, headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
     dsObject.raise_for_status()  # ensure we notice bad responses
     dsObject = dsObject.json()
     if args.verbose: print dsObject
@@ -112,90 +139,77 @@ def main():
     if dsObject['type'] == 'collection':
         if args.verbose: print dsObject['type']
 
-        itemList = []
-        offset = 0
-        items = ''
-        while items != []:
-            items = requests.get(baseURL+'/rest/collections/'+str(dsObjectID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
-            while items.status_code != 200:
-                time.sleep(5)
-                items = requests.get(baseURL+'/rest/collections/'+str(dsObjectID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
-            items = items.json()
-            for k in range(0, len(items)):
-                itemID = items[k]['uuid']
-                itemID = '/rest/items/'+itemID
-                itemHandle = items[k]['handle']
-                itemList.append(itemID)
-            offset = offset + 200
-
-        f = csv.writer(open(filePath+'handlesAndBitstreams.csv', 'wb'))
-        f.writerow(['bitstream']+['handle'])
-
-        for item in itemList:
-            bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
-            bitstreams.raise_for_status()  # ensure we notice bad responses
-            bitstreams = bitstreams.json()
-            for bitstream in bitstreams:
-                fileName = bitstream['name']
-                fileName.replace('.pdf', '')
-                f.writerow([fileName]+[itemHandle])
+        itemCount = len(dsObject['items'])
+        print('{} items').format(itemCount)
+        for collItem in dsObject['items']:
+            endpoint = args.baseURL + collItem['link'] + '?expand=bitstreams'
+            item = requests.get(endpoint, headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
+            item.raise_for_status()  # ensure we notice bad responses
+            item = item.json()
+            processItem(item, args)
 
     elif dsObject['type'] == 'item':
-        if args.verbose: print(dsObject['type'])
+        processItem(dsObject, args)
 
-        itemHandle = dsObject['handle']
-        handleID = re.sub(r'.*\/', '', itemHandle)
-        itemPath = filePath + '/' + handleID + '/'
-        if not os.path.exists(itemPath):
-            os.makedirs(itemPath)
-
-        f = csv.writer(open(itemPath + handleID + '_bitstreams.csv', 'wb'))
-        f.writerow(['sequenceId']+['name']+['format']+['bundleName'])
-
-        bitstreamCount = len(dsObject['bitstreams'])
-        dlBitstreams = []
-        offset = 0
-        bitstreams = ''
-        # while bitstreams != []:
-        while bitstreamCount > 0:
-            # don't retreive more bitstreams than we have left
-            if limit > bitstreamCount:
-                limit = bitstreamCount
-            print('bitstreamCount: {0} offset: {1} limit: {2}').format(bitstreamCount, offset, limit)
-            bitstreams = requests.get(baseURL+'/rest/items/' + str(dsObjectID) + '/bitstreams?limit=' + str(limit) + '&offset='+str(offset), headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
-            bitstreams.raise_for_status()  # ensure we notice bad responses
-            bitstreams = bitstreams.json()
-            for bitstream in bitstreams:
-                if args.formats and bitstream['format'] in args.formats or not args.formats:
-                    if args.verbose: print(bitstream)
-                    sequenceId = str(bitstream['sequenceId'])
-                    fileName = bitstream['name']
-                    fileFormat = bitstream['format']
-                    bundleName = bitstream['bundleName']
-                    f.writerow([sequenceId]+[fileName]+[fileFormat]+[bundleName])
-
-                    if args.download:
-                        dlBitstreams.append(bitstream)
-            offset += limit
-            bitstreamCount -= limit
-
-        for dlBitstream in dlBitstreams:
-            if not os.path.isfile(itemPath + dlBitstream['name']):
-                response = requests.get(baseURL + str(dlBitstream['retrieveLink']), headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
-                response.raise_for_status()  # ensure we notice bad responses
-                file = open(itemPath + dlBitstream['name'], 'wb')
-                file.write(response.content)
-                file.close()
     else:
         print('object is of an invalid type for this script ({}). please enter the handle of an item or a collection.').format(dsObject['type'])
 
-
-    logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify, timeout=response_timeout)
+    logout = requests.post(args.baseURL+'/rest/logout', headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
 
     elapsedTime = time.time() - startTime
     m, s = divmod(elapsedTime, 60)
     h, m = divmod(m, 60)
     print('Total script run time: {:01.0f}:{:02.0f}:{:02.0f}').format(h, m, s)
+
+
+def processItem(dsObject, args):
+    if args.verbose: print(dsObject['type'])
+
+    itemHandle = dsObject['handle']
+    handleID = re.sub(r'.*\/', '', itemHandle)
+    itemPath = args.filePath + '/' + handleID + '/'
+    if not os.path.exists(itemPath):
+        os.makedirs(itemPath)
+
+    f = csv.writer(open(itemPath + handleID + '_bitstreams.csv', 'wb'))
+    f.writerow(['sequenceId']+['name']+['format']+['bundleName'])
+
+    itemID = dsObject['uuid']
+    bitstreamCount = len(dsObject['bitstreams'])
+    dlBitstreams = []
+    offset = 0
+    limit = args.limit
+    bitstreams = ''
+    # while bitstreams != []:
+    while bitstreamCount > 0:
+        # don't retreive more bitstreams than we have left
+        if limit > bitstreamCount:
+            limit = bitstreamCount
+        print('bitstreamCount: {0} offset: {1} limit: {2}').format(bitstreamCount, offset, limit)
+        bitstreams = requests.get(args.baseURL+'/rest/items/' + str(itemID) + '/bitstreams?limit=' + str(limit) + '&offset='+str(offset), headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
+        bitstreams.raise_for_status()  # ensure we notice bad responses
+        bitstreams = bitstreams.json()
+        for bitstream in bitstreams:
+            if args.formats and bitstream['format'] in args.formats or not args.formats:
+                if args.verbose: print(bitstream)
+                sequenceId = str(bitstream['sequenceId'])
+                fileName = bitstream['name']
+                fileFormat = bitstream['format']
+                bundleName = bitstream['bundleName']
+                f.writerow([sequenceId]+[fileName]+[fileFormat]+[bundleName])
+
+                if args.download:
+                    dlBitstreams.append(bitstream)
+        offset += limit
+        bitstreamCount -= limit
+
+    for dlBitstream in dlBitstreams:
+        if not os.path.isfile(itemPath + dlBitstream['name']):
+            response = requests.get(args.baseURL + str(dlBitstream['retrieveLink']), headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
+            response.raise_for_status()  # ensure we notice bad responses
+            file = open(itemPath + dlBitstream['name'], 'wb')
+            file.write(response.content)
+            file.close()
 
 
 if __name__ == "__main__": main()
