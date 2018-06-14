@@ -6,6 +6,27 @@ import time
 import os
 import csv
 import urllib3
+import collections
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--directory', help='the directory of files to be ingested. optional - if not provided, the script will ask for input')
+parser.add_argument('-e', '--fileExtension', help='the extension of files to be ingested. optional - if not provided, the script will ask for input')
+parser.add_argument('-h', '--handle', help='handle of the object to retreive. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.uri:
+    directory = args.directory
+else:
+    directory = raw_input('Enter directory name: ')
+if args.uri:
+    fileExtension = args.fileExtension
+else:
+    fileExtension = '.'+raw_input('Enter file extension: ')
+if args.handle:
+    handle = args.handle
+else:
+    handle = raw_input('Enter handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -25,10 +46,6 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-directory = raw_input('Enter directory name: ')
-fileExtension = '.'+raw_input('Enter file extension: ')
-collectionHandle = raw_input('Enter collection handle: ')
-
 startTime = time.time()
 
 #create file list and export csv
@@ -37,13 +54,12 @@ for root, dirs, files in os.walk(directory, topdown=True):
     for file in files:
         if file.endswith(fileExtension):
             fileList[file[:file.index('.')]] = os.path.join(root, file).replace('\\','/')
-            print file
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print 'File list creation time: ','%d:%02d:%02d' % (h, m, s)
 
-f=csv.writer(open(collectionHandle.replace('/','-')+'addedFilesList.csv', 'wb'))
+f=csv.writer(open(handle.replace('/','-')+'addedFilesList.csv', 'wb'))
 f.writerow(['itemID'])
 
 for k,v in fileList.items():
@@ -62,15 +78,17 @@ userFullName = status['fullname']
 print 'authenticated'
 
 #Get collection ID
-endpoint = baseURL+'/rest/handle/'+collectionHandle
+endpoint = baseURL+'/rest/handle/'+handle
 collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 collectionID = str(collection['uuid'])
+print collectionID
 
 # Post items
-collectionMetadata = json.load(open(directory+'/'+'metadata.json'))
+collectionMetadata = json.load(open(directory+'/'+'metadataNewFiles.json'))
 for itemMetadata in collectionMetadata:
     counter = counter - 1
     print 'Items remaining: ', counter
+    fileExists = ''
     updatedItemMetadata = {}
     updatedItemMetadataList = []
     for element in itemMetadata['metadata']:
@@ -80,15 +98,42 @@ for itemMetadata in collectionMetadata:
             updatedItemMetadataList.append(element)
     updatedItemMetadata['metadata'] = updatedItemMetadataList
     updatedItemMetadata = json.dumps(updatedItemMetadata)
-    post = requests.post(baseURL+'/rest/collections/'+collectionID+'/items', headers=header, cookies=cookies, verify=verify, data=updatedItemMetadata).json()
-    itemID = post['link']
+    for k in fileList:
+        if fileIdentifier in k:
+            fileExists = True
+    if fileExists == True:
+        print fileIdentifier
+        post = requests.post(baseURL+'/rest/collections/'+collectionID+'/items', headers=header, cookies=cookies, verify=verify, data=updatedItemMetadata).json()
+        print json.dumps(post)
+        itemID = post['link']
 
-    #Post bitstream
-    bitstream = fileList[fileIdentifier]
-    fileName = bitstream[bitstream.rfind('/')+1:]
-    data = open(bitstream, 'rb')
-    files = {'file': open(bitstream, 'rb')}
-    post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, verify=verify, data=data).json()
+    # #Post bitstream - front and back
+    # for k,v in fileList.items():
+    #     if k == fileIdentifier + '-Front':
+    #         bitstream = fileList[k]
+    #         fileName = bitstream[bitstream.rfind('/')+1:]
+    #         data = open(bitstream, 'rb')
+    #         post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, cookies=cookies, verify=verify, data=data).json()
+    #         print post
+    #
+    # for k,v in fileList.items():
+    #     if k == fileIdentifier + '-Back':
+    #         bitstream = fileList[k]
+    #         fileName = bitstream[bitstream.rfind('/')+1:]
+    #         data = open(bitstream, 'rb')
+    #         post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, cookies=cookies, verify=verify, data=data).json()
+    #         print post
+
+    #Post bitstream - starts with file identifier
+    orderedFileList = collections.OrderedDict(sorted(fileList.items()))
+    for k,v in orderedFileList.items():
+        if k.startswith(fileIdentifier):
+            bitstream = orderedFileList[k]
+            fileName = bitstream[bitstream.rfind('/')+1:]
+            print fileName
+            data = open(bitstream, 'rb')
+            post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, cookies=cookies, verify=verify, data=data).json()
+            print post
 
     #Create provenance notes
     provNote = {}
@@ -110,7 +155,6 @@ for itemMetadata in collectionMetadata:
     provNote2 = {}
     provNote2['key'] = 'dc.description.provenance'
     provNote2['language'] = 'en_US'
-
     provNote2Value = 'Made available in DSpace on '+utcTime+' (GMT). No. of bitstreams: '+str(bitstreamCount)
     for bitstream in bitstreams:
         fileName = bitstream['name']
