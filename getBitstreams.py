@@ -199,8 +199,8 @@ def processItem(dsObject, args):
         bitstreams.raise_for_status()  # ensure we notice bad responses
         bitstreams = bitstreams.json()
         for bitstream in bitstreams:
-            if (args.formats and bitstream['format'] in args.formats or not args.formats
-                    and args.bundles and bitstream['bundleName'] in args.bundles or not args.bundles):
+            if ((args.formats and bitstream['format'] in args.formats or not args.formats)
+                    and (args.bundles and bitstream['bundleName'] in args.bundles or not args.bundles)):
                 if args.verbose: print(bitstream)
                 sequenceId = str(bitstream['sequenceId'])
                 fileName = bitstream['name']
