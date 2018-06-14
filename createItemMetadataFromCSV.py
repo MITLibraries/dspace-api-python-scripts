@@ -13,7 +13,7 @@ def createMetadataElementCSV (key, valueSource, language):
             metadata.append(metadataElement)
     else:
         pass
-        
+
 def createMetadataElementCSVSplitField (key, valueSource, language):
     if row[valueSource] != '':
         if '|' in row[valueSource]:
@@ -54,7 +54,7 @@ with open(filename) as csvfile:
         createMetadataElementCSV('fileIdentifier', '????', '')
         createMetadataElementCSV('dc.contributor.author', '????', '')
         createMetadataElementCSV('dc.contributor.other', '????', '')
-        createMetadataElementCSV('dc.date.created', '????', '')
+        createMetadataElementCSV('dc.date.issued', '????', '')
         createMetadataElementCSV('dc.description.abstract', '????', 'en_US')
         createMetadataElementCSV('dc.format.extent', '????', '')
         createMetadataElementDirect('dc.format.mimetype', '????', 'en_US')
