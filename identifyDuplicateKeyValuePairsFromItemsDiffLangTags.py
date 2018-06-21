@@ -43,7 +43,7 @@ for i in range (0, len (communities)):
     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
     for j in range (0, len (collections)):
         collectionID = collections[j]['uuid']
-        if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
+        if collectionID != '45794375-6640-4efe-848e-082e60bae375':
             offset = 0
             items = ''
             while items != []:
@@ -61,7 +61,7 @@ m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
 
-f=csv.writer(open(filePath+'DuplicatesRecordsDiffLangTags'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'DuplicateKeysWithDiffLangTags'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
 f.writerow(['itemID']+['key:value'])
 for number, itemID in enumerate(itemList):
     itemMetadataProcessed = []
