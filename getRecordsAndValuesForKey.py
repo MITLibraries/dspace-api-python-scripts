@@ -4,6 +4,16 @@ import secrets
 import csv
 import time
 import urllib3
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-k', '--key', help='the key to be searched. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.key:
+    key = args.key
+else:
+    key = raw_input('Enter the key: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,8 +33,6 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-key = raw_input('Enter key: ')
-
 startTime = time.time()
 data = {'email':email,'password':password}
 header = {'content-type':'application/json','accept':'application/json'}
@@ -36,45 +44,29 @@ status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, v
 userFullName = status['fullname']
 print 'authenticated'
 
-itemList = []
-endpoint = baseURL+'/rest/communities'
-communities = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
-for i in range (0, len (communities)):
-    communityID = communities[i]['uuid']
-    collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
-    for j in range (0, len (collections)):
-        collectionID = collections[j]['uuid']
-        if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
-            offset = 0
-            items = ''
-            while items != []:
-                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                while items.status_code != 200:
-                    time.sleep(5)
-                    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                items = items.json()
-                for k in range (0, len (items)):
-                    itemID = items[k]['uuid']
-                    itemList.append(itemID)
-                offset = offset + 200
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
-
 f=csv.writer(open(filePath+'recordsWith'+key+'.csv', 'wb'))
 f.writerow(['itemID']+['uri']+[key])
-for number, itemID in enumerate(itemList):
-    itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
-    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-    for l in range (0, len (metadata)):
-        if metadata[l]['key'] == key:
-            metadataValue = metadata[l]['value']
-            for l in range (0, len (metadata)):
-                if metadata[l]['key'] == 'dc.identifier.uri':
-                    uri = metadata[l]['value']
-            f.writerow([itemID]+[uri]+[metadataValue.encode('utf8')])
+offset = 0
+recordsEdited = 0
+items = ''
+while items != []:
+    endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=exists&query_val[]=&limit=200&offset='+str(offset)
+    print endpoint
+    response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+    items = response['items']
+    for item in items:
+        itemMetadataProcessed = []
+        itemLink = item['link']
+        metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
+        for l in range (0, len (metadata)):
+            if metadata[l]['key'] == key:
+                metadataValue = metadata[l]['value'].encode('utf-8')
+                for l in range (0, len (metadata)):
+                    if metadata[l]['key'] == 'dc.identifier.uri':
+                        uri = metadata[l]['value']
+                f.writerow([itemLink]+[uri]+[metadataValue])
+    offset = offset + 200
+    print offset
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

@@ -49,7 +49,7 @@ for i in range (0, len (communities)):
     for j in range (0, len (collections)):
         collectionID = collections[j]['uuid']
         print collectionID
-        if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
+        if collectionID != '45794375-6640-4efe-848e-082e60bae375':
             offset = 0
             items = ''
             while items != []:

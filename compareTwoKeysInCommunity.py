@@ -4,6 +4,26 @@ import secrets
 import csv
 import time
 import urllib3
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-1', '--key', help='the first key to be output. optional - if not provided, the script will ask for input')
+parser.add_argument('-2', '--key2', help='the second key to be output. optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--handle', help='handle of the community to retreive. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.key:
+    key = args.key
+else:
+    key = raw_input('Enter first key: ')
+if args.key2:
+    key2 = args.key2
+else:
+    key2 = raw_input('Enter second key: ')
+if args.handle:
+    handle = args.handle
+else:
+    handle = raw_input('Enter community handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,10 +43,6 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-communityHandle = raw_input('Enter community handle: ')
-key = raw_input('Enter first key: ')
-key2 = raw_input('Enter second key: ')
-
 startTime = time.time()
 data = {'email':email,'password':password}
 header = {'content-type':'application/json','accept':'application/json'}
@@ -37,7 +53,7 @@ cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 print 'authenticated'
 
-endpoint = baseURL+'/rest/handle/'+communityHandle
+endpoint = baseURL+'/rest/handle/'+handle
 community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 communityID = community['uuid']
 
@@ -47,7 +63,7 @@ collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/colle
 for j in range (0, len (collections)):
     collectionID = collections[j]['uuid']
     print collectionID
-    if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
+    if collectionID != '45794375-6640-4efe-848e-082e60bae375':
         offset = 0
         items = ''
         while items != []:
@@ -60,6 +76,7 @@ for j in range (0, len (collections)):
                 itemID = items[k]['uuid']
                 itemList.append(itemID)
             offset = offset + 200
+            print offset
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
