@@ -6,6 +6,7 @@ import urllib3
 import argparse
 import os
 import re
+from six.moves import input
 
 
 def main():
@@ -67,7 +68,7 @@ def main():
 
     args = parser.parse_args()
 
-    secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+    secretsVersion = input('To edit production server, enter the name of the secrets file: ')
     if secretsVersion != '':
         try:
             secrets = __import__(secretsVersion)
@@ -101,21 +102,21 @@ def main():
     if args.handle:
         handle = args.handle
     else:
-        handle = raw_input('Enter handle: ')
+        handle = input('Enter handle: ')
 
     if args.verbose:
         print('verbosity turned on')
 
         if args.handle:
-            print('retreiving object with handle {}').format(args.handle)
+            print('retreiving object with handle {}'.format(args.handle))
 
         if args.formats:
-            print('filtering results to the following bitstream formats: {}').format(args.formats)
+            print('filtering results to the following bitstream formats: {}'.format(args.formats))
         else:
             print('returning bitstreams of any format')
 
         if args.bundles:
-            print('filtering results to the following bundles: {}').format(args.bundles)
+            print('filtering results to the following bundles: {}'.format(args.bundles))
         else:
             print('returning bitstreams from any bundle')
 
@@ -123,7 +124,7 @@ def main():
             print('downloading bitstreams')
 
         if args.rtimeout:
-            print('response_timeout set to {}').format(args.rtimeout)
+            print('response_timeout set to {}'.format(args.rtimeout))
 
     # end: argument parsing
 
@@ -134,21 +135,21 @@ def main():
     header = {'content-type': 'application/json', 'accept': 'application/json'}
     session = requests.post(args.baseURL+'/rest/login', headers=header, verify=args.verify, params=data, timeout=args.rtimeout).cookies['JSESSIONID']
     cookies = {'JSESSIONID': session}
-    print 'authenticated'
+    print('authenticated')
 
     # NOTE: expanding items (of collections) and bitstreams (of items) to get the count
     endpoint = args.baseURL+'/rest/handle/'+handle+'?expand=items,bitstreams'
     dsObject = requests.get(endpoint, headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
     dsObject.raise_for_status()  # ensure we notice bad responses
     dsObject = dsObject.json()
-    if args.verbose: print dsObject
+    if args.verbose: print(dsObject)
     dsObjectID = dsObject['uuid']
     # TODO: extend
     if dsObject['type'] == 'collection':
-        if args.verbose: print dsObject['type']
+        if args.verbose: print(dsObject['type'])
 
         itemCount = len(dsObject['items'])
-        print('{} items').format(itemCount)
+        print('{} items'.format(itemCount))
         for collItem in dsObject['items']:
             endpoint = args.baseURL + collItem['link'] + '?expand=bitstreams'
             item = requests.get(endpoint, headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
@@ -160,14 +161,14 @@ def main():
         processItem(dsObject, args)
 
     else:
-        print('object is of an invalid type for this script ({}). please enter the handle of an item or a collection.').format(dsObject['type'])
+        print('object is of an invalid type for this script ({}). please enter the handle of an item or a collection.'.format(dsObject['type']))
 
     logout = requests.post(args.baseURL+'/rest/logout', headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
 
     elapsedTime = time.time() - startTime
     m, s = divmod(elapsedTime, 60)
     h, m = divmod(m, 60)
-    print('Total script run time: {:01.0f}:{:02.0f}:{:02.0f}').format(h, m, s)
+    print('Total script run time: {:01.0f}:{:02.0f}:{:02.0f}'.format(h, m, s))
 
 
 def processItem(dsObject, args):
@@ -179,7 +180,7 @@ def processItem(dsObject, args):
     if not os.path.exists(itemPath):
         os.makedirs(itemPath)
 
-    f = csv.writer(open(itemPath + handleID + '_bitstreams.csv', 'wb'))
+    f = csv.writer(open(itemPath + handleID + '_bitstreams.csv', 'w'))
     f.writerow(['sequenceId']+['name']+['format']+['bundleName'])
 
     itemID = dsObject['uuid']
@@ -193,13 +194,13 @@ def processItem(dsObject, args):
         # don't retreive more bitstreams than we have left
         if limit > bitstreamCount:
             limit = bitstreamCount
-        print('bitstreamCount: {0} offset: {1} limit: {2}').format(bitstreamCount, offset, limit)
+        print('bitstreamCount: {0} offset: {1} limit: {2}'.format(bitstreamCount, offset, limit))
         bitstreams = requests.get(args.baseURL+'/rest/items/' + str(itemID) + '/bitstreams?limit=' + str(limit) + '&offset='+str(offset), headers=header, cookies=cookies, verify=args.verify, timeout=args.rtimeout)
         bitstreams.raise_for_status()  # ensure we notice bad responses
         bitstreams = bitstreams.json()
         for bitstream in bitstreams:
-            if (args.formats and bitstream['format'] in args.formats or not args.formats
-                    and args.bundles and bitstream['bundleName'] in args.bundles or not args.bundles):
+            if ((args.formats and bitstream['format'] in args.formats or not args.formats)
+                    and (args.bundles and bitstream['bundleName'] in args.bundles or not args.bundles)):
                 if args.verbose: print(bitstream)
                 sequenceId = str(bitstream['sequenceId'])
                 fileName = bitstream['name']
