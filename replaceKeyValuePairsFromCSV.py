@@ -5,6 +5,22 @@ import time
 import csv
 from datetime import datetime
 import urllib3
+import argparse
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--fileName', help='the CSV file of changes. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.fileName:
+    fileName = filePath+args.fileName
+else:
+    fileName = filePath+raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -18,14 +34,6 @@ if secretsVersion != '':
 else:
     print 'Editing Stage'
 
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-
-filename = filePath+raw_input('Enter filename (including \'.csv\'): ')
-
 startTime = time.time()
 data = {'email':email,'password':password}
 header = {'content-type':'application/json','accept':'application/json'}
@@ -36,87 +44,57 @@ cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 print 'authenticated'
 
-itemList = []
-endpoint = baseURL+'/rest/communities'
-communities = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
-for i in range (0, len (communities)):
-    communityID = communities[i]['uuid']
-    collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
-    for j in range (0, len (collections)):
-        collectionID = collections[j]['uuid']
-        if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
-            offset = 0
-            items = ''
-            while items != []:
-                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                while items.status_code != 200:
-                    time.sleep(5)
-                    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                items = items.json()
-                for k in range (0, len (items)):
-                    itemID = items[k]['uuid']
-                    itemList.append(itemID)
-                offset = offset + 200
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
-
-recordsEdited = 0
-elementsEdited = 0
 f=csv.writer(open(filePath+'searchAndReplace'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
 f.writerow(['itemID']+['replacedKey']+['replacedValue']+['delete']+['post'])
-for number, itemID in enumerate(itemList):
-    replacedElement = ''
-    itemMetadataProcessed = []
-    itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
-    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-    with open(filename) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            replacedKey = row['replacedKey']
-            replacementKey = row['replacementKey']
-            replacedValue = row['replacedValue']
-            replacementValue = row['replacementValue']
-            for l in range (0, len (metadata)):
-                languageValue = metadata[l]['language']
-                if metadata[l]['key'] == replacedKey and metadata[l]['value'] == replacedValue:
-                    replacedElement = metadata[l]
-                    updatedMetadataElement = {}
-                    updatedMetadataElement['key'] = replacementKey
-                    updatedMetadataElement['value'] = unicode(replacementValue)
-                    updatedMetadataElement['language'] = languageValue
-                    itemMetadataProcessed.append(updatedMetadataElement)
-                    provNote = '\''+replacedKey+': '+replacedValue+'\' was replaced by \''+replacementKey+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
-                    provNoteElement = {}
-                    provNoteElement['key'] = 'dc.description.provenance'
-                    provNoteElement['value'] = unicode(provNote)
-                    provNoteElement['language'] = 'en_US'
-                    itemMetadataProcessed.append(provNoteElement)
-                    elementsEdited = elementsEdited + 1
-                else:
-                    if metadata[l] not in itemMetadataProcessed:
-                        itemMetadataProcessed.append(metadata[l])
-    if replacedElement != '':
-        print replacedElement
-        itemMetadataProcessed2 = []
-        for m in range (0, len (itemMetadataProcessed)):
-            if itemMetadataProcessed[m]['key'] == replacedElement['key'] and itemMetadataProcessed[m]['value'] == replacedElement['value']:
-                pass
-            else:
-                itemMetadataProcessed2.append(itemMetadataProcessed[m])
-        itemMetadataProcessed = itemMetadataProcessed2
-        recordsEdited = recordsEdited + 1
-        itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemID, recordsEdited, elementsEdited
-        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
-        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
-        f.writerow([itemID]+[replacedElement['key']]+[replacedElement['value']]+[delete]+[post])
-    else:
-        print 'not updated', itemID
+with open(fileName) as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        replacedKey = row['replacedKey']
+        replacementKey = row['replacementKey']
+        replacedValue = row['replacedValue']
+        replacementValue = row['replacementValue']
+        offset = 0
+        recordsEdited = 0
+        items = ''
+        while items != []:
+            endpoint = baseURL+'/rest/filtered-items?query_field[]='+replacedKey+'&query_op[]=equals&query_val[]='+replacedValue+'&limit=200&offset='+str(offset)
+            print endpoint
+            response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+            items = response['items']
+            for item in items:
+                itemMetadataProcessed = []
+                itemLink = item['link']
+                print itemLink
+                metadata = requests.get(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify).json()
+                for l in range (0, len (metadata)):
+                    metadata[l].pop('schema', None)
+                    metadata[l].pop('element', None)
+                    metadata[l].pop('qualifier', None)
+                    languageValue = metadata[l]['language']
+                    if metadata[l]['key'] == replacedKey and metadata[l]['value'] == replacedValue:
+                        replacedElement = metadata[l]
+                        updatedMetadataElement = {}
+                        updatedMetadataElement['key'] = replacementKey
+                        updatedMetadataElement['value'] = unicode(replacementValue)
+                        updatedMetadataElement['language'] = languageValue
+                        itemMetadataProcessed.append(updatedMetadataElement)
+                        provNote = '\''+replacedKey+': '+replacedValue+'\' was replaced by \''+replacementKey+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+                        provNoteElement = {}
+                        provNoteElement['key'] = 'dc.description.provenance'
+                        provNoteElement['value'] = unicode(provNote)
+                        provNoteElement['language'] = 'en_US'
+                        itemMetadataProcessed.append(provNoteElement)
+                    else:
+                        if metadata[l] not in itemMetadataProcessed:
+                            itemMetadataProcessed.append(metadata[l])
+                itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+                delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
+                print delete
+                post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+                print post
+                f.writerow([itemLink]+[replacedElement['key']]+[replacedElement['value']]+[delete]+[post])
+            offset = offset + 200
+            print offset
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

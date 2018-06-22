@@ -23,7 +23,7 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-fileName = filePath+raw_input('Enter filename (including \'.csv\'): ')
+fileName = filePath+raw_input('Enter fileName (including \'.csv\'): ')
 replacedKey = raw_input('Enter key: ')
 
 startTime = time.time()

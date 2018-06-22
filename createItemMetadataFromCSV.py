@@ -43,9 +43,9 @@ def createMetadataElementDirect (key, value, language):
         metadataElement = {'key': key, 'value': value}
         metadata.append(metadataElement)
 
-filename = raw_input('Enter filename (including \'.csv\'): ')
+fileName = raw_input('Enter fileName (including \'.csv\'): ')
 
-with open(filename) as csvfile:
+with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
     counter = 0
     metadataGroup = []

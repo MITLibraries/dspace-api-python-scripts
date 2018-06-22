@@ -34,14 +34,14 @@ cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 print 'authenticated'
 
-filename = filePath+raw_input('Enter filename (including \'.csv\'): ')
+fileName = filePath+raw_input('Enter fileName (including \'.csv\'): ')
 addedKey = raw_input('Enter key: ')
 startTime = time.time()
 
 f=csv.writer(open(filePath+'addKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
 f.writerow(['itemID']+['addedKey']+['addedValue']+['delete']+['post'])
 
-with open(filename) as csvfile:
+with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         addedValue = row['value'].decode('utf-8')
