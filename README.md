@@ -15,14 +15,14 @@ The 'filePath' is directory into which output files will be written and 'handleP
 
 If you are using both a development server and a production server, you can create a separate secrets.py file with a different name (e.g. secretsProd.py) and containing the production server information. When running each of these scripts, you will be prompted to enter the file name (e.g 'secretsProd' without '.py') of an alternate secrets file. If you skip the prompt or incorrectly type the file name, the scripts will default to the information in the secrets.py file. This ensures that you will only edit the production server if you really intend to.
 
-**Note**: All of these scripts skip collection '4dccec82-4cfb-4583-a728-2cb823b15ef0' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
+**Note**: All of these scripts skip collection '45794375-6640-4efe-848e-082e60bae375' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
 
 
-Skips collection 4dccec82-4cfb-4583-a728-2cb823b15ef0:
+Skips collection 45794375-6640-4efe-848e-082e60bae375:
 
                 for j in range (0, len (collections)):
                         collectionID = collections[j]['uuid']
-                        if collectionID != '4dccec82-4cfb-4583-a728-2cb823b15ef0':
+                        if collectionID != '45794375-6640-4efe-848e-082e60bae375':
                                 offset = 0
 
 

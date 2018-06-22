@@ -8,13 +8,19 @@ import urllib3
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-k', '--key', help='the key to be updated. optional - if not provided, the script will ask for input')
+parser.add_argument('-k', '--deletedKey', help='the key to be deleted. optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--handle', help='handle of the community to retreive. optional - if not provided, the script will ask for input')
 args = parser.parse_args()
 
-if args.key:
-    key = args.key
+if args.deletedKey:
+    deletedKey = args.deletedKey
 else:
-    key = raw_input('Enter the key to be updated: ')
+    deletedKey = raw_input('Enter the key to be deleted: ')
+
+if args.handle:
+    handle = args.handle
+else:
+    handle = raw_input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -25,8 +31,6 @@ if secretsVersion != '':
         print 'Editing Production'
     except ImportError:
         print 'Editing Stage'
-else:
-    print 'Editing Stage'
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -42,15 +46,26 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+userFullName = status['fullname']
 print 'authenticated'
 
-f=csv.writer(open(filePath+'languageTagUpdate'+key+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
-f.writerow(['itemID']+['key'])
+endpoint = baseURL+'/rest/handle/'+handle
+community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+communityID = community['uuid']
+collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
+collSels = ''
+for j in range (0, len (collections)):
+    collectionID = collections[j]['uuid']
+    collSel = '&collSel[]=' + collectionID
+    collSels = collSels + collSel
+
+f=csv.writer(open(filePath+'deletedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f.writerow(['handle']+['deletedValue']+['delete']+['post'])
 offset = 0
 recordsEdited = 0
 items = ''
 while items != []:
-    endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=exists&query_val[]=&limit=200&offset='+str(offset)
+    endpoint = baseURL+'/rest/filtered-items?query_field[]='+deletedKey+'&query_op[]=exists&query_val[]='+collSels+'&limit=200&offset='+str(offset)
     print endpoint
     response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
     items = response['items']
@@ -60,13 +75,12 @@ while items != []:
         print itemLink
         metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
         for l in range (0, len (metadata)):
-            if metadata[l]['key'] == key and metadata[l]['language'] == None:
-                updatedMetadataElement = {}
-                updatedMetadataElement['key'] = metadata[l]['key']
-                updatedMetadataElement['value'] = metadata[l]['value']
-                updatedMetadataElement['language'] = 'en_US'
-                itemMetadataProcessed.append(updatedMetadataElement)
-                provNote = 'The language tag for \''+metadata[l]['key']+': '+metadata[l]['value']+'\' was changed from \'null\' to \'en_US\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+            metadata[l].pop('schema', None)
+            metadata[l].pop('element', None)
+            metadata[l].pop('qualifier', None)
+            languageValue = metadata[l]['language']
+            if metadata[l]['key'] == deletedKey:
+                provNote = '\''+deletedKey+'\' was deleted through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
                 provNoteElement = {}
                 provNoteElement['key'] = 'dc.description.provenance'
                 provNoteElement['value'] = unicode(provNote)
@@ -74,13 +88,16 @@ while items != []:
                 itemMetadataProcessed.append(provNoteElement)
             else:
                 itemMetadataProcessed.append(metadata[l])
-            delete = requests.delete(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify)
-            print delete
-            post = requests.put(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-            print post
-            f.writerow([itemLink]+[key])
-        offset = offset + 200
-        print offset
+        recordsEdited = recordsEdited + 1
+        itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+        print 'updated', itemLink, recordsEdited
+        delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
+        print delete
+        post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+        print post
+        f.writerow([itemLink]+[deletedKey]+[delete]+[post])
+    offset = offset + 200
+    print offset
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

@@ -12,7 +12,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', help='the directory of files to be ingested. optional - if not provided, the script will ask for input')
 parser.add_argument('-e', '--fileExtension', help='the extension of files to be ingested. optional - if not provided, the script will ask for input')
-parser.add_argument('-h', '--handle', help='handle of the object to retreive. optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--handle', help='handle of the object to retreive. optional - if not provided, the script will ask for input')
 args = parser.parse_args()
 
 if args.uri:

@@ -1,22 +1,31 @@
 import json
 import requests
 import secrets
-import time
 import csv
-from datetime import datetime
+import time
 import urllib3
 import argparse
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-k', '--deletedKey', help='the key to be deleted. optional - if not provided, the script will ask for input')
+parser.add_argument('-k', '--key', help='the key to be searched. optional - if not provided, the script will ask for input')
+parser.add_argument('-1', '--replacedValue', help='the value to be replaced. optional - if not provided, the script will ask for input')
+parser.add_argument('-2', '--replacementValue', help='the replacement value. optional - if not provided, the script will ask for input')
 parser.add_argument('-i', '--handle', help='handle of the collection to retreive. optional - if not provided, the script will ask for input')
 args = parser.parse_args()
 
-if args.deletedKey:
-    deletedKey = args.deletedKey
+if args.key:
+    key = args.key
 else:
-    deletedKey = raw_input('Enter the key to be deleted: ')
-
+    key = raw_input('Enter the key: ')
+if args.replacedValue:
+    replacedValue = args.replacedValue
+else:
+    replacedValue = raw_input('Enter the value to be replaced: ')
+if args.replacementValue:
+    replacementValue = args.replacementValue
+else:
+    replacementValue = raw_input('Enter the replacement value: ')
 if args.handle:
     handle = args.handle
 else:
@@ -31,8 +40,6 @@ if secretsVersion != '':
         print 'Editing Production'
     except ImportError:
         print 'Editing Stage'
-else:
-    print 'Editing Stage'
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -56,43 +63,51 @@ collection = requests.get(endpoint, headers=header, cookies=cookies, verify=veri
 collectionID = collection['uuid']
 collSels = '&collSel[]=' + collectionID
 
-f=csv.writer(open(filePath+'deletedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
-f.writerow(['handle']+['deletedValue']+['delete']+['post'])
+f=csv.writer(open(filePath+'replacedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f.writerow(['handle']+['replacedValue']+['replacementValue'])
 offset = 0
 recordsEdited = 0
 items = ''
 while items != []:
-    endpoint = baseURL+'/rest/filtered-items?query_field[]='+deletedKey+'&query_op[]=exists&query_val[]='+collSels+'&limit=200&offset='+str(offset)
+    endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=equals&query_val[]='+replacedValue+collSels+'&limit=200&offset='+str(offset)
     print endpoint
+    replacedKey = key
+    replacementKey = key
     response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
     items = response['items']
     for item in items:
         itemMetadataProcessed = []
         itemLink = item['link']
-        print itemLink
         metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
         for l in range (0, len (metadata)):
             metadata[l].pop('schema', None)
             metadata[l].pop('element', None)
             metadata[l].pop('qualifier', None)
             languageValue = metadata[l]['language']
-            if metadata[l]['key'] == deletedKey:
-                provNote = '\''+deletedKey+'\' was deleted through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+            if metadata[l]['key'] == replacedKey and metadata[l]['value'] == replacedValue:
+                replacedElement = metadata[l]
+                updatedMetadataElement = {}
+                updatedMetadataElement['key'] = replacementKey
+                updatedMetadataElement['value'] = unicode(replacementValue)
+                updatedMetadataElement['language'] = languageValue
+                itemMetadataProcessed.append(updatedMetadataElement)
+                provNote = '\''+replacedKey+': '+replacedValue+'\' was replaced by \''+replacementKey+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
                 provNoteElement = {}
                 provNoteElement['key'] = 'dc.description.provenance'
                 provNoteElement['value'] = unicode(provNote)
                 provNoteElement['language'] = 'en_US'
                 itemMetadataProcessed.append(provNoteElement)
+                recordsEdited = recordsEdited + 1
             else:
-                itemMetadataProcessed.append(metadata[l])
-        recordsEdited = recordsEdited + 1
+                if metadata[l] not in itemMetadataProcessed:
+                    itemMetadataProcessed.append(metadata[l])
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
         print 'updated', itemLink, recordsEdited
         delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
         print delete
         post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
         print post
-        f.writerow([itemLink]+[deletedKey]+[delete]+[post])
+        f.writerow([itemLink]+[updatedMetadataElement['key']]+[updatedMetadataElement['value']]+[delete]+[post])
     offset = offset + 200
     print offset
 
