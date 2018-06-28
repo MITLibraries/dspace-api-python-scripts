@@ -40,7 +40,7 @@ status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, v
 userFullName = status['fullname']
 print 'authenticated'
 
-itemList = []
+collectionIds = []
 endpoint = baseURL+'/rest/communities'
 communities = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 for i in range (0, len (communities)):
@@ -48,49 +48,61 @@ for i in range (0, len (communities)):
     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
     for j in range (0, len (collections)):
         collectionID = collections[j]['uuid']
-        print collectionID
         if collectionID != '45794375-6640-4efe-848e-082e60bae375':
-            offset = 0
-            items = ''
-            while items != []:
-                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                while items.status_code != 200:
-                    time.sleep(5)
-                    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-                items = items.json()
-                for k in range (0, len (items)):
-                    itemID = items[k]['uuid']
-                    itemList.append(itemID)
-                offset = offset + 200
-                print offset
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
+            collectionIds.append(collectionID)
 
 os.mkdir(filePathComplete)
 os.mkdir(filePathUnique)
-for number, itemID in enumerate(itemList):
-    itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
-    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-    for l in range (0, len (metadata)):
-        if metadata[l]['key'] != 'dc.description.provenance':
-            key = metadata[l]['key']
-            value = metadata[l]['value'].encode('utf-8')
-            if os.path.isfile(filePathComplete+key+'ValuesComplete.csv') == False:
-                f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'wb'))
-                f.writerow(['itemID']+['value'])
-                f.writerow([itemID]+[value])
-            else:
-                f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'a'))
-                f.writerow([itemID]+[value])
+
+for number, collectionID in enumerate(collectionIds):
+    collectionsRemaining = len(collectionIds) - number
+    print collectionID, 'Collections remaining: ', collectionsRemaining
+    collSels = '&collSel[]=' + collectionID
+    offset = 0
+    recordsEdited = 0
+    items = ''
+    while items != []:
+        setTime = time.time()
+        endpoint = baseURL+'/rest/filtered-items?query_field[]=*&query_op[]=exists&query_val[]='+collSels+'&expand=metadata&limit=20&offset='+str(offset)
+        response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+        items = response['items']
+        for item in items:
+            metadata = item['metadata']
+            for i in range (0, len (metadata)):
+                if metadata[i]['key'] != 'dc.description.provenance':
+                    key = metadata[i]['key']
+                    try:
+                        value = metadata[i]['value'].encode('utf-8')
+                    except:
+                        value = ''
+                    for i in range (0, len (metadata)):
+                        if metadata[i]['key'] == 'dc.identifier.uri':
+                            uri = metadata[i]['value']
+                    if os.path.isfile(filePathComplete+key+'ValuesComplete.csv') == False:
+                        f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'wb'))
+                        f.writerow(['handle']+['value'])
+                        f.writerow([uri]+[value])
+                    else:
+                        f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'a'))
+                        f.writerow([uri]+[value])
+        offset = offset + 20
+        print offset
+
+        setTime = time.time() - setTime
+        m, s = divmod(setTime, 60)
+        h, m = divmod(m, 60)
+        print 'Set run time: ', '%d:%02d:%02d' % (h, m, s)
+
+    elapsedTime = time.time() - startTime
+    m, s = divmod(elapsedTime, 60)
+    h, m = divmod(m, 60)
+    print 'Collection run time: ', '%d:%02d:%02d' % (h, m, s)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print 'Complete value list creation time: ','%d:%02d:%02d' % (h, m, s)
-
+#
 for fileName in os.listdir(filePathComplete):
     reader = csv.DictReader(open(filePathComplete+fileName))
     fileName = fileName.replace('Complete', 'Unique')
