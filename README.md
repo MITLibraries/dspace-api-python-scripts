@@ -36,40 +36,40 @@ No collections skipped:
 #### [allUppercaseValueCheck.py](allUppercaseValueCheck.py)
 
 #### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
-Based on user input, this script extracts the values of two specified keys from a specified community to a CSV file for comparison.
+Based on user input, extracts the values of two specified keys from a specified community to a CSV file for comparison.
 
 #### [findBogusUris.py](findBogusUris.py)
-This script extracts the item ID and the value of the key 'dc.identifier.uri' to a CSV file when the value does not begin with the handlePrefix specified in the secrets.py file.
+Extracts the item ID and the value of the key 'dc.identifier.uri' to a CSV file when the value does not begin with the handlePrefix specified in the secrets.py file.
 
 #### [findDuplicateKeys.py](findDuplicateKeys.py)
-Based on user input, this script extracts item IDs to a CSV file where there are multiple instances of the specified key in the item metadata.
+Based on user input, extracts item IDs to a CSV file where there are multiple instances of the specified key in the item metadata.
 
 #### [getCollectionMetadataJson.py](getCollectionMetadataJson.py)
-Based on user input, this script extracts all of the item metadata from the specified collection to a JSON file.
+Based on user input, extracts all of the item metadata from the specified collection to a JSON file.
 
 #### [getCompleteAndUniqueValuesForAllKeys.py](getCompleteAndUniqueValuesForAllKeys.py)
-This script creates a 'completeValueLists' folder and for all keys used in the repository, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
+Creates a 'completeValueLists' folder and for all keys used in the repository, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
 
 #### [getCompleteAndUniqueValuesForAllKeysInCommunity.py](getCompleteAndUniqueValuesForAllKeysInCommunity.py)
-This script creates a 'completeValueLists' folder and for all keys used in the specified community, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
+Creates a 'completeValueLists' folder and for all keys used in the specified community, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
 
 #### [getGlobalLanguageValues.py](getGlobalLanguageValues.py)
-This script extracts all unique language values used by metadata entries in the repository to a CSV file.
+Extracts all unique language values used by metadata entries in the repository to a CSV file.
 
 #### [getHandlesAndBitstreamsFromCollection.py](getHandlesAndBitstreamsFromCollection.py)
-Based on user input, this script extracts all the handles and bitstreams associated with the items in the specified collection to a CSV file.
+Based on user input, extracts all the handles and bitstreams associated with the items in the specified collection to a CSV file.
 
 #### [getLanguageValuesForKeys.py](getLanguageValuesForKeys.py)
-This script extracts all unique pairs of keys and language values used by metadata entries in the repository to a CSV file.
+Extracts all unique pairs of keys and language values used by metadata entries in the repository to a CSV file.
 
 #### [getRecordsAndValuesForKey.py](getRecordsAndValuesForKey.py)
-Based on user input, this script extracts the ID and URI for all items in the repository with the specified key, as well as the value of the specified key, to a CSV file.
+Based on user input, extracts the ID and URI for all items in the repository with the specified key, as well as the value of the specified key, to a CSV file.
 
 #### [getRecordsAndValuesForKeyInCollection.py](getRecordsAndValuesForKeyInCollection.py)
-Based on user input, this script extracts the ID and URI for all items in the specified collection with the specified key, as well as the value of the specified key, to a CSV file.
+Based on user input, extracts the ID and URI for all items in the specified collection with the specified key, as well as the value of the specified key, to a CSV file.
 
 #### [getRecordsWithKeyAndValue.py](getRecordsWithKeyAndValue.py)
-Based on user input, this script extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
+Based on user input, extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
 
 #### [identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py](identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py)
 
@@ -78,10 +78,10 @@ Based on user input, this script extracts the ID and URI for all items in the re
 #### [identifyItemsMissingKeyInCommunity.py](identifyItemsMissingKeyInCommunity.py)
 
 #### [metadataCollectionsKeysMatrix.py](metadataCollectionsKeysMatrix.py)
-This script creates a matrix containing a count of each time a key appears in each collection in the repository.
+Creates a matrix containing a count of each time a key appears in each collection in the repository.
 
 #### [metadataOverview.py](metadataOverview.py)
-This script produces several CSV files containing different information about the structure and metadata of the repository:
+Produces several CSV files containing different information about the structure and metadata of the repository:
 
 |File Name |Description|
 |--------------------------|--------------------------------------------------------------------------|
