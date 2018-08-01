@@ -59,17 +59,29 @@ while items != []:
 
 handle = handle.replace('/','-')
 f=csv.writer(open(filePath+handle+'handlesAndBitstreams.csv', 'wb'))
-f.writerow(['bitstream']+['handle'])
+f.writerow(['bitstream']+['handle']+['title']+['date']+['description'])
 
 for k,v in itemList.items():
     itemID = k
     itemHandle = v
+    print itemID
+    metadata = requests.get(baseURL+itemID+'/metadata', headers=header, cookies=cookies, verify=verify).json()
+    title = ''
+    date = ''
+    description = ''
+    for i in range (0, len (metadata)):
+        if metadata[i]['key'] == 'dc.title':
+            title = metadata[i]['value']
+        if metadata[i]['key'] == 'dc.date.issued':
+            date = metadata[i]['value']
+        if metadata[i]['key'] == 'dc.description.abstract':
+            description = metadata[i]['value'].encode('utf-8')
+
     bitstreams = requests.get(baseURL+itemID+'/bitstreams', headers=header, cookies=cookies, verify=verify).json()
     for bitstream in bitstreams:
-        print json.dumps(bitstream)
         fileName = bitstream['name']
         fileName.replace('.jpg','')
-        f.writerow([fileName]+[itemHandle])
+        f.writerow([fileName]+[itemHandle]+[title]+[date]+[description])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
