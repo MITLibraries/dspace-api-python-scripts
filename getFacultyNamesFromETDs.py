@@ -56,7 +56,7 @@ for j in range (0, len (collections)):
     collSels = collSels + collSel
 
 
-f=csv.writer(open(filePath+'EtdFacultyNames.csv', 'wb'))
+f=csv.writer(open(filePath+'/ETD RDF/EtdFacultyNames.csv', 'wb'))
 f.writerow(['name'])
 
 nameFields = ['dc.contributor.advisor','dc.contributor.committeeMember','jhuthesis.advisor.externalmember','jhuthesis.advisor.primary','jhuthesis.advisor.secondary']
