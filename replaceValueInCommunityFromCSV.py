@@ -20,9 +20,9 @@ parser.add_argument('-f', '--fileName', help='the CSV file of changes. optional 
 args = parser.parse_args()
 
 if args.fileName:
-    fileName = filePath+args.fileName
+    fileName = filePath+'/ETD RDF/'+args.fileName
 else:
-    fileName = filePath+raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
+    fileName = filePath+'/ETD RDF/'+raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
 if args.handle:
     handle = args.handle
 else:
@@ -63,10 +63,15 @@ f=csv.writer(open(filePath+'replacedValues'+datetime.now().strftime('%Y-%m-%d %H
 f.writerow(['handle']+['replacedValue']+['replacementValue'])
 with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
+    rowCount = len(list(reader))
+with open(fileName) as csvfile:
+    reader = csv.DictReader(csvfile)
     for row in reader:
-        print row
+        rowCount -= 1
         replacedValue = row['replacedValue'].decode('utf-8')
         replacementValue = row['replacementValue'].decode('utf-8')
+        print 'Rows remaining: ', rowCount,
+        print replacedValue, ' -- ', replacementValue
         if replacedValue != replacementValue:
             print replacedValue
             offset = 0
@@ -74,7 +79,6 @@ with open(fileName) as csvfile:
             items = ''
             while items != []:
                 endpoint = baseURL+'/rest/filtered-items?query_field[]=*&query_op[]=equals&query_val[]='+replacedValue+collSels+'&limit=200&offset='+str(offset)
-                print endpoint
                 response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
                 items = response['items']
                 for item in items:
