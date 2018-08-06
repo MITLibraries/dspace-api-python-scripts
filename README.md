@@ -53,6 +53,8 @@ Creates a 'completeValueLists' folder and for all keys used in the repository, e
 #### [getCompleteAndUniqueValuesForAllKeysInCommunity.py](getCompleteAndUniqueValuesForAllKeysInCommunity.py)
 Creates a 'completeValueLists' folder and for all keys used in the specified community, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
 
+#### [getFacultyNamesFromETDs.py](getFacultyNamesFromETDs.py)
+
 #### [getGlobalLanguageValues.py](getGlobalLanguageValues.py)
 Extracts all unique language values used by metadata entries in the repository to a CSV file.
 
