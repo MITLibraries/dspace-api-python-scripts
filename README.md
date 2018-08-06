@@ -39,6 +39,10 @@ Based on user input, adds key-value pairs from a specified CSV file of DSpace it
 #### [addKeyValuePairToCollection.py](addKeyValuePairToCollection.py)
 Based on user input, adds a specified key-value pair with a specified language value to every item in the collection with the specified handle.
 
+#### [addKeyValuePairToCommunity.py](addKeyValuePairToCommunity.py)
+
+#### [addNewItemsToCollection.py](addNewItemsToCollection.py)
+
 #### [createItemMetadataFromCSV.py](createItemMetadataFromCSV.py)
 Based on user input, creates a JSON file of metadata that can be added to a DSpace item from the specified CSV file or from values directly specified in the script. The 'createMetadataElementCSV' function in the script is used to create a metadata element from the specified CSV file and has three variables:
 
@@ -52,11 +56,19 @@ The 'createMetadataElementDirect' function in the script is used to create a met
 - 'value' - The actual value of the element.
 - 'language' - The desired language value for the element.
 
+#### [deleteBitstreamsFromItem.py](deleteBitstreamsFromItem.py)
+Based on user input, removes all bitstreams associated with an item with the specified handle.
+
 #### [deleteKeyFromCollection.py](deleteKeyFromCollection.py)
 Based on user input, removes all key-value pairs with the specified key for every item in the collection with the specified handle.
 
-#### [deleteBitstreamsFromItem.py](deleteBitstreamsFromItem.py)
-Based on user input, removes all bitstreams associated with an item with the specified handle.
+#### [deleteKeyFromCommunity.py](deleteKeyFromCommunity.py)
+
+#### [deleteKeyValuePairFromCollection.py](deleteKeyValuePairFromCollection.py)
+
+#### [editBitstreamsNames.py](editBitstreamsNames.py)
+
+#### [overwriteExistingMetadata.py](overwriteExistingMetadata.py)
 
 #### [postCollection.py](postCollection.py)
 Based on user input, creates a collection with a specified name within the specified community.  In the specified directory (within the filePath set by the secrets.py file), the script creates items and associated metadata based on a 'collectionMetadata.json' file in the directory. Based on the specified file extension, the script then posts each file in the directory  with that extension as a bitstream for the appropriate item, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
@@ -81,11 +93,19 @@ Based on user input, updates key-value pairs from the specified CSV file with th
 #### [replaceUnnecessarySpaces.py](replaceUnnecessarySpaces.py)
 Based on user input, removes double spaces, triple spaces, and spaces before commas in the values from the specified key in the specified community.
 
+#### [replaceValueInCollection.py](replaceValueInCollection.py)
+
+#### [replaceValueInCommunityFromCSV.py](replaceValueInCommunityFromCSV.py)
+
 #### [repositoryMetadataBackup.py](repositoryMetadataBackup.py)
 Creates a folder with a timestamp in the folder name and creates a JSON file for every collection in the repository with the metadata for all of the items in that collection.
 
 #### [repositoryMetadataRestore.py](repositoryMetadataRestore.py)
 Based on user input, restores the metadata from a specified backup folder that was created by the repositoryMetadataBackup.py script.
 
+#### [splitFieldIntoMultipleFields.py](splitFieldIntoMultipleFields.py)
+
 #### [updateLanguageTagsForKey.py](updateLanguageTagsForKey.py)
 Based on user input, updates the language value for the specified key to 'en_us' for all items with that key in the repository. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
+
+#### [updateLanguageTagsForKeyInCollection.py](updateLanguageTagsForKeyInCollection.py)
