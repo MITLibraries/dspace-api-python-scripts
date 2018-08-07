@@ -65,10 +65,13 @@ Based on user input, removes all bitstreams associated with an item with the spe
 Based on user input, removes all key-value pairs with the specified key for every item in the collection with the specified handle.
 
 #### [deleteKeyFromCommunity.py](deleteKeyFromCommunity.py)
+Based on user input, removes all key-value pairs with the specified key for every item in every collection in the community with the specified handle.
 
 #### [deleteKeyValuePairFromCollection.py](deleteKeyValuePairFromCollection.py)
+Based on user input, removes all key-value pairs with the specified key and value for every item in the collection with the specified handle.
 
 #### [editBitstreamsNames.py](editBitstreamsNames.py)
+Based on a specified CSV file of DSpace item handles and replacement file names, replaces the name of bitstreams attached to the specified items.
 
 #### [overwriteExistingMetadata.py](overwriteExistingMetadata.py)
 
