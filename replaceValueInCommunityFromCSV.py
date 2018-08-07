@@ -70,7 +70,7 @@ with open(fileName) as csvfile:
         rowCount -= 1
         replacedValue = row['replacedValue'].decode('utf-8')
         replacementValue = row['replacementValue'].decode('utf-8')
-        print 'Rows remaining: ', rowCount,
+        print 'Rows remaining: ', rowCount
         print replacedValue, ' -- ', replacementValue
         if replacedValue != replacementValue:
             print replacedValue
