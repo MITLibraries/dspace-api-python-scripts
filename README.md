@@ -40,8 +40,10 @@ Based on user input, adds key-value pairs from a specified CSV file of DSpace it
 Based on user input, adds a specified key-value pair with a specified language value to every item in the collection with the specified handle.
 
 #### [addKeyValuePairToCommunity.py](addKeyValuePairToCommunity.py)
+Based on user input, adds a specified key-value pair with a specified language value to every item in every collection in the community with the specified handle.
 
 #### [addNewItemsToCollection.py](addNewItemsToCollection.py)
+Based on user input, adds new items to the specified collection. In the specified directory, the script creates items and associated metadata based on a 'metadataNewFiles.json' file in the directory. The script then posts files for the appropriate items, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
 
 #### [createItemMetadataFromCSV.py](createItemMetadataFromCSV.py)
 Based on user input, creates a JSON file of metadata that can be added to a DSpace item from the specified CSV file or from values directly specified in the script. The 'createMetadataElementCSV' function in the script is used to create a metadata element from the specified CSV file and has three variables:
@@ -71,7 +73,7 @@ Based on user input, removes all key-value pairs with the specified key for ever
 #### [overwriteExistingMetadata.py](overwriteExistingMetadata.py)
 
 #### [postCollection.py](postCollection.py)
-Based on user input, creates a collection with a specified name within the specified community.  In the specified directory (within the filePath set by the secrets.py file), the script creates items and associated metadata based on a 'collectionMetadata.json' file in the directory. Based on the specified file extension, the script then posts each file in the directory  with that extension as a bitstream for the appropriate item, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
+Based on user input, creates a collection with a specified name within the specified community. In the specified directory, the script creates items and associated metadata based on a 'collectionMetadata.json' file in the directory. Based on the specified file extension, the script then posts each file in the directory  with that extension as a bitstream for the appropriate item, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
 
 #### [removeDuplicateKeyValuePairsFromItems.py](removeDuplicateKeyValuePairsFromItems.py)
 Finds all items with duplicate key-value pairs and removes the duplicates. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
