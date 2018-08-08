@@ -74,6 +74,7 @@ Based on user input, removes all key-value pairs with the specified key and valu
 Based on a specified CSV file of DSpace item handles and replacement file names, replaces the name of bitstreams attached to the specified items.
 
 #### [overwriteExistingMetadata.py](overwriteExistingMetadata.py)
+Based on a specified CSV file of DSpace item handles and file identifiers, replaces the metadata of the items with specified handles with the set of metadata elements associated with the corresponding file identifier in a JSON file of metadata entries named 'metadataOverwrite.json.'
 
 #### [postCollection.py](postCollection.py)
 Based on user input, creates a collection with a specified name within the specified community. In the specified directory, the script creates items and associated metadata based on a 'collectionMetadata.json' file in the directory. Based on the specified file extension, the script then posts each file in the directory  with that extension as a bitstream for the appropriate item, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
