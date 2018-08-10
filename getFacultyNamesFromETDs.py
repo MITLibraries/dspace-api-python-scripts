@@ -55,8 +55,9 @@ for j in range (0, len (collections)):
     collSel = '&collSel[]=' + collectionID
     collSels = collSels + collSel
 
+date = datetime.now().strftime('%Y-%m-%d %H.%M.%S')
 
-f=csv.writer(open(filePath+'/ETD RDF/EtdFacultyNames.csv', 'wb'))
+f=csv.writer(open(filePath+'/ETD RDF/EtdFacultyNames'+date+'.csv', 'wb'))
 f.writerow(['name'])
 
 nameFields = ['dc.contributor.advisor','dc.contributor.committeeMember','jhuthesis.advisor.externalmember','jhuthesis.advisor.primary','jhuthesis.advisor.secondary']
