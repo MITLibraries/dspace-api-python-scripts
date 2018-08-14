@@ -92,16 +92,19 @@ Based on user input, replaces one specified key with another specified key in al
 Based on user input, replaces one specified key with another specified key in all item metadata across the specified community. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
 #### [replaceKeyValuePairOnItemIdCSV.py](replaceKeyValuePairOnItemIdCSV.py)
+Based on user input, updates key-value pairs on the specified items from the specified CSV file with the columns: 'replacedKey,' 'replacementKey,' 'replacedValue,' 'replacementValue,' and 'itemID.' A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
 #### [replaceKeyValuePairsFromCSV.py](replaceKeyValuePairsFromCSV.py)
-Based on user input, updates key-value pairs from the specified CSV file with the columns: 'replacedKey,' 'replacementKey,'replacedValue,' and 'replacementValue.' A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
+Based on user input, updates key-value pairs from the specified CSV file with the columns: 'replacedKey,' 'replacementKey,' 'replacedValue,' and 'replacementValue.' A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
 #### [replaceUnnecessarySpaces.py](replaceUnnecessarySpaces.py)
 Based on user input, removes double spaces, triple spaces, and spaces before commas in the values from the specified key in the specified community.
 
 #### [replaceValueInCollection.py](replaceValueInCollection.py)
+Based on user input, replaces a specified value with another specified value in all item metadata across the specified collection. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
 #### [replaceValueInCommunityFromCSV.py](replaceValueInCommunityFromCSV.py)
+Based on a user specified CSV, replaces specified values in the specified community with specified replacement values. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
 #### [repositoryMetadataBackup.py](repositoryMetadataBackup.py)
 Creates a folder with a timestamp in the folder name and creates a JSON file for every collection in the repository with the metadata for all of the items in that collection.
@@ -110,8 +113,10 @@ Creates a folder with a timestamp in the folder name and creates a JSON file for
 Based on user input, restores the metadata from a specified backup folder that was created by the repositoryMetadataBackup.py script.
 
 #### [splitFieldIntoMultipleFields.py](splitFieldIntoMultipleFields.py)
+Based on a user specified CSV, replaces a single field with multiple values into multiple fields which each contain a single value.
 
 #### [updateLanguageTagsForKey.py](updateLanguageTagsForKey.py)
 Based on user input, updates the language value for the specified key to 'en_us' for all items with that key in the repository. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
 
 #### [updateLanguageTagsForKeyInCollection.py](updateLanguageTagsForKeyInCollection.py)
+Based on user input, updates the language value for the specified key to 'en_us' for all items with that key in the specified collection. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.
