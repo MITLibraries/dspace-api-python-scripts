@@ -33,8 +33,6 @@ No collections skipped:
                         if collectionID != 0:
                                 offset = 0
 
-#### [allUppercaseValueCheck.py](allUppercaseValueCheck.py)
-
 #### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
 Based on user input, extracts the values of two specified keys from a specified community to a CSV file for comparison.
 
@@ -54,6 +52,7 @@ Creates a 'completeValueLists' folder and for all keys used in the repository, e
 Creates a 'completeValueLists' folder and for all keys used in the specified community, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
 
 #### [getFacultyNamesFromETDs.py](getFacultyNamesFromETDs.py)
+Based on user input, extracts all values from 'dc.contributor.advisor' and 'dc.contributor.committeeMember' fields from items in collections in the specified community.
 
 #### [getGlobalLanguageValues.py](getGlobalLanguageValues.py)
 Extracts all unique language values used by metadata entries in the repository to a CSV file.
@@ -74,10 +73,10 @@ Based on user input, extracts the ID and URI for all items in the specified coll
 Based on user input, extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
 
 #### [identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py](identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py)
-
-#### [identifyItemWithDuplicateKeysInCommunity.py](identifyItemWithDuplicateKeysInCommunity.py)
+Extracts all duplicate key-value pairs in an item that only differ in their assigned language tag.
 
 #### [identifyItemsMissingKeyInCommunity.py](identifyItemsMissingKeyInCommunity.py)
+Based on user input, extracts the IDs of items from a specified community that do not have the specified key.
 
 #### [metadataCollectionsKeysMatrix.py](metadataCollectionsKeysMatrix.py)
 Creates a matrix containing a count of each time a key appears in each collection in the repository.
