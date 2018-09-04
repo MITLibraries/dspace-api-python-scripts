@@ -5,6 +5,31 @@ import time
 import csv
 from datetime import datetime
 import urllib3
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-k', '--key', help='the key to be added. optional - if not provided, the script will ask for input')
+parser.add_argument('-v', '--value', help='the value to be added. optional - if not provided, the script will ask for input')
+parser.add_argument('-l', '--language', help='the language tag to be added. optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--handle', help='handle of the community. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.key:
+    addedKey = args.key
+else:
+    addedKey = raw_input('Enter the key: ')
+if args.value:
+    addedValue = args.value
+else:
+    addedValue = raw_input('Enter the value: ')
+if args.language:
+    addedLanguage = args.language
+else:
+    addedLanguage = raw_input('Enter the language tag: ')
+if args.handle:
+    handle = args.handle
+else:
+    handle = raw_input('Enter community handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,11 +48,6 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-
-handle = raw_input('Enter community handle: ')
-addedKey = raw_input('Enter key: ')
-addedValue = raw_input('Enter value: ')
-addedLanguage = raw_input('Enter language: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -72,26 +92,35 @@ for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
     print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-    itemMetadataProcessed = metadata
-    addedMetadataElement = {}
-    addedMetadataElement['key'] = addedKey
-    addedMetadataElement['value'] = unicode(addedValue)
-    addedMetadataElement['language'] = unicode(addedLanguage)
-    itemMetadataProcessed.append(addedMetadataElement)
-    provNote = '\''+addedKey+': '+addedValue+'\' was added through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
-    provNoteElement = {}
-    provNoteElement['key'] = 'dc.description.provenance'
-    provNoteElement['value'] = unicode(provNote)
-    provNoteElement['language'] = 'en_US'
-    itemMetadataProcessed.append(provNoteElement)
-    recordsEdited = recordsEdited + 1
-    itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-    print 'updated', itemID, recordsEdited
-    delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-    print delete
-    post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-    print post
-    f.writerow([itemID]+[addedKey]+[addedValue]+[delete]+[post])
+    itemMetadataProcessed = []
+    changeRecord = True
+    for metadataElement in metadata:
+        if metadataElement['key'] == addedKey and metadataElement['value'] == addedValue:
+            changeRecord = False
+        metadataElement.pop('schema', None)
+        metadataElement.pop('element', None)
+        metadataElement.pop('qualifier', None)
+        itemMetadataProcessed.append(metadataElement)
+    if changeRecord == True:
+        addedMetadataElement = {}
+        addedMetadataElement['key'] = addedKey
+        addedMetadataElement['value'] = unicode(addedValue)
+        addedMetadataElement['language'] = unicode(addedLanguage)
+        itemMetadataProcessed.append(addedMetadataElement)
+        provNote = '\''+addedKey+': '+addedValue+'\' was added through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+        provNoteElement = {}
+        provNoteElement['key'] = 'dc.description.provenance'
+        provNoteElement['value'] = unicode(provNote)
+        provNoteElement['language'] = 'en_US'
+        itemMetadataProcessed.append(provNoteElement)
+        recordsEdited = recordsEdited + 1
+        itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+        print 'updated', itemID, recordsEdited
+        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
+        print delete
+        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+        print post
+        f.writerow([itemID]+[addedKey]+[addedValue]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

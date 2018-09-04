@@ -5,6 +5,31 @@ import time
 import csv
 from datetime import datetime
 import urllib3
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-k', '--key', help='the key to be added. optional - if not provided, the script will ask for input')
+parser.add_argument('-v', '--value', help='the value to be added. optional - if not provided, the script will ask for input')
+parser.add_argument('-l', '--language', help='the language tag to be added. optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--handle', help='handle of the collection. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.key:
+    addedKey = args.key
+else:
+    addedKey = raw_input('Enter the key: ')
+if args.value:
+    addedValue = args.value
+else:
+    addedValue = raw_input('Enter the value: ')
+if args.language:
+    addedLanguage = args.language
+else:
+    addedLanguage = raw_input('Enter the language tag: ')
+if args.handle:
+    handle = args.handle
+else:
+    handle = raw_input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -23,12 +48,6 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-
-collectionHandle = raw_input('Enter collection handle: ')
-addedKey = raw_input('Enter key: ')
-addedValue = raw_input('Enter value: ')
-addedLanguage = raw_input('Enter language: ')
-confirm = raw_input('Hit enter to proceed')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -68,7 +87,12 @@ for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
     print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-    itemMetadataProcessed = metadata
+    itemMetadataProcessed = []
+    for l in range (0, len (metadata)):
+        metadata[l].pop('schema', None)
+        metadata[l].pop('element', None)
+        metadata[l].pop('qualifier', None)
+        itemMetadataProcessed.append(metadata[l])
     addedMetadataElement = {}
     addedMetadataElement['key'] = addedKey
     addedMetadataElement['value'] = unicode(addedValue)

@@ -105,7 +105,7 @@ while items != []:
         print delete
         post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
         print post
-        f.writerow([itemID]+[replacedElement['key']]+[replacedElement['value'].encode('utf-8')]+[delete]+[post])
+        f.writerow([itemLink]+[replacedElement['key']]+[replacedElement['value'].encode('utf-8')]+[delete]+[post])
     offset = offset + 200
     print offset
 

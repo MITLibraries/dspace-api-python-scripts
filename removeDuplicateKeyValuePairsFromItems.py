@@ -32,6 +32,7 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+userFullName = status['fullname']
 print 'authenticated'
 
 itemList = []
@@ -60,33 +61,45 @@ m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
 print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
 
-f=csv.writer(open(filePath+'removeDuplicatesRecordsEdited'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
-f.writerow(['itemID'])
+f=csv.writer(open(filePath+'DuplicateKeysRemoved'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f.writerow(['itemID']+['key:value'])
 for number, itemID in enumerate(itemList):
     itemMetadataProcessed = []
+    keyValueList = []
     itemsRemaining = len(itemList) - number
     print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-    for l in range (0, len (metadata)):
-        if metadata[l] not in itemMetadataProcessed:
-            itemMetadataProcessed.append(metadata[l])
-        else:
-            if metadata[l]['key'] == 'dc.description.provenance':
-                itemMetadataProcessed.append(metadata[l])
+    changeRecord = False
+    for metadataElement in metadata:
+        metadataElement.pop('schema', None)
+        metadataElement.pop('element', None)
+        metadataElement.pop('qualifier', None)
+        key = metadataElement['key']
+        try:
+            value = metadataElement['value']
+        except:
+            value = ''
+        if key != 'dc.description.provenance':
+            keyValue = str(key)+':'+unicode(value)
+            if keyValue not in keyValueList:
+                itemMetadataProcessed.append(metadataElement)
+                keyValueList.append(keyValue)
             else:
-                provNote = 'A duplicate element, \''+metadata[l]['key']+': '+metadata[l]['value']+',\' was removed through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+                f.writerow([itemID]+[keyValue])
+                provNote = 'A duplicate element, \''+key+': '+value+',\' was removed through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
                 provNoteElement = {}
                 provNoteElement['key'] = 'dc.description.provenance'
                 provNoteElement['value'] = unicode(provNote)
                 provNoteElement['language'] = 'en_US'
                 itemMetadataProcessed.append(provNoteElement)
-    if itemMetadataProcessed != metadata:
+                changeRecord = True
+    if changeRecord == True:
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+        print itemID
         delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
         print delete
         post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
         print post
-        f.writerow([itemID])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
