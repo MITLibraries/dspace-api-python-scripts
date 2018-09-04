@@ -36,6 +36,9 @@ No collections skipped:
 #### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
 Based on user input, extracts the values of two specified keys from a specified community to a CSV file for comparison.
 
+#### [exportSelectedRecordMetadataToCSV.py](exportSelectedRecordMetadataToCSV.py)
+Based a CSV of item handles, extracts all metadata (except 'dc.description.provenance' values) from the selected items to a CSV file.
+
 #### [findBogusUris.py](findBogusUris.py)
 Extracts the item ID and the value of the key 'dc.identifier.uri' to a CSV file when the value does not begin with the handlePrefix specified in the secrets.py file.
 
@@ -71,9 +74,6 @@ Based on user input, extracts the ID and URI for all items in the specified coll
 
 #### [getRecordsWithKeyAndValue.py](getRecordsWithKeyAndValue.py)
 Based on user input, extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
-
-#### [identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py](identifyDuplicateKeyValuePairsFromItemsDiffLangTags.py)
-Extracts all duplicate key-value pairs in an item that only differ in their assigned language tag.
 
 #### [identifyItemsMissingKeyInCommunity.py](identifyItemsMissingKeyInCommunity.py)
 Based on user input, extracts the IDs of items from a specified community that do not have the specified key.

@@ -78,7 +78,10 @@ for number, itemID in enumerate(itemList):
     for l in range (0, len (metadata)):
         if metadata[l]['key'] != 'dc.description.provenance':
             key = metadata[l]['key']
-            value = metadata[l]['value'].encode('utf-8')
+            try:
+                value = metadata[l]['value'].encode('utf-8')
+            except:
+                value = ''
             if os.path.isfile(filePathComplete+key+'ValuesComplete.csv') == False:
                 f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'wb'))
                 f.writerow(['itemID']+['value'])
