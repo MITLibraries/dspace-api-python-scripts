@@ -8,21 +8,15 @@ import urllib3
 import argparse
 from datetime import datetime
 
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--handle', help='handle of the community. optional - if not provided, the script will ask for input')
 parser.add_argument('-f', '--fileName', help='the CSV file of changes. optional - if not provided, the script will ask for input')
 args = parser.parse_args()
 
 if args.fileName:
-    fileName = filePath+'/ETD RDF/'+args.fileName
+    fileName = args.fileName
 else:
-    fileName = filePath+'/ETD RDF/'+raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
+    fileName = raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
 if args.handle:
     handle = args.handle
 else:
@@ -37,6 +31,14 @@ if secretsVersion != '':
         print 'Editing Production'
     except ImportError:
         print 'Editing Stage'
+else:
+    print 'Editing Stage'
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
 
 startTime = time.time()
 data = {'email':email,'password':password}
