@@ -57,10 +57,10 @@ for j in range (0, len (collections)):
 
 date = datetime.now().strftime('%Y-%m-%d %H.%M.%S')
 
-f=csv.writer(open(filePath+'/ETD RDF/EtdFacultyNames'+date+'.csv', 'wb'))
+f=csv.writer(open(filePath+'EtdFacultyNames'+date+'.csv', 'wb'))
 f.writerow(['name'])
 
-nameFields = ['dc.contributor.advisor','dc.contributor.committeeMember','jhuthesis.advisor.externalmember','jhuthesis.advisor.primary','jhuthesis.advisor.secondary']
+nameFields = ['dc.contributor.advisor','dc.contributor.committeeMember']
 
 facultyNames = []
 
