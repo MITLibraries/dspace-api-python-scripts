@@ -23,7 +23,7 @@ else:
 handle  = handle.replace('/', '%2F')
 
 #Enter abstract text here
-abstractText = 'Educational slides played an important role in the history of public health campaign in P.R. China. From the beginning of the 1950s, Chinese government\'s health policy put an emphasis on public hygiene and preventive treatment. Along with radio, posters, and movies, slides became a favored propaganda tool for educating the public. Slides were inexpensive to produce and disseminate. They were widely used in school teaching and various public health activities/campaigns in both rural and urban China. These health slides aimed at disseminating scientific and medical concepts and behaviors among a population with very different understanding of what constituted illness and well-being.''
+abstractText = ''
 
 seriesTitles = []
 
