@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+import csv
+import time
+import os
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--directory', help='the directory of the files. optional - if not provided, the script will ask for input')
+parser.add_argument('-f', '--fileNameCSV', help='the metadata CSV. optional - if not provided, the script will ask for input')
+parser.add_argument('-e', '--fileExtension', help='the file extension. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.directory:
+    directory = args.directory
+else:
+    directory = raw_input('Enter directory (C:/Test/): ')
+if args.fileNameCSV:
+    fileNameCSV = args.fileNameCSV
+else:
+    fileNameCSV = raw_input('Enter metadata CSV: ')
+if args.fileExtension:
+    fileExtension = args.fileExtension
+else:
+    fileExtension = raw_input('Enter file extension: ')
+
+startTime = time.time()
+fileIdentifierList = []
+for root, dirs, files in os.walk(directory, topdown=True):
+    for file in files:
+        if file.endswith(fileExtension):
+            file.replace('.'+fileExtension,'')
+            fileIdentifierList.append(file)
+
+elapsedTime = time.time() - startTime
+m, s = divmod(elapsedTime, 60)
+h, m = divmod(m, 60)
+print 'File list creation time: ','%d:%02d:%02d' % (h, m, s)
+
+f=csv.writer(open('collectionfileList.csv', 'wb'))
+f.writerow(['fileName'])
+
+for file in fileIdentifierList:
+    f.writerow([file])
+
+metadataIdentifierList = []
+f=csv.writer(open('metadataFileList.csv', 'wb'))
+f.writerow(['metadataItemID'])
+with open(fileNameCSV) as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        value = row['fileIdentifier']
+        f.writerow([value])
+        metadataIdentifierList.append(value)
+
+fileMatches = []
+for fileID in fileIdentifierList:
+    for metadataID in metadataIdentifierList:
+        if fileID.startswith(metadataID):
+            fileMatches.append(fileID)
+
+f=csv.writer(open('filesNotInMetadata.csv', 'wb'))
+f.writerow(['fileItemID'])
+filesNotInMetadata = set(fileIdentifierList) - set(fileMatches)
+for file in filesNotInMetadata:
+    f.writerow([file])
+
+metadataMatches = []
+for metadataID in metadataIdentifierList:
+    for fileID in fileIdentifierList:
+        if fileID.startswith(metadataID):
+            metadataMatches.append(metadataID)
+
+metadataWithNoFiles = set(metadataIdentifierList) - set(metadataMatches)
+
+with open(fileNameCSV) as csvfile:
+    f=csv.writer(open('metadataWithNoFiles.csv', 'wb'))
+    reader = csv.DictReader(csvfile)
+    header = next(reader)
+    headerRow = []
+    for k,v in header.iteritems():
+        headerRow.append(k)
+    f.writerow(headerRow)
+    for row in reader:
+        csvRow = []
+        for metadata in metadataWithNoFiles:
+            if metadata == row['fileIdentifier']:
+                for value in headerRow:
+                    csvRow.append(row[value])
+                f.writerow(csvRow)
+
+with open(fileNameCSV) as csvfile:
+    f=csv.writer(open('metadataWithFiles.csv', 'wb'))
+    reader = csv.DictReader(csvfile)
+    header = next(reader)
+    headerRow = []
+    for k,v in header.iteritems():
+        headerRow.append(k)
+    f.writerow(headerRow)
+    for row in reader:
+        csvRow = []
+        for metadata in metadataMatches:
+            if metadata == row['fileIdentifier']:
+                for value in headerRow:
+                    csvRow.append(row[value])
+                f.writerow(csvRow)
+
+elapsedTime = time.time() - startTime
+m, s = divmod(elapsedTime, 60)
+h, m = divmod(m, 60)
+print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)

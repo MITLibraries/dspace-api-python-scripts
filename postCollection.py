@@ -6,6 +6,31 @@ import time
 import os
 import csv
 import urllib3
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--directory', help='the directory of the files. optional - if not provided, the script will ask for input')
+parser.add_argument('-e', '--fileExtension', help='the file extension. optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--communityHandle', help='handle of the community. optional - if not provided, the script will ask for input')
+parser.add_argument('-n', '--collectionName', help='the name of the collection. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.directory:
+    directory = args.directory
+else:
+    directory = raw_input('Enter directory (C:/Test/): ')
+if args.fileExtension:
+    fileExtension = args.fileExtension
+else:
+    fileExtension = raw_input('Enter file extension: ')
+if args.communityHandle:
+    communityHandle = args.communityHandle
+else:
+    communityHandle = raw_input('Enter community handle: ')
+if args.collectionName:
+    collectionName = args.collectionName
+else:
+    collectionName = raw_input('Enter collection name: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -24,11 +49,6 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-
-directory = raw_input('Enter directory name: ')
-fileExtension = '.'+raw_input('Enter file extension: ')
-communityHandle = raw_input('Enter community handle: ')
-collectionName = raw_input('Enter collection name: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
