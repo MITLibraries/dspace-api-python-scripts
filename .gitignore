@@ -55,7 +55,7 @@ local/*
 *.csv
 *.json
 createItemMetadataFromCSV_*
-.txt
+*.txt
 
 # Environments
 .env
