@@ -74,7 +74,7 @@ Based on user input, removes all key-value pairs with the specified key and valu
 Based on a specified CSV file of DSpace item handles and replacement file names, replaces the name of bitstreams attached to the specified items.
 
 #### [generateCollectionLevelAbstract.py](generateCollectionLevelAbstract.py)
-Based on user input, creates an HTML collection-level abstract that contains hyperlinks to all of the items in each series, as found in the metadata CSV. This assumes that the series title is recorded in 'dc.relation.ispartof' or a similar property in the DSpace item records.
+Based on user input, creates an HTML collection-level abstract that contains hyperlinks to all of the items in each series, as found in the metadata CSV. This assumes that the series title is recorded in 'dc.relation.ispartof' or a similar property in the DSpace item records. The abstract is then posted to the collection in DSpace.
 
 #### [overwriteExistingMetadata.py](overwriteExistingMetadata.py)
 Based on a specified CSV file of DSpace item handles and file identifiers, replaces the metadata of the items with specified handles with the set of metadata elements associated with the corresponding file identifier in a JSON file of metadata entries named 'metadataOverwrite.json.'
