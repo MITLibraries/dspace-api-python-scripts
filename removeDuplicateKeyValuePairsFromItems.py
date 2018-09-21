@@ -80,7 +80,7 @@ for number, itemID in enumerate(itemList):
         except:
             value = ''
         if key != 'dc.description.provenance':
-            keyValue = str(key)+':'+unicode(value)
+            keyValue = {'key' : key, 'value' : value}
             if keyValue not in keyValueList:
                 itemMetadataProcessed.append(metadataElement)
                 keyValueList.append(keyValue)
