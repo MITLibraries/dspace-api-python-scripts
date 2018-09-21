@@ -96,7 +96,7 @@ post = requests.post(baseURL+'/rest/communities/'+communityID+'/collections', he
 collectionID = post['link']
 
 # Post items
-collectionMetadata = json.load(open(directory+'/'+'metadata.json'))
+collectionMetadata = json.load(open(directory+'/metadata.json'))
 for itemMetadata in collectionMetadata:
     fileExists = ''
     updatedItemMetadata = {}
