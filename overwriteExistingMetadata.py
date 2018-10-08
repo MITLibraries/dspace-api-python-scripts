@@ -7,16 +7,6 @@ from datetime import datetime
 import urllib3
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fileName', help='the name of the CSV with handles and file identifiers. optional - if not provided, the script will ask for input')
-args = parser.parse_args()
-if args.fileName:
-    fileName = args.fileName
-else:
-    fileName = raw_input('Enter file name: ')
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
@@ -26,6 +16,16 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--fileName', help='the name of the CSV with handles and file identifiers. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+if args.fileName:
+    fileName = args.fileName
+else:
+    fileName = raw_input('Enter file name: ')
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 baseURL = secrets.baseURL
 email = secrets.email

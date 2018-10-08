@@ -51,7 +51,7 @@ with open(fileName) as csvfile:
         itemMetadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
         for element in itemMetadata:
             languageValue = element['language']
-            if element['key'] == replacedKey and element['value'] == replacedValue:
+            if element['key'] == replacedKey and element['value'].encode('utf-8') == replacedValue:
                 updatedMetadataElement = {}
                 updatedMetadataElement['key'] = replacementKey
                 updatedMetadataElement['value'] = unicode(replacementValue)

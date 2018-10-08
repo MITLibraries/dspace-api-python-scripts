@@ -92,7 +92,7 @@ with open(fileName) as csvfile:
                         metadata[l].pop('element', None)
                         metadata[l].pop('qualifier', None)
                         languageValue = metadata[l]['language']
-                        if metadata[l]['value'] == replacedValue:
+                        if metadata[l]['value'].encode('utf-8') == replacedValue:
                             key = metadata[l]['key']
                             replacedElement = metadata[l]
                             updatedMetadataElement = {}

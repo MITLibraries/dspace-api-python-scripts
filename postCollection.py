@@ -8,6 +8,16 @@ import csv
 import urllib3
 import argparse
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+else:
+    print 'Editing Stage'
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', help='the directory of the files. optional - if not provided, the script will ask for input')
 parser.add_argument('-e', '--fileExtension', help='the file extension. optional - if not provided, the script will ask for input')
@@ -33,16 +43,6 @@ else:
     collectionName = raw_input('Enter collection name: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print 'Editing Production'
-    except ImportError:
-        print 'Editing Stage'
-else:
-    print 'Editing Stage'
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -141,7 +141,7 @@ for itemMetadata in collectionMetadata:
                 fileName = bitstream[bitstream.rfind('/')+1:]
                 data = open(bitstream, 'rb')
                 post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, cookies=cookies, verify=verify, data=data).json()
-                print post
+                print json.dumps(post)
 
         #Create provenance notes
         provNote = {}
@@ -175,8 +175,8 @@ for itemMetadata in collectionMetadata:
 
         #Post provenance notes
         provNote = json.dumps([provNote, provNote2])
-        post = requests.put(baseURL+itemID+'/metadata', headers=header, cookies=cookies, verify=verify, data=provNote)
-        print post
+        post = requests.put(baseURL+itemID+'/metadata', headers=header, cookies=cookies, verify=verify, data=provNote).json()
+        print json.dumps(post)
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

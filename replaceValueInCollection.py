@@ -84,7 +84,7 @@ while items != []:
             metadata[l].pop('element', None)
             metadata[l].pop('qualifier', None)
             languageValue = metadata[l]['language']
-            if metadata[l]['key'] == replacedKey and metadata[l]['value'] == replacedValue:
+            if metadata[l]['key'] == replacedKey and metadata[l]['value'].encode('utf-8') == replacedValue:
                 replacedElement = metadata[l]
                 updatedMetadataElement = {}
                 updatedMetadataElement['key'] = replacementKey

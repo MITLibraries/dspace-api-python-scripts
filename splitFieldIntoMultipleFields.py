@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import requests
 import secrets
@@ -6,8 +7,7 @@ import time
 import urllib3
 from datetime import datetime
 import ast
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import argparse
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
@@ -23,8 +23,21 @@ password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
 
-fileName = filePath+raw_input('Enter fileName (including \'.csv\'): ')
-replacedKey = raw_input('Enter key: ')
+parser = argparse.ArgumentParser()
+parser.add_argument('-r', '--replacedKey', help='the key to be replaced. optional - if not provided, the script will ask for input')
+parser.add_argument('-f', '--fileName', help='the CSV file of changes. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.replacedKey:
+    replacedKey = args.replacedKey
+else:
+    replacedKey = raw_input('Enter the key to be replaced: ')
+if args.fileName:
+    fileName = filePath+args.fileName
+else:
+    fileName = filePath+raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -45,10 +58,9 @@ replacedElement = ''
 with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
-        replacedValue = row['originalSubject']
+        replacedValue = row['value']
         print replacedValue
-        replacementValueList = ast.literal_eval(row['listOfSubject'])
-        print type(replacementValueList)
+        replacementValueList = ast.literal_eval(row['structuredList'])
         offset = 0
         items = ''
         while items != []:
@@ -64,18 +76,19 @@ with open(fileName) as csvfile:
                     metadata[l].pop('element', None)
                     metadata[l].pop('qualifier', None)
                     languageValue = metadata[l]['language']
-                    if metadata[l]['key'] == replacedKey and metadata[l]['value'] == replacedValue:
+                    if metadata[l]['key'] == replacedKey and metadata[l]['value'].encode('utf-8') == replacedValue:
+                        print 'match'
                         replacedElement = metadata[l]
                         for replacementValue in replacementValueList:
                             updatedMetadataElement = {}
                             updatedMetadataElement['key'] = replacedKey
-                            updatedMetadataElement['value'] = unicode(replacementValue)
+                            updatedMetadataElement['value'] = replacementValue
                             updatedMetadataElement['language'] = languageValue
                             itemMetadataProcessed.append(updatedMetadataElement)
                             provNote = '\''+replacedKey+': '+replacedValue+'\' split into \''+replacedKey+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
                             provNoteElement = {}
                             provNoteElement['key'] = 'dc.description.provenance'
-                            provNoteElement['value'] = unicode(provNote)
+                            provNoteElement['value'] = provNote
                             provNoteElement['language'] = 'en_US'
                             itemMetadataProcessed.append(provNoteElement)
                             elementsEdited = elementsEdited + 1
@@ -84,7 +97,7 @@ with open(fileName) as csvfile:
                             itemMetadataProcessed.append(metadata[l])
                 recordsEdited = recordsEdited + 1
                 itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-                print itemMetadataProcessed
+                #print itemMetadataProcessed
                 print 'updated', itemLink, recordsEdited, elementsEdited
                 delete = requests.delete(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify)
                 print delete
