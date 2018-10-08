@@ -7,6 +7,16 @@ from collections import Counter
 import urllib3
 import argparse
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+else:
+    print 'Editing Stage'
+
 #login info kept in secrets.py file
 baseURL = secrets.baseURL
 email = secrets.email
@@ -24,16 +34,6 @@ else:
     handle = raw_input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print 'Editing Production'
-    except ImportError:
-        print 'Editing Stage'
-else:
-    print 'Editing Stage'
 
 #authentication
 startTime = time.time()

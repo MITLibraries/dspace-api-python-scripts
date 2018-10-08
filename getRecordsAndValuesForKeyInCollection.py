@@ -6,6 +6,16 @@ import time
 import urllib3
 import argparse
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+else:
+    print 'Editing Stage'
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--key', help='the key to be searched. optional - if not provided, the script will ask for input')
 parser.add_argument('-i', '--handle', help='handle of the collection to retreive. optional - if not provided, the script will ask for input')
@@ -21,16 +31,6 @@ else:
     handle = raw_input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print 'Editing Production'
-    except ImportError:
-        print 'Editing Stage'
-else:
-    print 'Editing Stage'
 
 baseURL = secrets.baseURL
 email = secrets.email
