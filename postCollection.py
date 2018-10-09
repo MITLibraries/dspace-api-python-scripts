@@ -175,8 +175,8 @@ for itemMetadata in collectionMetadata:
 
         #Post provenance notes
         provNote = json.dumps([provNote, provNote2])
-        post = requests.put(baseURL+itemID+'/metadata', headers=header, cookies=cookies, verify=verify, data=provNote).json()
-        print json.dumps(post)
+        post = requests.put(baseURL+itemID+'/metadata', headers=header, cookies=cookies, verify=verify, data=provNote)
+        print post
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

@@ -5,6 +5,16 @@ import csv
 import argparse
 import urllib3
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+else:
+    print 'Editing Stage'
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fileNameCSV', help='the metadata CSV file. optional - if not provided, the script will ask for input')
 parser.add_argument('-i', '--handle', help='handle of the collection. optional - if not provided, the script will ask for input')
@@ -20,16 +30,6 @@ else:
     handle = raw_input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print 'Editing Production'
-    except ImportError:
-        print 'Editing Stage'
-else:
-    print 'Editing Stage'
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -69,7 +69,7 @@ seriesLinks = ''
 for seriesTitle in seriesTitles:
     handleEdited  = handle.replace('/', '%2F')
     editedSeriesTitle = seriesTitle.replace(' ','+')
-    seriesLink = '<li><a href="'+baseURL+'/discover?scope='+handleEdited+'&query=%22'+editedSeriesTitle+'%22&sort_by=dc.title_sort&order=asc&submit=">'+seriesTitle+'</a></li>'
+    seriesLink = '<li><a href="https://jscholarship.library.jhu.edu/discover?scope='+handleEdited+'&query=%22'+editedSeriesTitle+'%22&sort_by=dc.title_sort&order=asc&submit=">'+seriesTitle+'</a></li>'
     seriesLinks += seriesLink
 
 abstractText = '<p>'+abstractText+'</p>'
