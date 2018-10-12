@@ -36,6 +36,9 @@ No collections skipped:
 #### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
 Based on user input, extracts the values of two specified keys from a specified community to a CSV file for comparison.
 
+#### [countInitialedNamesByCollection.py](countInitialedNamesByCollection.py)
+Based on [mjanowiecki's](https://github.com/mjanowiecki) [findInitialedNamesByCollection.py](https://github.com/mjanowiecki/dspace-data-collection/blob/master/findInitialedNamesByCollection.py), find values in name fields that appear to have first initials that could be expanded to full names and provides a count for each collection when the count is more than zero.
+
 #### [exportSelectedRecordMetadataToCSV.py](exportSelectedRecordMetadataToCSV.py)
 Based a CSV of item handles, extracts all metadata (except 'dc.description.provenance' values) from the selected items to a CSV file.
 
