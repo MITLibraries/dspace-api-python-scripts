@@ -7,6 +7,16 @@ from datetime import datetime
 import urllib3
 import argparse
 
+secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+if secretsVersion != '':
+    try:
+        secrets = __import__(secretsVersion)
+        print 'Editing Production'
+    except ImportError:
+        print 'Editing Stage'
+else:
+    print 'Editing Stage'
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
@@ -23,16 +33,6 @@ else:
     fileName = filePath+raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print 'Editing Production'
-    except ImportError:
-        print 'Editing Stage'
-else:
-    print 'Editing Stage'
 
 startTime = time.time()
 data = {'email':email,'password':password}
