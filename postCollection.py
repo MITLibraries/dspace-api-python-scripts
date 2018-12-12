@@ -82,6 +82,7 @@ for k,v in fileList.items():
 f2=open('fileListDict.txt', 'wb')
 f2.write(json.dumps(fileList))
 
+## Use this section of code if 'fileListDict.txt' has already been generated and comment out lines 64-83. This is useful if uploading a very large collection as generating the file list will take some time.
 # f3=open('fileListDict.txt', 'rb')
 # fileList = json.load(f3)
 
@@ -117,7 +118,7 @@ for itemMetadata in collectionMetadata:
         print json.dumps(post)
         itemID = post['link']
 
-        # #Post bitstream - front and back
+        # #Post bitstream - front and back. Deprecated method, preserved for reference
         # for k,v in fileList.items():
         #     if k == fileIdentifier + '-Front':
         #         bitstream = fileList[k]
