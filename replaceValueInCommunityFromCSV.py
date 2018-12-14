@@ -61,6 +61,7 @@ for j in range (0, len (collections)):
     collSel = '&collSel[]=' + collectionID
     collSels = collSels + collSel
 
+counter = 0
 f=csv.writer(open(filePath+'replacedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
 f.writerow(['handle']+['replacedValue']+['replacementValue'])
 with open(fileName) as csvfile:
@@ -81,12 +82,18 @@ with open(fileName) as csvfile:
             items = ''
             while items != []:
                 endpoint = baseURL+'/rest/filtered-items?query_field[]=*&query_op[]=equals&query_val[]='+replacedValue+collSels+'&limit=200&offset='+str(offset)
-                response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+                print endpoint
+                response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify)
+                print response
+                response = response.json()
                 items = response['items']
+                print len(items), ' search results'
                 for item in items:
                     itemMetadataProcessed = []
                     itemLink = item['link']
                     metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
+                    counter += 1
+                    print counter
                     for l in range (0, len (metadata)):
                         metadata[l].pop('schema', None)
                         metadata[l].pop('element', None)
