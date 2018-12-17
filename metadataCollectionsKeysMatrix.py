@@ -92,8 +92,8 @@ for i in range (0, len (communities)):
     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
     for j in range (0, len (collections)):
         collectionID = collections[j]['uuid']
-        if collectionID == '45794375-6640-4efe-848e-082e60bae375':
-            print 'Levy Collection - skipped'
+        if collectionID not in skippedCollections:
+            print 'Collection skipped'
         else:
             collectionItemList = []
             collectionName = collections[j]['name'].encode('utf-8')
