@@ -101,7 +101,6 @@ for i in range (0, len (communities)):
             items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=header, cookies=cookies, verify=verify)
             while items.status_code != 200:
                 time.sleep(5)
-                print 'collection:', collectionID, '# of items:',len(items), 'fail'
                 items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=header, cookies=cookies, verify=verify)
             items = items.json()
             for i in range (0, len (items)):
