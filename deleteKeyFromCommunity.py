@@ -16,7 +16,7 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
-    
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--deletedKey', help='the key to be deleted. optional - if not provided, the script will ask for input')
 parser.add_argument('-i', '--handle', help='handle of the community to retreive. optional - if not provided, the script will ask for input')
@@ -39,6 +39,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -66,6 +67,7 @@ f.writerow(['handle']+['deletedValue']+['delete']+['post'])
 offset = 0
 recordsEdited = 0
 items = ''
+itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+deletedKey+'&query_op[]=exists&query_val[]='+collSels+'&limit=200&offset='+str(offset)
     print endpoint
@@ -74,32 +76,35 @@ while items != []:
     for item in items:
         itemMetadataProcessed = []
         itemLink = item['link']
-        print itemLink
-        metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
-        for l in range (0, len (metadata)):
-            metadata[l].pop('schema', None)
-            metadata[l].pop('element', None)
-            metadata[l].pop('qualifier', None)
-            languageValue = metadata[l]['language']
-            if metadata[l]['key'] == deletedKey:
-                provNote = '\''+deletedKey+'\' was deleted through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
-                provNoteElement = {}
-                provNoteElement['key'] = 'dc.description.provenance'
-                provNoteElement['value'] = unicode(provNote)
-                provNoteElement['language'] = 'en_US'
-                itemMetadataProcessed.append(provNoteElement)
-            else:
-                itemMetadataProcessed.append(metadata[l])
-        recordsEdited = recordsEdited + 1
-        itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemLink, recordsEdited
-        delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
-        post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
-        f.writerow([itemLink]+[deletedKey]+[delete]+[post])
+        itemLinks.append(itemLink)
     offset = offset + 200
     print offset
+for itemLink in itemLinks:
+    itemMetadataProcessed = []
+    print itemLink
+    metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
+    for l in range (0, len (metadata)):
+        metadata[l].pop('schema', None)
+        metadata[l].pop('element', None)
+        metadata[l].pop('qualifier', None)
+        languageValue = metadata[l]['language']
+        if metadata[l]['key'] == deletedKey:
+            provNote = '\''+deletedKey+'\' was deleted through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+            provNoteElement = {}
+            provNoteElement['key'] = 'dc.description.provenance'
+            provNoteElement['value'] = unicode(provNote)
+            provNoteElement['language'] = 'en_US'
+            itemMetadataProcessed.append(provNoteElement)
+        else:
+            itemMetadataProcessed.append(metadata[l])
+    recordsEdited = recordsEdited + 1
+    itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+    print 'updated', itemLink, recordsEdited
+    delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
+    print delete
+    post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+    print post
+    f.writerow([itemLink]+[deletedKey]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

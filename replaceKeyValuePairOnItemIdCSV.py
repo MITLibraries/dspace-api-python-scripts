@@ -23,6 +23,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}

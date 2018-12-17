@@ -23,6 +23,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 communityHandle = raw_input('Enter community handle: ')
 key = raw_input('Enter key: ')

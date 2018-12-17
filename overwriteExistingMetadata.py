@@ -32,6 +32,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 handleIdDict = {}
 with open(fileName) as csvfile:

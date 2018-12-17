@@ -5,8 +5,7 @@ import time
 import csv
 from datetime import datetime
 import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import argparse
 
 secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
@@ -18,15 +17,33 @@ if secretsVersion != '':
 else:
     print 'Editing Stage'
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-k', '--deletedKey', help='the key to be deleted. optional - if not provided, the script will ask for input')
+parser.add_argument('-v', '--deletedValue', help='the value to be deleted. optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--handle', help='handle of the community to retreive. optional - if not provided, the script will ask for input')
+args = parser.parse_args()
+
+if args.deletedKey:
+    deletedKey = args.deletedKey
+else:
+    deletedKey = raw_input('Enter the key to be deleted: ')
+if args.deletedValue:
+    deletedValue = args.deletedValue
+else:
+    deletedValue = raw_input('Enter the value to be deleted: ')
+if args.handle:
+    handle = args.handle
+else:
+    handle = raw_input('Enter collection handle: ')
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-
-collectionHandle = raw_input('Enter collection handle: ')
-deletedKey = raw_input('Enter key to be deleted: ')
-deletedValue = raw_input('Enter value to be deleted: ')
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -38,36 +55,36 @@ cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 print 'authenticated'
 
-itemList = []
-endpoint = baseURL+'/rest/handle/'+collectionHandle
+endpoint = baseURL+'/rest/handle/'+handle
 collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 collectionID = collection['uuid']
-offset = 0
-items = ''
-while items != []:
-    items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-    while items.status_code != 200:
-        time.sleep(5)
-        items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
-    items = items.json()
-    for k in range (0, len (items)):
-        itemID = items[k]['uuid']
-        itemList.append(itemID)
-    offset = offset + 200
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
+collSels = '&collSel[]=' + collectionID
 
-recordsEdited = 0
 f=csv.writer(open(filePath+'deletedKey'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
 f.writerow(['itemID']+['deletedKey']+['deletedValue']+['delete']+['post'])
-for number, itemID in enumerate(itemList):
-    itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
-    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
+recordsEdited = 0
+offset = 0
+items = ''
+itemLinks = []
+while items != []:
+    endpoint = baseURL+'/rest/filtered-items?query_field[]='+deletedKey+'&query_op[]=exists&query_val[]='+collSels+'&limit=200&offset='+str(offset)
+    print endpoint
+    response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+    items = response['items']
+    for item in items:
+        itemMetadataProcessed = []
+        itemLink = item['link']
+        itemLinks.append(itemLink)
+    offset = offset + 200
+    print offset
+for itemLink in itemLinks:
     itemMetadataProcessed = []
+    print itemLink
+    metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
+        metadata[l].pop('schema', None)
+        metadata[l].pop('element', None)
+        metadata[l].pop('qualifier', None)
         if metadata[l]['key'] == deletedKey and metadata[l]['value'] == deletedValue:
             provNote = '\''+deletedKey+':'+deletedValue+'\' was deleted through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
             provNoteElement = {}
@@ -77,16 +94,15 @@ for number, itemID in enumerate(itemList):
             itemMetadataProcessed.append(provNoteElement)
         else:
             itemMetadataProcessed.append(metadata[l])
-
     if itemMetadataProcessed != metadata:
         recordsEdited = recordsEdited + 1
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemID, recordsEdited
-        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
+        print 'updated', itemLink, recordsEdited
+        delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
         print delete
-        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+        post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
         print post
-        f.writerow([itemID]+[deletedKey]+[deletedValue]+[delete]+[post])
+        f.writerow([itemLink]+[deletedKey]+[deletedValue]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

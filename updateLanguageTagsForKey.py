@@ -33,6 +33,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -49,6 +50,7 @@ f.writerow(['itemID']+['key'])
 offset = 0
 recordsEdited = 0
 items = ''
+itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=exists&query_val[]=&limit=200&offset='+str(offset)
     print endpoint
@@ -57,30 +59,37 @@ while items != []:
     for item in items:
         itemMetadataProcessed = []
         itemLink = item['link']
-        print itemLink
-        metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
-        for l in range (0, len (metadata)):
-            if metadata[l]['key'] == key and metadata[l]['language'] == None:
-                updatedMetadataElement = {}
-                updatedMetadataElement['key'] = metadata[l]['key']
-                updatedMetadataElement['value'] = metadata[l]['value']
-                updatedMetadataElement['language'] = 'en_US'
-                itemMetadataProcessed.append(updatedMetadataElement)
-                provNote = 'The language tag for \''+metadata[l]['key']+': '+metadata[l]['value']+'\' was changed from \'null\' to \'en_US\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
-                provNoteElement = {}
-                provNoteElement['key'] = 'dc.description.provenance'
-                provNoteElement['value'] = unicode(provNote)
-                provNoteElement['language'] = 'en_US'
-                itemMetadataProcessed.append(provNoteElement)
-            else:
-                itemMetadataProcessed.append(metadata[l])
-            delete = requests.delete(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify)
-            print delete
-            post = requests.put(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-            print post
-            f.writerow([itemLink]+[key])
-        offset = offset + 200
-        print offset
+        itemLinks.append(itemLink)
+    offset = offset + 200
+    print offset
+for itemLink in itemLinks:
+    itemMetadataProcessed = []
+    print itemLink
+    metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
+    for l in range (0, len (metadata)):
+        metadata[l].pop('schema', None)
+        metadata[l].pop('element', None)
+        metadata[l].pop('qualifier', None)
+        if metadata[l]['key'] == key and metadata[l]['language'] == None:
+            updatedMetadataElement = {}
+            updatedMetadataElement['key'] = metadata[l]['key']
+            updatedMetadataElement['value'] = metadata[l]['value']
+            updatedMetadataElement['language'] = 'en_US'
+            itemMetadataProcessed.append(updatedMetadataElement)
+            provNote = 'The language tag for \''+metadata[l]['key']+': '+metadata[l]['value']+'\' was changed from \'null\' to \'en_US\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+            provNoteElement = {}
+            provNoteElement['key'] = 'dc.description.provenance'
+            provNoteElement['value'] = unicode(provNote)
+            provNoteElement['language'] = 'en_US'
+            itemMetadataProcessed.append(provNoteElement)
+        else:
+            itemMetadataProcessed.append(metadata[l])
+    itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+    delete = requests.delete(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify)
+    print delete
+    post = requests.put(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+    print post
+    f.writerow([itemLink]+[key])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

@@ -22,6 +22,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--replacedKey', help='the key to be replaced. optional - if not provided, the script will ask for input')
@@ -63,49 +64,54 @@ with open(fileName) as csvfile:
         replacementValueList = ast.literal_eval(row['structuredList'])
         offset = 0
         items = ''
+        itemLinks = []
         while items != []:
             endpoint = baseURL+'/rest/filtered-items?query_field[]='+replacedKey+'&query_op[]=equals&query_val[]='+replacedValue+'&limit=200&offset='+str(offset)
             response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
             items = response['items']
             for item in items:
                 itemLink = item['link']
-                itemMetadataProcessed = []
-                metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
-                for l in range (0, len (metadata)):
-                    metadata[l].pop('schema', None)
-                    metadata[l].pop('element', None)
-                    metadata[l].pop('qualifier', None)
-                    languageValue = metadata[l]['language']
-                    if metadata[l]['key'] == replacedKey and metadata[l]['value'].encode('utf-8') == replacedValue:
-                        print 'match'
-                        replacedElement = metadata[l]
-                        for replacementValue in replacementValueList:
-                            updatedMetadataElement = {}
-                            updatedMetadataElement['key'] = replacedKey
-                            updatedMetadataElement['value'] = replacementValue
-                            updatedMetadataElement['language'] = languageValue
-                            itemMetadataProcessed.append(updatedMetadataElement)
-                            provNote = '\''+replacedKey+': '+replacedValue+'\' split into \''+replacedKey+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
-                            provNoteElement = {}
-                            provNoteElement['key'] = 'dc.description.provenance'
-                            provNoteElement['value'] = provNote
-                            provNoteElement['language'] = 'en_US'
-                            itemMetadataProcessed.append(provNoteElement)
-                            elementsEdited = elementsEdited + 1
-                    else:
-                        if metadata[l] not in itemMetadataProcessed:
-                            itemMetadataProcessed.append(metadata[l])
-                recordsEdited = recordsEdited + 1
-                itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-                #print itemMetadataProcessed
-                print 'updated', itemLink, recordsEdited, elementsEdited
-                delete = requests.delete(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify)
-                print delete
-                post = requests.put(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-                print post
-                f.writerow([itemLink]+[replacedKey]+[replacementValueList]+[delete]+[post])
+                itemLinks.append(itemLink)
             offset = offset + 200
             print offset
+        for itemLink in itemLinks:
+            itemMetadataProcessed = []
+            print itemLink
+            metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
+            for l in range (0, len (metadata)):
+                metadata[l].pop('schema', None)
+                metadata[l].pop('element', None)
+                metadata[l].pop('qualifier', None)
+                languageValue = metadata[l]['language']
+                if metadata[l]['key'] == replacedKey and metadata[l]['value'].encode('utf-8') == replacedValue:
+                    print 'match'
+                    replacedElement = metadata[l]
+                    for replacementValue in replacementValueList:
+                        updatedMetadataElement = {}
+                        updatedMetadataElement['key'] = replacedKey
+                        updatedMetadataElement['value'] = replacementValue
+                        updatedMetadataElement['language'] = languageValue
+                        itemMetadataProcessed.append(updatedMetadataElement)
+                        provNote = '\''+replacedKey+': '+replacedValue+'\' split into \''+replacedKey+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+                        provNoteElement = {}
+                        provNoteElement['key'] = 'dc.description.provenance'
+                        provNoteElement['value'] = provNote
+                        provNoteElement['language'] = 'en_US'
+                        itemMetadataProcessed.append(provNoteElement)
+                        elementsEdited = elementsEdited + 1
+                else:
+                    if metadata[l] not in itemMetadataProcessed:
+                        itemMetadataProcessed.append(metadata[l])
+            recordsEdited = recordsEdited + 1
+            itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+            #print itemMetadataProcessed
+            print 'updated', itemLink, recordsEdited, elementsEdited
+            delete = requests.delete(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify)
+            print delete
+            post = requests.put(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+            print post
+            f.writerow([itemLink]+[replacedKey]+[replacementValueList]+[delete]+[post])
+
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime

@@ -20,6 +20,7 @@ password = secrets.password
 filePath = secrets.filePath
 handlePrefix = secrets.handlePrefix
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 requests.packages.urllib3.disable_warnings()
 

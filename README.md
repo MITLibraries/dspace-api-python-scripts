@@ -10,28 +10,11 @@ All of these scripts require a secrets.py file in the same directory that must c
         filePath = '/Users/dspace_user/dspace-data-collection/data/'
         handlePrefix = 'http://dspace.myuni.edu/handle/'
         verify = True or False (no quotes). Use False if using an SSH tunnel to connect to the DSpace API
+        skippedCollections = A list of the 'uuid' of any collections that you wish the script to skip. (e.g. ['45794375-6640-4efe-848e-082e60bae375'])
 ```
 The 'filePath' is directory into which output files will be written and 'handlePrefix' may or may not vary from your DSpace URL depending on your configuration. This secrets.py file will be ignored according to the repository's .gitignore file so that DSpace login details will not be inadvertently exposed through GitHub.
 
 If you are using both a development server and a production server, you can create a separate secrets.py file with a different name (e.g. secretsProd.py) and containing the production server information. When running each of these scripts, you will be prompted to enter the file name (e.g 'secretsProd' without '.py') of an alternate secrets file. If you skip the prompt or incorrectly type the file name, the scripts will default to the information in the secrets.py file. This ensures that you will only edit the production server if you really intend to.
-
-**Note**: All of these scripts skip collection '45794375-6640-4efe-848e-082e60bae375' for local reasons. To change this, edit the following portion of the script (typically between line 27-39)
-
-
-Skips collection 45794375-6640-4efe-848e-082e60bae375:
-
-                for j in range (0, len (collections)):
-                        collectionID = collections[j]['uuid']
-                        if collectionID != '45794375-6640-4efe-848e-082e60bae375':
-                                offset = 0
-
-
-No collections skipped:
-
-                for j in range (0, len (collections)):
-                        collectionID = collections[j]['uuid']
-                        if collectionID != 0:
-                                offset = 0
 
 #### [addKeyValuePairOnHandleCSV.py](addKeyValuePairOnHandleCSV.py)
 Based on user input, adds key-value pairs from a specified CSV file of DSpace item handles and the value to be added to that item using the specified key. A CSV log is written with all of the changes made and a 'dc.description.provenance' note describing the change is added to the metadata of each item that is updated.

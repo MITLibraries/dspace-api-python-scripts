@@ -36,6 +36,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 data = {'email':email,'password':password}
 header = {'content-type':'application/json','accept':'application/json'}

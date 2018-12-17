@@ -16,7 +16,7 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
-    
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--replacedKey', help='the key to be replaced. optional - if not provided, the script will ask for input')
 parser.add_argument('-2', '--replacementKey', help='the replacement key. optional - if not provided, the script will ask for input')
@@ -38,6 +38,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -54,6 +55,7 @@ f.writerow(['itemID']+['replacedKey']+['replacedValue']+['delete']+['post'])
 offset = 0
 recordsEdited = 0
 items = ''
+itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+replacedKey+'&query_op[]=exists&query_val[]=&limit=200&offset='+str(offset)
     print endpoint
@@ -62,37 +64,40 @@ while items != []:
     for item in items:
         itemMetadataProcessed = []
         itemLink = item['link']
-        metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
-        for l in range (0, len (metadata)):
-            metadata[l].pop('schema', None)
-            metadata[l].pop('element', None)
-            metadata[l].pop('qualifier', None)
-            if metadata[l]['key'] == replacedKey:
-                replacedElement = metadata[l]
-                updatedMetadataElement = {}
-                updatedMetadataElement['key'] = replacementKey
-                updatedMetadataElement['value'] = unicode(replacedElement['value'])
-                updatedMetadataElement['language'] = unicode(replacedElement['language'])
-                print updatedMetadataElement
-                itemMetadataProcessed.append(updatedMetadataElement)
-                provNote = '\''+replacedKey+'\' was replaced by \''+replacementKey+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
-                provNoteElement = {}
-                provNoteElement['key'] = 'dc.description.provenance'
-                provNoteElement['value'] = unicode(provNote)
-                provNoteElement['language'] = 'en_US'
-                itemMetadataProcessed.append(provNoteElement)
-            else:
-                if metadata[l] not in itemMetadataProcessed:
-                    itemMetadataProcessed.append(metadata[l])
-        itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print itemMetadataProcessed
-        delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
-        post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
-        f.writerow([itemID]+[replacedElement['key']]+[replacedElement['value'].encode('utf-8')]+[delete]+[post])
+        itemLinks.append(itemLink)
     offset = offset + 200
     print offset
+for itemLink in itemLinks:
+    itemMetadataProcessed = []
+    print itemLink
+    metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
+    for l in range (0, len (metadata)):
+        metadata[l].pop('schema', None)
+        metadata[l].pop('element', None)
+        metadata[l].pop('qualifier', None)
+        if metadata[l]['key'] == replacedKey:
+            replacedElement = metadata[l]
+            updatedMetadataElement = {}
+            updatedMetadataElement['key'] = replacementKey
+            updatedMetadataElement['value'] = unicode(replacedElement['value'])
+            updatedMetadataElement['language'] = unicode(replacedElement['language'])
+            print updatedMetadataElement
+            itemMetadataProcessed.append(updatedMetadataElement)
+            provNote = '\''+replacedKey+'\' was replaced by \''+replacementKey+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+            provNoteElement = {}
+            provNoteElement['key'] = 'dc.description.provenance'
+            provNoteElement['value'] = unicode(provNote)
+            provNoteElement['language'] = 'en_US'
+            itemMetadataProcessed.append(provNoteElement)
+        else:
+            if metadata[l] not in itemMetadataProcessed:
+                itemMetadataProcessed.append(metadata[l])
+    itemMetadataProcessed = json.dumps(itemMetadataProcessed)
+    delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
+    print delete
+    post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+    print post
+    f.writerow([itemLink]+[replacedElement['key']]+[replacedElement['value'].encode('utf-8')]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

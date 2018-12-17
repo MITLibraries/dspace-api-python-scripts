@@ -23,6 +23,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 key = raw_input('Enter key: ')
 collectionHandle = raw_input('Enter collection handle: ')
