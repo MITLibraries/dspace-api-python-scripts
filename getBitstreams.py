@@ -98,6 +98,7 @@ def main():
 
     if not args.verify:
         args.verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
     if args.handle:
         handle = args.handle

@@ -23,6 +23,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -43,7 +44,7 @@ for community in communities:
     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
     for collection in collections:
         collectionID = collection['uuid']
-        if collectionID != '45794375-6640-4efe-848e-082e60bae375':
+        if collectionID not in skippedCollections:
             collectionIds.append(collectionID)
 
 names = []

@@ -24,6 +24,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 #authentication
 startTime = time.time()
@@ -55,7 +56,7 @@ for i in range (0, len (communities)):
         collectionHandle = collections[j]['handle']
         fullName = communityName+' - '+collectionName
         print collectionID
-        if collectionID != '45794375-6640-4efe-848e-082e60bae375':
+        if collectionID not in skippedCollections:
             offset = 0
             items = ''
             while items != []:

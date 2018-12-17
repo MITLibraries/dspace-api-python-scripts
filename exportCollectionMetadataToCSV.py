@@ -23,6 +23,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--handle', help='handle of the collection to retreive. optional - if not provided, the script will ask for input')

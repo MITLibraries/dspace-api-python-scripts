@@ -37,6 +37,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -54,6 +55,7 @@ f.writerow(['itemID']+['uri']+['key']+['value'])
 offset = 0
 recordsEdited = 0
 items = ''
+itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=equals&query_val[]='+value+'&limit=200&offset='+str(offset)
     print endpoint
@@ -62,16 +64,18 @@ while items != []:
     for item in items:
         itemMetadataProcessed = []
         itemLink = item['link']
-        metadata = requests.get(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-        for i in range (0, len (metadata)):
-            if metadata[i]['key'] == key and metadata[i]['value'] == value:
-                metadataValue = metadata[i]['value']
-                for i in range (0, len (metadata)):
-                    if metadata[i]['key'] == 'dc.identifier.uri':
-                        uri = metadata[i]['value']
-                f.writerow([itemLink]+[uri]+[key]+[metadataValue])
+        itemLinks.append(itemLink)
     offset = offset + 200
     print offset
+for itemLink in itemLinks:
+    metadata = requests.get(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify).json()
+    for i in range (0, len (metadata)):
+        if metadata[i]['key'] == key and metadata[i]['value'] == value:
+            metadataValue = metadata[i]['value']
+            for i in range (0, len (metadata)):
+                if metadata[i]['key'] == 'dc.identifier.uri':
+                    uri = metadata[i]['value']
+            f.writerow([itemLink]+[uri]+[key]+[metadataValue])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

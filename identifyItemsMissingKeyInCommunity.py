@@ -39,6 +39,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -66,6 +67,7 @@ f.writerow(['itemID']+['key'])
 offset = 0
 recordsEdited = 0
 items = ''
+itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=doesnt_exist&query_val[]='+collSels+'&limit=200&offset='+str(offset)
     print endpoint
@@ -74,13 +76,14 @@ while items != []:
     for item in items:
         itemMetadataProcessed = []
         itemLink = item['link']
-        metadata = requests.get(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-        for metadataElement in metadata:
-            itemMetadataProcessed.append(metadataElement['key'])
-        if key not in itemMetadataProcessed:
-            f.writerow([itemLink])
     offset = offset + 200
     print offset
+for itemLink in itemLinks:
+    metadata = requests.get(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify).json()
+    for metadataElement in metadata:
+        itemMetadataProcessed.append(metadataElement['key'])
+    if key not in itemMetadataProcessed:
+        f.writerow([itemLink])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 

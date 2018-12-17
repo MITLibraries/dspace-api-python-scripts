@@ -23,6 +23,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fileName', help='the CSV file of record handles. optional - if not provided, the script will ask for input')

@@ -15,7 +15,7 @@ if secretsVersion != '':
         print 'Editing Stage'
 else:
     print 'Editing Stage'
-    
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--key', help='the first key to be output. optional - if not provided, the script will ask for input')
 parser.add_argument('-2', '--key2', help='the second key to be output. optional - if not provided, the script will ask for input')
@@ -43,6 +43,7 @@ email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
+skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -64,7 +65,7 @@ collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/colle
 for j in range (0, len (collections)):
     collectionID = collections[j]['uuid']
     print collectionID
-    if collectionID != '45794375-6640-4efe-848e-082e60bae375':
+    if collectionID not in skippedCollections:
         offset = 0
         items = ''
         while items != []:
