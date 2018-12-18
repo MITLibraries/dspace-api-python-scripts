@@ -37,7 +37,6 @@ else:
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
