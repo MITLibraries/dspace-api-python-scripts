@@ -8,15 +8,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -25,8 +25,8 @@ filePath = secrets.filePath
 verify = secrets.verify
 skippedCollections = secrets.skippedCollections
 
-communityHandle = raw_input('Enter community handle: ')
-key = raw_input('Enter key: ')
+communityHandle = input('Enter community handle: ')
+key = input('Enter key: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -36,7 +36,7 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+communityHandle
 community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -57,9 +57,9 @@ for i in range (0, len (collections)):
             itemID = items[j]['uuid']
             itemList.append(itemID)
             offset = offset + 200
-            print offset
+            print(offset)
 
-f=csv.writer(open(filePath+'removeUnnecessarySpaces'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'removeUnnecessarySpaces'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['replacedKey']+['replacedValue']+['delete']+['post'])
 for itemID in itemList:
     itemMetadataProcessed = []
@@ -76,17 +76,17 @@ for itemID in itemList:
             itemMetadataProcessed.append(metadata[i])
     if json.dumps(itemMetadataProcessed) != json.dumps(metadata):
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemID
+        print('updated', itemID)
         delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
+        print(delete)
         post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
+        print(post)
     else:
-        print 'not updated', itemID
+        print('not updated', itemID)
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

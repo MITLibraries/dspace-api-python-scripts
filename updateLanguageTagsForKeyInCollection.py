@@ -8,15 +8,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -25,8 +25,8 @@ filePath = secrets.filePath
 verify = secrets.verify
 skippedCollections = secrets.skippedCollections
 
-key = raw_input('Enter key: ')
-collectionHandle = raw_input('Enter collection handle: ')
+key = input('Enter key: ')
+collectionHandle = input('Enter collection handle: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -36,7 +36,7 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
-print 'authenticated'
+print('authenticated')
 
 itemList = []
 endpoint = baseURL+'/rest/handle/'+collectionHandle
@@ -57,14 +57,14 @@ while items != []:
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
+print('Item list creation time: ','%d:%02d:%02d' % (h, m, s))
 
-f=csv.writer(open(filePath+'languageTagUpdate'+key+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'languageTagUpdate'+key+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['key'])
 for number, itemID in enumerate(itemList):
     itemMetadataProcessed = []
     itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
+    print('Items remaining: ', itemsRemaining, 'ItemID: ', itemID)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
         if metadata[l]['key'] == key and metadata[l]['language'] == '':
@@ -76,25 +76,25 @@ for number, itemID in enumerate(itemList):
             provNote = 'The language tag for \''+metadata[l]['key']+': '+metadata[l]['value']+'\' was changed from \'null\' to \'en_US\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
             provNoteElement = {}
             provNoteElement['key'] = 'dc.description.provenance'
-            provNoteElement['value'] = unicode(provNote)
+            provNoteElement['value'] = provNote
             provNoteElement['language'] = 'en_US'
             itemMetadataProcessed.append(provNoteElement)
         else:
             itemMetadataProcessed.append(metadata[l])
     if 'The language tag for \''+key in json.dumps(itemMetadataProcessed):
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemID
+        print('updated', itemID)
         delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
+        print(delete)
         post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
+        print(post)
         f.writerow([itemID]+[key])
     else:
-        print 'not updated', itemID
+        print('not updated', itemID)
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

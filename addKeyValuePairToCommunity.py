@@ -7,15 +7,15 @@ from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--key', help='the key to be added. optional - if not provided, the script will ask for input')
@@ -27,19 +27,19 @@ args = parser.parse_args()
 if args.key:
     addedKey = args.key
 else:
-    addedKey = raw_input('Enter the key: ')
+    addedKey = input('Enter the key: ')
 if args.value:
     addedValue = args.value
 else:
-    addedValue = raw_input('Enter the value: ')
+    addedValue = input('Enter the value: ')
 if args.language:
     addedLanguage = args.language
 else:
-    addedLanguage = raw_input('Enter the language tag: ')
+    addedLanguage = input('Enter the language tag: ')
 if args.handle:
     handle = args.handle
 else:
-    handle = raw_input('Enter community handle: ')
+    handle = input('Enter community handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -58,7 +58,7 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
-print 'authenticated'
+print('authenticated')
 
 itemList = []
 endpoint = baseURL+'/rest/handle/'+handle
@@ -84,14 +84,14 @@ for j in range (0, len (collections)):
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
+print('Item list creation time: ','%d:%02d:%02d' % (h, m, s))
 
 recordsEdited = 0
-f=csv.writer(open(filePath+'addKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'addKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['addedKey']+['addedValue']+['delete']+['post'])
 for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
+    print('Items remaining: ', itemsRemaining, 'ItemID: ', itemID)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     itemMetadataProcessed = []
     changeRecord = True
@@ -105,22 +105,22 @@ for number, itemID in enumerate(itemList):
     if changeRecord == True:
         addedMetadataElement = {}
         addedMetadataElement['key'] = addedKey
-        addedMetadataElement['value'] = unicode(addedValue)
-        addedMetadataElement['language'] = unicode(addedLanguage)
+        addedMetadataElement['value'] = addedValue
+        addedMetadataElement['language'] = addedLanguage
         itemMetadataProcessed.append(addedMetadataElement)
         provNote = '\''+addedKey+': '+addedValue+'\' was added through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
         provNoteElement = {}
         provNoteElement['key'] = 'dc.description.provenance'
-        provNoteElement['value'] = unicode(provNote)
+        provNoteElement['value'] = provNote
         provNoteElement['language'] = 'en_US'
         itemMetadataProcessed.append(provNoteElement)
         recordsEdited = recordsEdited + 1
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-        print 'updated', itemID, recordsEdited
+        print('updated', itemID, recordsEdited)
         delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
+        print(delete)
         post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
+        print(post)
         f.writerow([itemID]+[addedKey]+[addedValue]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
@@ -128,4 +128,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

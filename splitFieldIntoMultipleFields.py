@@ -9,13 +9,13 @@ from datetime import datetime
 import ast
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -32,11 +32,11 @@ args = parser.parse_args()
 if args.replacedKey:
     replacedKey = args.replacedKey
 else:
-    replacedKey = raw_input('Enter the key to be replaced: ')
+    replacedKey = input('Enter the key to be replaced: ')
 if args.fileName:
     fileName = filePath+args.fileName
 else:
-    fileName = filePath+raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
+    fileName = filePath+input('Enter the file name of the CSV of changes (including \'.csv\'): ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -49,18 +49,18 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 recordsEdited = 0
 elementsEdited = 0
-f=csv.writer(open(filePath+'splitFieldIntoMultipleFields'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'splitFieldIntoMultipleFields'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['replacedKey']+['replacementValueList']+['delete']+['post'])
 replacedElement = ''
 with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         replacedValue = row['value']
-        print replacedValue
+        print(replacedValue)
         replacementValueList = ast.literal_eval(row['structuredList'])
         offset = 0
         items = ''
@@ -73,18 +73,18 @@ with open(fileName) as csvfile:
                 itemLink = item['link']
                 itemLinks.append(itemLink)
             offset = offset + 200
-            print offset
+            print(offset)
         for itemLink in itemLinks:
             itemMetadataProcessed = []
-            print itemLink
+            print(itemLink)
             metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
             for l in range (0, len (metadata)):
                 metadata[l].pop('schema', None)
                 metadata[l].pop('element', None)
                 metadata[l].pop('qualifier', None)
                 languageValue = metadata[l]['language']
-                if metadata[l]['key'] == replacedKey and metadata[l]['value'].encode('utf-8') == replacedValue:
-                    print 'match'
+                if metadata[l]['key'] == replacedKey and metadata[l]['value'] == replacedValue:
+                    print('match')
                     replacedElement = metadata[l]
                     for replacementValue in replacementValueList:
                         updatedMetadataElement = {}
@@ -104,12 +104,12 @@ with open(fileName) as csvfile:
                         itemMetadataProcessed.append(metadata[l])
             recordsEdited = recordsEdited + 1
             itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-            #print itemMetadataProcessed
-            print 'updated', itemLink, recordsEdited, elementsEdited
+            #print(itemMetadataProcessed)
+            print('updated', itemLink, recordsEdited, elementsEdited)
             delete = requests.delete(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify)
-            print delete
+            print(delete)
             post = requests.put(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-            print post
+            print(post)
             f.writerow([itemLink]+[replacedKey]+[replacementValueList]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
@@ -117,4 +117,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

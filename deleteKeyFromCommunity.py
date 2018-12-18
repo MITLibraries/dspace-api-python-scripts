@@ -7,15 +7,15 @@ from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--deletedKey', help='the key to be deleted. optional - if not provided, the script will ask for input')
@@ -25,12 +25,12 @@ args = parser.parse_args()
 if args.deletedKey:
     deletedKey = args.deletedKey
 else:
-    deletedKey = raw_input('Enter the key to be deleted: ')
+    deletedKey = input('Enter the key to be deleted: ')
 
 if args.handle:
     handle = args.handle
 else:
-    handle = raw_input('Enter collection handle: ')
+    handle = input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -50,7 +50,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+handle
 community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -62,7 +62,7 @@ for j in range (0, len (collections)):
     collSel = '&collSel[]=' + collectionID
     collSels = collSels + collSel
 
-f=csv.writer(open(filePath+'deletedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'deletedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['handle']+['deletedValue']+['delete']+['post'])
 offset = 0
 recordsEdited = 0
@@ -70,7 +70,7 @@ items = ''
 itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+deletedKey+'&query_op[]=exists&query_val[]='+collSels+'&limit=200&offset='+str(offset)
-    print endpoint
+    print(endpoint)
     response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
     items = response['items']
     for item in items:
@@ -78,10 +78,10 @@ while items != []:
         itemLink = item['link']
         itemLinks.append(itemLink)
     offset = offset + 200
-    print offset
+    print(offset)
 for itemLink in itemLinks:
     itemMetadataProcessed = []
-    print itemLink
+    print(itemLink)
     metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
         metadata[l].pop('schema', None)
@@ -92,18 +92,18 @@ for itemLink in itemLinks:
             provNote = '\''+deletedKey+'\' was deleted through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
             provNoteElement = {}
             provNoteElement['key'] = 'dc.description.provenance'
-            provNoteElement['value'] = unicode(provNote)
+            provNoteElement['value'] = provNote
             provNoteElement['language'] = 'en_US'
             itemMetadataProcessed.append(provNoteElement)
         else:
             itemMetadataProcessed.append(metadata[l])
     recordsEdited = recordsEdited + 1
     itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-    print 'updated', itemLink, recordsEdited
+    print('updated', itemLink, recordsEdited)
     delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
-    print delete
+    print(delete)
     post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-    print post
+    print(post)
     f.writerow([itemLink]+[deletedKey]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
@@ -111,4 +111,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

@@ -8,15 +8,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -33,13 +33,13 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
-print 'authenticated'
+print('authenticated')
 
-fileName = filePath+raw_input('Enter fileName (including \'.csv\'): ')
-replacedKey = raw_input('Enter key: ')
+fileName = filePath+input('Enter fileName (including \'.csv\'): ')
+replacedKey = input('Enter key: ')
 replacementKey = replacedKey
 
-f=csv.writer(open(filePath+'replacedKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'replacedKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['replacedKey']+['replacedValue']+['replacementValue']+['delete']+['post'])
 
 with open(fileName) as csvfile:
@@ -47,31 +47,31 @@ with open(fileName) as csvfile:
     for row in reader:
         itemMetadataProcessed = []
         itemID = row['itemID']
-        replacedValue = row['replacedValue'].decode('utf-8')
-        replacementValue = row['replacementValue'].decode('utf-8')
+        replacedValue = row['replacedValue']
+        replacementValue = row['replacementValue']
         itemMetadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
         for element in itemMetadata:
             languageValue = element['language']
-            if element['key'] == replacedKey and element['value'].encode('utf-8') == replacedValue:
+            if element['key'] == replacedKey and element['value'] == replacedValue:
                 updatedMetadataElement = {}
                 updatedMetadataElement['key'] = replacementKey
-                updatedMetadataElement['value'] = unicode(replacementValue)
+                updatedMetadataElement['value'] = replacementValue
                 updatedMetadataElement['language'] = languageValue
                 itemMetadataProcessed.append(updatedMetadataElement)
 
                 provNote = '\''+replacedKey+': '+replacedValue+'\' was replaced by \''+replacementKey+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
                 provNoteElement = {}
                 provNoteElement['key'] = 'dc.description.provenance'
-                provNoteElement['value'] = unicode(provNote)
+                provNoteElement['value'] = provNote
                 provNoteElement['language'] = 'en_US'
                 itemMetadataProcessed.append(provNoteElement)
             else:
                 itemMetadataProcessed.append(element)
-        print itemMetadata
+        print(itemMetadata)
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
 
         delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-        print delete
+        print(delete)
         post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-        print post
-        f.writerow([itemID]+[replacedKey.encode('utf-8')]+[replacedValue.encode('utf-8')]+[replacementValue.encode('utf-8')]+[delete]+[post])
+        print(post)
+        f.writerow([itemID]+[replacedKey]+[replacedValue]+[replacementValue]+[delete]+[post])

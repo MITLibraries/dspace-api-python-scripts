@@ -8,15 +8,15 @@ import urllib3
 import argparse
 from datetime import datetime
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--handle', help='handle of the community. optional - if not provided, the script will ask for input')
@@ -26,11 +26,11 @@ args = parser.parse_args()
 if args.fileName:
     fileName = args.fileName
 else:
-    fileName = raw_input('Enter the file name of the CSV of changes (including \'.csv\'): ')
+    fileName = input('Enter the file name of the CSV of changes (including \'.csv\'): ')
 if args.handle:
     handle = args.handle
 else:
-    handle = raw_input('Enter community handle: ')
+    handle = input('Enter community handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -50,7 +50,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+handle
 community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -63,7 +63,7 @@ for j in range (0, len (collections)):
     collSels = collSels + collSel
 
 counter = 0
-f=csv.writer(open(filePath+'replacedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'replacedValues'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['handle']+['replacedValue']+['replacementValue'])
 with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
@@ -72,51 +72,51 @@ with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         rowCount -= 1
-        replacedValue = row['replacedValue'].decode('utf-8')
-        replacementValue = row['replacementValue'].decode('utf-8')
-        print 'Rows remaining: ', rowCount
-        print replacedValue, ' -- ', replacementValue
+        replacedValue = row['replacedValue']
+        replacementValue = row['replacementValue']
+        print('Rows remaining: ', rowCount)
+        print(replacedValue, ' -- ', replacementValue)
         if replacedValue != replacementValue:
-            print replacedValue
+            print(replacedValue)
             offset = 0
             recordsEdited = 0
             items = ''
             itemLinks = []
             while items != []:
                 endpoint = baseURL+'/rest/filtered-items?query_field[]=*&query_op[]=equals&query_val[]='+replacedValue+collSels+'&limit=200&offset='+str(offset)
-                print endpoint
+                print(endpoint)
                 response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify)
-                print response
+                print(response)
                 response = response.json()
                 items = response['items']
-                print len(items), ' search results'
+                print(len(items), ' search results')
                 for item in items:
                     itemLink = item['link']
                     itemLinks.append(itemLink)
                 offset = offset + 200
-                print offset
+                print(offset)
             for itemLink in itemLinks:
                 itemMetadataProcessed = []
                 metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
                 counter += 1
-                print counter
+                print(counter)
                 for l in range (0, len (metadata)):
                     metadata[l].pop('schema', None)
                     metadata[l].pop('element', None)
                     metadata[l].pop('qualifier', None)
                     languageValue = metadata[l]['language']
-                    if metadata[l]['value'].encode('utf-8') == replacedValue:
+                    if metadata[l]['value'] == replacedValue:
                         key = metadata[l]['key']
                         replacedElement = metadata[l]
                         updatedMetadataElement = {}
                         updatedMetadataElement['key'] = metadata[l]['key']
-                        updatedMetadataElement['value'] = unicode(replacementValue)
+                        updatedMetadataElement['value'] = replacementValue
                         updatedMetadataElement['language'] = languageValue
                         itemMetadataProcessed.append(updatedMetadataElement)
                         provNote = '\''+key+': '+replacedValue+'\' was replaced by \''+key+': '+replacementValue+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
                         provNoteElement = {}
                         provNoteElement['key'] = 'dc.description.provenance'
-                        provNoteElement['value'] = unicode(provNote)
+                        provNoteElement['value'] = provNote
                         provNoteElement['language'] = 'en_US'
                         itemMetadataProcessed.append(provNoteElement)
                         recordsEdited = recordsEdited + 1
@@ -124,16 +124,16 @@ with open(fileName) as csvfile:
                         if metadata[l] not in itemMetadataProcessed:
                             itemMetadataProcessed.append(metadata[l])
                 itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-                print 'updated', itemLink, recordsEdited
+                print('updated', itemLink, recordsEdited)
                 delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
-                print delete
+                print(delete)
                 post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-                print post
-                f.writerow([itemLink]+[replacedValue.encode('utf-8')]+[replacementValue.encode('utf-8')]+[delete]+[post])
+                print(post)
+                f.writerow([itemLink]+[replacedValue]+[replacementValue]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

@@ -7,15 +7,15 @@ from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fileName', help='the name of the CSV with handles and file identifiers. optional - if not provided, the script will ask for input')
@@ -23,7 +23,7 @@ args = parser.parse_args()
 if args.fileName:
     fileName = args.fileName
 else:
-    fileName = raw_input('Enter file name: ')
+    fileName = input('Enter file name: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -41,8 +41,8 @@ with open(fileName) as csvfile:
         fileIdentifier = row['fileId']
         handle = row['handle']
         handleIdDict[fileIdentifier] = handle
-print handleIdDict
-id = raw_input('test')
+print(handleIdDict)
+id = input('test')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -52,11 +52,11 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
-print 'authenticated'
+print('authenticated')
 
 collectionMetadata = json.load(open('metadataOverwrite.json'))
 
-f=csv.writer(open(filePath+'metadataOverwrite'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'metadataOverwrite'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['delete']+['post'])
 
 for k,v in handleIdDict.items():
@@ -75,12 +75,12 @@ for k,v in handleIdDict.items():
         provNote = 'Item metadata updated through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
         provNoteElement = {}
         provNoteElement['key'] = 'dc.description.provenance'
-        provNoteElement['value'] = unicode(provNote)
+        provNoteElement['value'] = provNote
         provNoteElement['language'] = 'en_US'
         updatedItemMetadataList.append(provNoteElement)
 
         if fileIdentifier == k:
-            print fileIdentifier
+            print(fileIdentifier)
             endpoint = baseURL+'/rest/handle/'+v
             item = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
             itemID = item['uuid']
@@ -97,9 +97,9 @@ for k,v in handleIdDict.items():
                     updatedItemMetadataList.append(metadata[l])
             updatedItemMetadata = json.dumps(updatedItemMetadataList)
             delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
-            print delete
+            print(delete)
             post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=updatedItemMetadata)
-            print post
+            print(post)
             f.writerow([itemID]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
@@ -107,4 +107,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
