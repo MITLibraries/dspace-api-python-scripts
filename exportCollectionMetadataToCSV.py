@@ -81,7 +81,7 @@ for itemID in itemList:
 keyListHeader = ['itemID']
 keyListHeader = keyListHeader + keyList
 print keyListHeader
-f=csv.writer(open(filePath+itemHandle.replace('/','-')+'Metadata.csv', 'wb'))
+f=csv.writer(open(filePath+handle.replace('/','-')+'Metadata.csv', 'wb'))
 f.writerow(keyListHeader)
 
 itemRows = []
