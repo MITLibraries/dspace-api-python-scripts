@@ -93,7 +93,10 @@ for itemID in itemList:
     for metadataElement in metadata:
         for key in keyListHeader:
             if metadataElement['key'] == key:
-                value = metadataElement['value'].encode('utf-8')+'|'
+                try:
+                    value = metadataElement['value'].encode('utf-8')+'|'
+                except:
+                    value = ''+'|'            
                 try:
                     itemRow[key] = itemRow[key] + value
                 except:
