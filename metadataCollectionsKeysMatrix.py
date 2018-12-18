@@ -8,15 +8,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 #login info kept in secrets.py file
 baseURL = secrets.baseURL
@@ -36,7 +36,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/communities'
 communities = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -50,7 +50,7 @@ for i in range (0, len (communities)):
     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
     for j in range (0, len (collections)):
         collectionID = collections[j]['uuid']
-        print collectionID
+        print(collectionID)
         if collectionID not in skippedCollections:
             offset = 0
             items = ''
@@ -64,16 +64,16 @@ for i in range (0, len (communities)):
                     itemID = items[k]['uuid']
                     itemList.append(itemID)
                 offset = offset + 200
-                print offset
+                print(offset)
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
+print('Item list creation time: ','%d:%02d:%02d' % (h, m, s))
 
 #retrieve metadata from all items
 keyList = []
 for itemID in itemList:
-    print itemID
+    print(itemID)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for i in range (0, len (metadata)):
         key = metadata[i]['key']
@@ -83,20 +83,20 @@ for itemID in itemList:
 keyListHeader = ['collectionNameColumn']
 keyList.sort()
 keyListHeader = keyListHeader + keyList
-f=csv.writer(open(filePath+'collectionsKeysMatrix.csv', 'wb'))
+f=csv.writer(open(filePath+'collectionsKeysMatrix.csv', 'w'))
 f.writerow(keyListHeader)
 
 for i in range (0, len (communities)):
     communityID = communities[i]['uuid']
-    communityName = communities[i]['name'].encode('utf-8')
+    communityName = communities[i]['name']
     collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
     for j in range (0, len (collections)):
         collectionID = collections[j]['uuid']
         if collectionID not in skippedCollections:
-            print 'Collection skipped'
+            print('Collection skipped')
         else:
             collectionItemList = []
-            collectionName = collections[j]['name'].encode('utf-8')
+            collectionName = collections[j]['name']
             fullName = communityName+' - '+collectionName
             items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=5000', headers=header, cookies=cookies, verify=verify)
             while items.status_code != 200:
@@ -111,7 +111,7 @@ for i in range (0, len (communities)):
             for key in keyList:
                 collectionKeyCount[key] = 0
             for itemID in collectionItemList:
-                print itemID
+                print(itemID)
                 metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
                 for i in range (0, len (metadata)):
                     itemKey = metadata[i]['key']
@@ -134,6 +134,6 @@ for i in range (0, len (communities)):
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print "%d:%02d:%02d" % (h, m, s)
+print("%d:%02d:%02d" % (h, m, s))
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)

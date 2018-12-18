@@ -7,15 +7,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -33,7 +33,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 itemList = []
 endpoint = baseURL+'/rest/communities'
@@ -59,12 +59,12 @@ for i in range (0, len (communities)):
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Item list creation time: ',"%d:%02d:%02d" % (h, m, s)
+print('Item list creation time: ',"%d:%02d:%02d" % (h, m, s))
 
 valueList = []
 for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
+    print('Items remaining: ', itemsRemaining, 'ItemID: ', itemID)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
         metadataKeyLanguagePair = {}
@@ -74,7 +74,7 @@ for number, itemID in enumerate(itemList):
         if metadataKeyLanguagePair not in valueList:
             valueList.append(metadataKeyLanguagePair)
 
-f=csv.writer(open(filePath+'keyLanguageValues.csv', 'wb'))
+f=csv.writer(open(filePath+'keyLanguageValues.csv', 'w'))
 f.writerow(['key']+['language'])
 for m in range (0, len (valueList)):
     for k, v in valueList[m].iteritems():
@@ -85,4 +85,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

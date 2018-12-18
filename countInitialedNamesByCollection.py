@@ -6,15 +6,15 @@ import re
 import time
 import urllib3
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -34,7 +34,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 collectionIds = []
 endpoint = baseURL+'/rest/communities'
@@ -50,15 +50,15 @@ for community in communities:
 names = []
 keys = ['dc.contributor.advisor', 'dc.contributor.author', 'dc.contributor.committeeMember', 'dc.contributor.editor', 'dc.contributor.illustrator', 'dc.contributor.other', 'dc.creator']
 
-f = csv.writer(open('initialCountInCollection.csv', 'wb'))
+f = csv.writer(open('initialCountInCollection.csv', 'w'))
 f.writerow(['collectionName']+['handle']+['initialCount'])
 
 for number, collectionID in enumerate(collectionIds):
     initialCount = 0
     collectionsRemaining = len(collectionIds) - number
-    print collectionID, 'Collections remaining: ', collectionsRemaining
+    print(collectionID, 'Collections remaining: ', collectionsRemaining)
     collection = requests.get(baseURL+'/rest/collections/'+str(collectionID), headers=header, cookies=cookies, verify=verify).json()
-    collectionName = collection['name'].encode('utf-8')
+    collectionName = collection['name']
     collectionHandle = collection['handle']
     collSels = '&collSel[]=' + collectionID
     offset = 0
@@ -67,7 +67,7 @@ for number, collectionID in enumerate(collectionIds):
     while items != []:
         for key in keys:
             endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=exists&query_val[]='+collSels+'&limit=100&offset='+str(offset)
-            print endpoint
+            print(endpoint)
             response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
             items = response['items']
             for item in items:
@@ -75,7 +75,7 @@ for number, collectionID in enumerate(collectionIds):
                 metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
                 for metadata_element in metadata:
                     if metadata_element['key'] == key:
-                        individual_name = metadata_element['value'].encode('utf-8')
+                        individual_name = metadata_element['value']
                         for metadata_element in metadata:
                             if metadata_element['key'] == 'dc.identifier.uri':
                                 uri = metadata_element['value']
@@ -91,7 +91,7 @@ for number, collectionID in enumerate(collectionIds):
                                 else:
                                     continue
         offset = offset + 200
-        print offset
+        print(offset)
     if initialCount > 0:
         f.writerow([collectionName]+[baseURL+'/'+collectionHandle]+[str(initialCount).zfill(6)])
 
@@ -100,4 +100,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

@@ -7,15 +7,15 @@ from collections import Counter
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 #login info kept in secrets.py file
 baseURL = secrets.baseURL
@@ -32,7 +32,7 @@ args = parser.parse_args()
 if args.handle:
     handle = args.handle
 else:
-    handle = raw_input('Enter collection handle: ')
+    handle = input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -46,7 +46,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+handle
 collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -66,37 +66,37 @@ while items != []:
         itemHandle = items[k]['handle']
         itemList[itemID] = itemHandle
     offset = offset + 200
-    print offset
+    print(offset)
 
 keyList = []
 for itemID in itemList:
-    print baseURL+'/rest/items/'+str(itemID)+'/metadata'
+    print(baseURL+'/rest/items/'+str(itemID)+'/metadata')
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for metadataElement in metadata:
         key = metadataElement['key']
         if key not in keyList and key != 'dc.description.provenance':
             keyList.append(key)
-            print itemID, key
+            print(itemID, key)
 
 keyListHeader = ['itemID']
 keyListHeader = keyListHeader + keyList
-print keyListHeader
-f=csv.writer(open(filePath+handle.replace('/','-')+'Metadata.csv', 'wb'))
+print(keyListHeader)
+f=csv.writer(open(filePath+handle.replace('/','-')+'Metadata.csv', 'w'))
 f.writerow(keyListHeader)
 
 itemRows = []
 for itemID in itemList:
     itemRow = dict.fromkeys(keyListHeader, '')
     itemRow['itemID'] = itemID
-    print itemID
+    print(itemID)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for metadataElement in metadata:
         for key in keyListHeader:
             if metadataElement['key'] == key:
                 try:
-                    value = metadataElement['value'].encode('utf-8')+'|'
+                    value = metadataElement['value']+'|'
                 except:
-                    value = ''+'|'            
+                    value = ''+'|'
                 try:
                     itemRow[key] = itemRow[key] + value
                 except:
@@ -111,4 +111,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ','%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ','%d:%02d:%02d' % (h, m, s))

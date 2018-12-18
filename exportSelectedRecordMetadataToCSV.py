@@ -7,15 +7,15 @@ from collections import Counter
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 #login info kept in secrets.py file
 baseURL = secrets.baseURL
@@ -32,7 +32,7 @@ args = parser.parse_args()
 if args.fileName:
     fileName = filePath+args.fileName
 else:
-    fileName = filePath+raw_input('Enter the CSV file of record handles (including \'.csv\'): ')
+    fileName = filePath+input('Enter the CSV file of record handles (including \'.csv\'): ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -46,7 +46,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 
 handles = []
@@ -69,29 +69,29 @@ for itemID in itemList:
         key = metadataElement['key']
         if key not in keyList and key != 'dc.description.provenance':
             keyList.append(key)
-            print itemID, key
+            print(itemID, key)
 
 keyListHeader = ['itemID']
 keyListHeader = keyListHeader + keyList
-print keyListHeader
-f=csv.writer(open(filePath+'selectedRecordMetadata.csv', 'wb'))
+print(keyListHeader)
+f=csv.writer(open(filePath+'selectedRecordMetadata.csv', 'w'))
 f.writerow(keyListHeader)
 
 itemRows = []
 for itemID in itemList:
     itemRow = dict.fromkeys(keyListHeader, '')
     itemRow['itemID'] = itemID
-    print itemRow
+    print(itemRow)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for metadataElement in metadata:
         for key in keyListHeader:
             if metadataElement['key'] == key:
-                value = metadataElement['value'].encode('utf-8')+'|'
+                value = metadataElement['value']+'|'
                 try:
                     itemRow[key] = itemRow[key] + value
                 except:
                     itemRow[key] = value
-    print itemRow
+    print(itemRow)
     for key in keyListHeader:
         itemList.append(itemRow[key][:len(itemRow[key])-1])
     f.writerow(itemList)

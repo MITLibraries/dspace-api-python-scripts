@@ -6,15 +6,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -23,7 +23,7 @@ filePath = secrets.filePath
 verify = secrets.verify
 skippedCollections = secrets.skippedCollections
 
-handle = raw_input('Enter handle: ')
+handle = input('Enter handle: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -34,7 +34,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+handle
 collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -61,4 +61,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print "%d:%02d:%02d" % (h, m, s)
+print("%d:%02d:%02d" % (h, m, s))

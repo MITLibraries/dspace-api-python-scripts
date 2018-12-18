@@ -7,15 +7,15 @@ from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--handle', help='handle of the community to retreive. optional - if not provided, the script will ask for input')
@@ -24,7 +24,7 @@ args = parser.parse_args()
 if args.handle:
     handle = args.handle
 else:
-    handle = raw_input('Enter community handle: ')
+    handle = input('Enter community handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -44,7 +44,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+handle
 community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -58,7 +58,7 @@ for j in range (0, len (collections)):
 
 date = datetime.now().strftime('%Y-%m-%d %H.%M.%S')
 
-f=csv.writer(open(filePath+'EtdFacultyNames'+date+'.csv', 'wb'))
+f=csv.writer(open(filePath+'EtdFacultyNames'+date+'.csv', 'w'))
 f.writerow(['name'])
 
 nameFields = ['dc.contributor.advisor','dc.contributor.committeeMember']
@@ -70,7 +70,7 @@ recordsEdited = 0
 items = ''
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?&query_val[]='+collSels+'&limit=200&offset='+str(offset)
-    print endpoint
+    print(endpoint)
     response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
     items = response['items']
     for item in items:
@@ -79,11 +79,11 @@ while items != []:
         metadata = requests.get(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify).json()
         for metadataElement in metadata:
             if metadataElement['key'] in nameFields:
-                facultyName = metadataElement['value'].encode('utf-8')
+                facultyName = metadataElement['value']
                 if facultyName not in facultyNames:
                     facultyNames.append(facultyName)
     offset = offset + 200
-    print offset
+    print(offset)
 
 for facultyName in facultyNames:
     f.writerow([facultyName])
@@ -93,4 +93,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

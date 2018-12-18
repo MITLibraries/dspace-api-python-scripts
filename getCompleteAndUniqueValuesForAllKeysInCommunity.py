@@ -10,15 +10,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -27,7 +27,7 @@ filePath = secrets.filePath
 verify = secrets.verify
 skippedCollections = secrets.skippedCollections
 
-handle = raw_input('Enter community handle: ')
+handle = input('Enter community handle: ')
 
 startTime = time.time()
 data = {'email':email,'password':password}
@@ -38,7 +38,7 @@ headerFileUpload = {'accept':'application/json'}
 cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 itemList = []
 endpoint = baseURL+'/rest/handle/'+handle
@@ -68,23 +68,23 @@ for j in range (0, len (collections)):
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Item list creation time: ','%d:%02d:%02d' % (h, m, s)
+print('Item list creation time: ','%d:%02d:%02d' % (h, m, s))
 
 os.mkdir(filePathComplete)
 os.mkdir(filePathUnique)
 for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
+    print('Items remaining: ', itemsRemaining, 'ItemID: ', itemID)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
         if metadata[l]['key'] != 'dc.description.provenance':
             key = metadata[l]['key']
             try:
-                value = metadata[l]['value'].encode('utf-8')
+                value = metadata[l]['value']
             except:
                 value = ''
             if os.path.isfile(filePathComplete+key+'ValuesComplete.csv') == False:
-                f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'wb'))
+                f=csv.writer(open(filePathComplete+key+'ValuesComplete.csv', 'w'))
                 f.writerow(['itemID']+['value'])
                 f.writerow([itemID]+[value])
             else:
@@ -94,7 +94,7 @@ for number, itemID in enumerate(itemList):
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Complete value list creation time: ','%d:%02d:%02d' % (h, m, s)
+print('Complete value list creation time: ','%d:%02d:%02d' % (h, m, s))
 
 for fileName in os.listdir(filePathComplete):
     reader = csv.DictReader(open(filePathComplete+fileName))
@@ -103,7 +103,7 @@ for fileName in os.listdir(filePathComplete):
     for row in reader:
         valueList.append(row['value'])
     valueListCount = Counter(valueList)
-    f=csv.writer(open(filePathUnique+fileName, 'wb'))
+    f=csv.writer(open(filePathUnique+fileName, 'w'))
     f.writerow(['value']+['count'])
     for key, value in valueListCount.items():
         f.writerow([key]+[str(value).zfill(6)])
@@ -113,4 +113,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
