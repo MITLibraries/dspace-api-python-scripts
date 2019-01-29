@@ -68,3 +68,5 @@ local/*
 .profile
 *.csv
 *.json
+Pipfile
+Pipfile.lock
