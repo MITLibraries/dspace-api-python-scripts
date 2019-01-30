@@ -25,11 +25,11 @@ parser.add_argument('-e', '--fileExtension', help='the extension of files to be 
 parser.add_argument('-i', '--handle', help='handle of the object to retreive. optional - if not provided, the script will ask for input')
 args = parser.parse_args()
 
-if args.uri:
+if args.directory:
     directory = args.directory
 else:
     directory = input('Enter directory name: ')
-if args.uri:
+if args.fileExtension:
     fileExtension = args.fileExtension
 else:
     fileExtension = '.'+input('Enter file extension: ')
