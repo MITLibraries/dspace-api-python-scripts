@@ -5,15 +5,15 @@ import csv
 import argparse
 import urllib3
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fileNameCSV', help='the metadata CSV file. optional - if not provided, the script will ask for input')
@@ -23,11 +23,11 @@ args = parser.parse_args()
 if args.fileNameCSV:
     fileNameCSV =args.fileNameCSV
 else:
-    fileNameCSV = raw_input('Enter the metadata CSV file (including \'.csv\'): ')
+    fileNameCSV = input('Enter the metadata CSV file (including \'.csv\'): ')
 if args.handle:
     handle = args.handle
 else:
-    handle = raw_input('Enter collection handle: ')
+    handle = input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -43,15 +43,15 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
+
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+handle
 collection = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
 collectionID = collection['uuid']
-print collection
+print(collection)
 
 #Enter abstract text here
 abstractText = ''
@@ -79,8 +79,8 @@ introductoryText = abstractText + seriesLinks
 
 collection['introductoryText'] = introductoryText
 collection = json.dumps(collection)
-print collection
+print(collection)
 post = requests.put(baseURL+'/rest/collections/'+collectionID, headers=header, cookies=cookies, verify=verify, data=collection)
-print post
+print(post)
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)

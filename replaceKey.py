@@ -7,15 +7,15 @@ from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--replacedKey', help='the key to be replaced. optional - if not provided, the script will ask for input')
@@ -25,11 +25,11 @@ args = parser.parse_args()
 if args.replacedKey:
     replacedKey = args.replacedKey
 else:
-    replacedKey = raw_input('Enter the key to be replaced: ')
+    replacedKey = input('Enter the key to be replaced: ')
 if args.replacementKey:
     replacementKey = args.replacementKey
 else:
-    replacementKey = raw_input('Enter the replacement key: ')
+    replacementKey = input('Enter the replacement key: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -46,11 +46,11 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
-status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
-print 'authenticated'
 
-f=csv.writer(open(filePath+'replaceKey'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+print('authenticated')
+
+f=csv.writer(open(filePath+'replaceKey'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['replacedKey']+['replacedValue']+['delete']+['post'])
 offset = 0
 recordsEdited = 0
@@ -58,7 +58,7 @@ items = ''
 itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+replacedKey+'&query_op[]=exists&query_val[]=&limit=200&offset='+str(offset)
-    print endpoint
+    print(endpoint)
     response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
     items = response['items']
     for item in items:
@@ -66,10 +66,10 @@ while items != []:
         itemLink = item['link']
         itemLinks.append(itemLink)
     offset = offset + 200
-    print offset
+    print(offset)
 for itemLink in itemLinks:
     itemMetadataProcessed = []
-    print itemLink
+    print(itemLink)
     metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
         metadata[l].pop('schema', None)
@@ -79,14 +79,14 @@ for itemLink in itemLinks:
             replacedElement = metadata[l]
             updatedMetadataElement = {}
             updatedMetadataElement['key'] = replacementKey
-            updatedMetadataElement['value'] = unicode(replacedElement['value'])
-            updatedMetadataElement['language'] = unicode(replacedElement['language'])
-            print updatedMetadataElement
+            updatedMetadataElement['value'] = replacedElement['value']
+            updatedMetadataElement['language'] = replacedElement['language']
+            print(updatedMetadataElement)
             itemMetadataProcessed.append(updatedMetadataElement)
             provNote = '\''+replacedKey+'\' was replaced by \''+replacementKey+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
             provNoteElement = {}
             provNoteElement['key'] = 'dc.description.provenance'
-            provNoteElement['value'] = unicode(provNote)
+            provNoteElement['value'] = provNote
             provNoteElement['language'] = 'en_US'
             itemMetadataProcessed.append(provNoteElement)
         else:
@@ -94,14 +94,14 @@ for itemLink in itemLinks:
                 itemMetadataProcessed.append(metadata[l])
     itemMetadataProcessed = json.dumps(itemMetadataProcessed)
     delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
-    print delete
+    print(delete)
     post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
-    print post
-    f.writerow([itemLink]+[replacedElement['key']]+[replacedElement['value'].encode('utf-8')]+[delete]+[post])
+    print(post)
+    f.writerow([itemLink]+[replacedElement['key']]+[replacedElement['value']]+[delete]+[post])
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

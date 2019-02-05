@@ -8,15 +8,15 @@ import csv
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', help='the directory of the files. optional - if not provided, the script will ask for input')
@@ -28,19 +28,19 @@ args = parser.parse_args()
 if args.directory:
     directory = args.directory
 else:
-    directory = raw_input('Enter directory (C:/Test/): ')
+    directory = input('Enter directory (C:/Test/): ')
 if args.fileExtension:
     fileExtension = args.fileExtension
 else:
-    fileExtension = raw_input('Enter file extension: ')
+    fileExtension = input('Enter file extension: ')
 if args.communityHandle:
     communityHandle = args.communityHandle
 else:
-    communityHandle = raw_input('Enter community handle: ')
+    communityHandle = input('Enter community handle: ')
 if args.collectionName:
     collectionName = args.collectionName
 else:
-    collectionName = raw_input('Enter collection name: ')
+    collectionName = input('Enter collection name: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -57,34 +57,34 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
+
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 #create file list and export csv
 fileList = {}
 for root, dirs, files in os.walk(directory, topdown=True):
-    print 'building file list'
+    print('building file list')
     for file in files:
         if file.endswith(fileExtension):
             fileList[file[:file.index('.')]] = os.path.join(root, file).replace('\\','/')
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'File list creation time: ','%d:%02d:%02d' % (h, m, s)
+print('File list creation time: ','%d:%02d:%02d' % (h, m, s))
 
-f=csv.writer(open(collectionName.replace(' ','')+'fileList.csv', 'wb'))
+f=csv.writer(open(collectionName.replace(' ','')+'fileList.csv', 'w'))
 f.writerow(['itemID'])
 
 for k,v in fileList.items():
     f.writerow([v[v.rindex('/')+1:]])
 
-f2=open('fileListDict.txt', 'wb')
+f2=open('fileListDict.txt', 'w')
 f2.write(json.dumps(fileList))
 
 ## Use this section of code if 'fileListDict.txt' has already been generated and comment out lines 64-83. This is useful if uploading a very large collection as generating the file list will take some time.
-# f3=open('fileListDict.txt', 'rb')
+# f3=open('fileListDict.txt', 'r')
 # fileList = json.load(f3)
 
 #Get community ID
@@ -114,9 +114,9 @@ for itemMetadata in collectionMetadata:
         if fileIdentifier in k:
             fileExists = True
     if fileExists == True:
-        print fileIdentifier
+        print(fileIdentifier)
         post = requests.post(baseURL+collectionID+'/items', headers=header, cookies=cookies, verify=verify, data=updatedItemMetadata).json()
-        print json.dumps(post)
+        print(json.dumps(post))
         itemID = post['link']
 
         # #Post bitstream - front and back. Deprecated method, preserved for reference
@@ -126,7 +126,7 @@ for itemMetadata in collectionMetadata:
         #         fileName = bitstream[bitstream.rfind('/')+1:]
         #         data = open(bitstream, 'rb')
         #         post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, verify=verify, data=data).json()
-        #         print post
+        #         print(post)
         #
         # for k,v in fileList.items():
         #     if k == fileIdentifier + '-Back':
@@ -134,7 +134,7 @@ for itemMetadata in collectionMetadata:
         #         fileName = bitstream[bitstream.rfind('/')+1:]
         #         data = open(bitstream, 'rb')
         #         post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, verify=verify, data=data).json()
-        #         print post
+        #         print(post)
 
         #Post bitstream - starts with file identifier
         for k,v in fileList.items():
@@ -143,7 +143,7 @@ for itemMetadata in collectionMetadata:
                 fileName = bitstream[bitstream.rfind('/')+1:]
                 data = open(bitstream, 'rb')
                 post = requests.post(baseURL+itemID+'/bitstreams?name='+fileName, headers=headerFileUpload, cookies=cookies, verify=verify, data=data).json()
-                print json.dumps(post)
+                print(json.dumps(post))
 
         #Create provenance notes
         provNote = {}
@@ -178,11 +178,11 @@ for itemMetadata in collectionMetadata:
         #Post provenance notes
         provNote = json.dumps([provNote, provNote2])
         post = requests.put(baseURL+itemID+'/metadata', headers=header, cookies=cookies, verify=verify, data=provNote)
-        print post
+        print(post)
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ','%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ','%d:%02d:%02d' % (h, m, s))

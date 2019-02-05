@@ -5,15 +5,15 @@ import time
 from datetime import datetime
 import os
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -31,9 +31,9 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
+
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/communities'
 communities = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -46,7 +46,7 @@ for i in range (0, len (communities)):
         collectionID = collections[j]['uuid']
         if collectionID not in skippedCollections:
             collectionHandle = collections[j]['handle'].replace(handlePrefix,'').replace('/','-')
-            print 'collectionID: ', collectionID
+            print('collectionID: ', collectionID)
             itemList = []
             offset = 0
             items = ''
@@ -72,4 +72,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print "%d:%02d:%02d" % (h, m, s)
+print("%d:%02d:%02d" % (h, m, s))

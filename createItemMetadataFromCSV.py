@@ -43,7 +43,7 @@ def createMetadataElementDirect (key, value, language):
         metadataElement = {'key': key, 'value': value}
         metadata.append(metadataElement)
 
-fileName = raw_input('Enter fileName (including \'.csv\'): ')
+fileName = input('Enter fileName (including \'.csv\'): ')
 
 with open(fileName) as csvfile:
     reader = csv.DictReader(csvfile)
@@ -72,7 +72,7 @@ with open(fileName) as csvfile:
         item = {'metadata': metadata}
         metadataGroup.append(item)
         counter = counter + 1
-        print counter
+        print(counter)
 
 f=open('metadata.json', 'w')
 json.dump(metadataGroup, f)
