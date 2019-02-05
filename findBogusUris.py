@@ -7,15 +7,15 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -31,19 +31,19 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
+
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
-f=csv.writer(open(filePath+'bogusUris.csv', 'wb'))
+f=csv.writer(open(filePath+'bogusUris.csv', 'w'))
 f.writerow(['itemID']+['uri'])
 offset = 0
 recordsEdited = 0
 items = ''
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]=dc.identifier.uri&query_op[]=doesnt_contain&query_val[]='+handlePrefix+'&limit=200&offset='+str(offset)
-    print endpoint
+    print(endpoint)
     response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
     items = response['items']
     for item in items:
@@ -56,11 +56,11 @@ while items != []:
                 if uri.startswith(handlePrefix) == False:
                     f.writerow([itemLink]+[uri])
     offset = offset + 200
-    print offset
+    print(offset)
 
 logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

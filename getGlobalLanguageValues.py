@@ -7,13 +7,13 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -28,10 +28,10 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
+
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 itemList = []
 endpoint = baseURL+'/rest/communities'
@@ -57,19 +57,19 @@ for i in range (0, len (communities)):
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Item list creation time: ',"%d:%02d:%02d" % (h, m, s)
+print('Item list creation time: ',"%d:%02d:%02d" % (h, m, s))
 
 valueList = []
 for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
-    print 'Items remaining: ', itemsRemaining, 'ItemID: ', itemID
+    print('Items remaining: ', itemsRemaining, 'ItemID: ', itemID)
     metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for l in range (0, len (metadata)):
         metadataValue = metadata[l]['language']
         if metadataValue not in valueList:
             valueList.append(metadataValue)
 
-f=csv.writer(open(filePath+'globalLanguageValues.csv', 'wb'))
+f=csv.writer(open(filePath+'globalLanguageValues.csv', 'w'))
 f.writerow(['language'])
 for m in range (0, len (valueList)):
     f.writerow([valueList[m]])
@@ -79,4 +79,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))

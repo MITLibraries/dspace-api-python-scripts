@@ -7,15 +7,15 @@ from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = raw_input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
-        print 'Editing Production'
+        print('Editing Production')
     except ImportError:
-        print 'Editing Stage'
+        print('Editing Stage')
 else:
-    print 'Editing Stage'
+    print('Editing Stage')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--key', help='the key to be searched. optional - if not provided, the script will ask for input')
@@ -25,12 +25,12 @@ args = parser.parse_args()
 if args.key:
     key = args.key
 else:
-    key = raw_input('Enter the key to be searched: ')
+    key = input('Enter the key to be searched: ')
 
 if args.handle:
     handle = args.handle
 else:
-    handle = raw_input('Enter collection handle: ')
+    handle = input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -47,10 +47,10 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
+
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print 'authenticated'
+print('authenticated')
 
 endpoint = baseURL+'/rest/handle/'+handle
 community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
@@ -62,7 +62,7 @@ for j in range (0, len (collections)):
     collSel = '&collSel[]=' + collectionID
     collSels = collSels + collSel
 
-f=csv.writer(open(filePath+'recordsMissing'+key+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'wb'))
+f=csv.writer(open(filePath+'recordsMissing'+key+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
 f.writerow(['itemID']+['key'])
 offset = 0
 recordsEdited = 0
@@ -70,14 +70,14 @@ items = ''
 itemLinks = []
 while items != []:
     endpoint = baseURL+'/rest/filtered-items?query_field[]='+key+'&query_op[]=doesnt_exist&query_val[]='+collSels+'&limit=200&offset='+str(offset)
-    print endpoint
+    print(endpoint)
     response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
     items = response['items']
     for item in items:
         itemMetadataProcessed = []
         itemLink = item['link']
     offset = offset + 200
-    print offset
+    print(offset)
 for itemLink in itemLinks:
     metadata = requests.get(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify).json()
     for metadataElement in metadata:
@@ -90,4 +90,4 @@ logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print 'Total script run time: ', '%d:%02d:%02d' % (h, m, s)
+print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
