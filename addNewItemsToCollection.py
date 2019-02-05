@@ -73,8 +73,8 @@ header = {'content-type':'application/json','accept':'application/json'}
 session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept':'application/json'}
-cookiesFileUpload = cookies
 status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+print(status)
 userFullName = status['fullname']
 print('authenticated')
 
