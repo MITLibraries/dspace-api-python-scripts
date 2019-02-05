@@ -1,6 +1,6 @@
 # dspace-editing
 
-**Note**: Upgraded to Python 3 in 02/2019. The Python 2.x version can be downloaded [here](https://github.com/ehanson8//releases)
+**Note**: Upgraded to Python 3 in 02/2019. The Python 2.x version can be downloaded [here](https://github.com/ehanson8/dspace-editing/releases)
 
 **Note**: These scripts were updated in 05/2018 for the new authentication method used by DSpace 6.x
 
