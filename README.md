@@ -1,5 +1,7 @@
 # dspace-data-collection
 
+Note: Upgraded to Python 3 in 02/2019
+
 **Note**: These scripts were updated in 05/2018 for the new authentication method used by DSpace 6.x
 
 All of these scripts require a secrets.py file in the same directory that must contain the following text:
