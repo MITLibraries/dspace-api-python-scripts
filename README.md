@@ -1,6 +1,6 @@
-# dspace-editing
+# dspace-api
 
-**Note**: Upgraded to Python 3 in 02/2019. The Python 2.x version can be downloaded [here](https://github.com/ehanson8/dspace-editing/releases)
+This repository was created from the merger of https://github.com/ehanson8/dspace-editing and https://github.com/ehanson8/dspace-data-collection, both of which have been archived. All further development will occur in this repository.
 
 **Note**: These scripts were updated in 05/2018 for the new authentication method used by DSpace 6.x
 
@@ -30,6 +30,12 @@ Based on user input, adds a specified key-value pair with a specified language v
 #### [addNewItemsToCollection.py](addNewItemsToCollection.py)
 Based on user input, adds new items to the specified collection. In the specified directory, the script creates items and associated metadata based on a 'metadataNewFiles.json' file in the directory. The script then posts files for the appropriate items, which is determined by having the file name (minus the file extension) in a 'dc.identifier.other' field in the item metadata record.
 
+#### [compareTwoKeysInCommunity.py](compareTwoKeysInCommunity.py)
+Based on user input, extracts the values of two specified keys from a specified community to a CSV file for comparison.
+
+#### [countInitialedNamesByCollection.py](countInitialedNamesByCollection.py)
+Based on [mjanowiecki's](https://github.com/mjanowiecki) [findInitialedNamesByCollection.py](https://github.com/mjanowiecki/dspace-data-collection/blob/master/findInitialedNamesByCollection.py), find values in name fields that appear to have first initials that could be expanded to full names and provides a count for each collection when the count is more than zero.
+
 #### [createItemMetadataFromCSV.py](createItemMetadataFromCSV.py)
 Based on user input, creates a JSON file of metadata that can be added to a DSpace item from the specified CSV file or from values directly specified in the script. The 'createMetadataElementCSV' function in the script is used to create a metadata element from the specified CSV file and has three variables:
 
@@ -58,8 +64,64 @@ Based on user input, removes all key-value pairs with the specified key and valu
 #### [editBitstreamsNames.py](editBitstreamsNames.py)
 Based on a specified CSV file of DSpace item handles and replacement file names, replaces the name of bitstreams attached to the specified items.
 
+#### [exportSelectedRecordMetadataToCSV.py](exportSelectedRecordMetadataToCSV.py)
+Based a CSV of item handles, extracts all metadata (except 'dc.description.provenance' values) from the selected items to a CSV file.
+
+#### [findBogusUris.py](findBogusUris.py)
+Extracts the item ID and the value of the key 'dc.identifier.uri' to a CSV file when the value does not begin with the handlePrefix specified in the secrets.py file.
+
+#### [findDuplicateKeys.py](findDuplicateKeys.py)
+Based on user input, extracts item IDs to a CSV file where there are multiple instances of the specified key in the item metadata.
+
 #### [generateCollectionLevelAbstract.py](generateCollectionLevelAbstract.py)
 Based on user input, creates an HTML collection-level abstract that contains hyperlinks to all of the items in each series, as found in the metadata CSV. This assumes that the series title is recorded in 'dc.relation.ispartof' or a similar property in the DSpace item records. The abstract is then posted to the collection in DSpace.
+
+#### [getCollectionMetadataJson.py](getCollectionMetadataJson.py)
+Based on user input, extracts all of the item metadata from the specified collection to a JSON file.
+
+#### [getCompleteAndUniqueValuesForAllKeys.py](getCompleteAndUniqueValuesForAllKeys.py)
+Creates a 'completeValueLists' folder and for all keys used in the repository, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
+
+#### [getCompleteAndUniqueValuesForAllKeysInCommunity.py](getCompleteAndUniqueValuesForAllKeysInCommunity.py)
+Creates a 'completeValueLists' folder and for all keys used in the specified community, extracts all values for a particular key to a CSV with item IDs.  It also creates a 'uniqueValueLists' folder, that writes a CSV file for each key with all unique values and a count of how many times the value appears.
+
+#### [getFacultyNamesFromETDs.py](getFacultyNamesFromETDs.py)
+Based on user input, extracts all values from 'dc.contributor.advisor' and 'dc.contributor.committeeMember' fields from items in collections in the specified community.
+
+#### [getGlobalLanguageValues.py](getGlobalLanguageValues.py)
+Extracts all unique language values used by metadata entries in the repository to a CSV file.
+
+#### [getHandlesAndBitstreamsFromCollection.py](getHandlesAndBitstreamsFromCollection.py)
+Based on user input, extracts all the handles and bitstreams associated with the items in the specified collection to a CSV file.
+
+#### [getLanguageValuesForKeys.py](getLanguageValuesForKeys.py)
+Extracts all unique pairs of keys and language values used by metadata entries in the repository to a CSV file.
+
+#### [getRecordsAndValuesForKey.py](getRecordsAndValuesForKey.py)
+Based on user input, extracts the ID and URI for all items in the repository with the specified key, as well as the value of the specified key, to a CSV file.
+
+#### [getRecordsAndValuesForKeyInCollection.py](getRecordsAndValuesForKeyInCollection.py)
+Based on user input, extracts the ID and URI for all items in the specified collection with the specified key, as well as the value of the specified key, to a CSV file.
+
+#### [getRecordsWithKeyAndValue.py](getRecordsWithKeyAndValue.py)
+Based on user input, extracts the ID and URI for all items in the repository with the specified key-value pair to a CSV file.
+
+#### [identifyItemsMissingKeyInCommunity.py](identifyItemsMissingKeyInCommunity.py)
+Based on user input, extracts the IDs of items from a specified community that do not have the specified key.
+
+#### [metadataCollectionsKeysMatrix.py](metadataCollectionsKeysMatrix.py)
+Creates a matrix containing a count of each time a key appears in each collection in the repository.
+
+#### [metadataOverview.py](metadataOverview.py)
+Produces several CSV files containing different information about the structure and metadata of the repository:
+
+|File Name |Description|
+|--------------------------|--------------------------------------------------------------------------|
+|collectionMetadataKeys.csv | A list of all keys used in each collection with collection name, ID, and handle.|
+|dspaceIDs.csv | A list of every item ID along with the IDs of the collection and community that contains that item.|
+|dspaceTypes.csv | A list of all unique values for the key 'dc.type.'|
+|keyCount.csv | A list of all unique keys used in the repository, as well as a count of how many times it appear.|
+|collectionStats.csv | A list of all collections in the repository with the collection name, ID, handle, and number of items.|
 
 #### [overwriteExistingMetadata.py](overwriteExistingMetadata.py)
 Based on a specified CSV file of DSpace item handles and file identifiers, replaces the metadata of the items with specified handles with the set of metadata elements associated with the corresponding file identifier in a JSON file of metadata entries named 'metadataOverwrite.json.'
