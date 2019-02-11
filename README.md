@@ -2,6 +2,8 @@
 
 This repository was created from the merger of https://github.com/ehanson8/dspace-editing and https://github.com/ehanson8/dspace-data-collection, both of which have been archived. All further development will occur in this repository.
 
+**Note**: Upgraded to Python 3 in 02/2019.
+
 **Note**: These scripts were updated in 05/2018 for the new authentication method used by DSpace 6.x
 
 All of these scripts require a secrets.py file in the same directory that must contain the following text:
