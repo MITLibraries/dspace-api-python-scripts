@@ -1,27 +1,32 @@
 import json
 import requests
-import secrets
 import time
 import csv
 from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the \
+secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
+        secrets = __import__(secrets)
         print('Editing Stage')
 else:
     print('Editing Stage')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-k', '--key', help='the key to be added. optional - if not provided, the script will ask for input')
-parser.add_argument('-v', '--value', help='the value to be added. optional - if not provided, the script will ask for input')
-parser.add_argument('-l', '--language', help='the language tag to be added. optional - if not provided, the script will ask for input')
-parser.add_argument('-i', '--handle', help='handle of the community. optional - if not provided, the script will ask for input')
+parser.add_argument('-k', '--key', help='the key to be added. optional - if \
+not provided, the script will ask for input')
+parser.add_argument('-v', '--value', help='the value to be added. optional - \
+if not provided, the script will ask for input')
+parser.add_argument('-l', '--language', help='the language tag to be added. \
+optional - if not provided, the script will ask for input')
+parser.add_argument('-i', '--handle', help='handle of the community. optional \
+- if not provided, the script will ask for input')
 args = parser.parse_args()
 
 if args.key:
@@ -51,64 +56,84 @@ verify = secrets.verify
 skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
-data = {'email':email,'password':password}
-header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
+data = {'email': email, 'password': password}
+header = {'content-type': 'application/json', 'accept': 'application/json'}
+session = requests.post(baseURL + '/rest/login', headers=header, verify=verify,
+                        params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
-headerFileUpload = {'accept':'application/json'}
+headerFileUpload = {'accept': 'application/json'}
 
-status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+status = requests.get(baseURL + '/rest/status', headers=header,
+                      cookies=cookies, verify=verify).json()
 print('authenticated')
 
 itemList = []
-endpoint = baseURL+'/rest/handle/'+handle
-community = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+endpoint = baseURL + '/rest/handle/' + handle
+community = requests.get(endpoint, headers=header, cookies=cookies,
+                         verify=verify).json()
 communityID = community['uuid']
 
-collections = requests.get(baseURL+'/rest/communities/'+str(communityID)+'/collections', headers=header, cookies=cookies, verify=verify).json()
-for j in range (0, len (collections)):
+collections = requests.get(baseURL + '/rest/communities/' + str(communityID)
+                           + '/collections', headers=header, cookies=cookies,
+                           verify=verify).json()
+for j in range(0, len(collections)):
     collectionID = collections[j]['uuid']
     if collectionID not in skippedCollections:
         offset = 0
         items = ''
         while items != []:
-            items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
+            items = requests.get(baseURL + '/rest/collections/'
+                                 + str(collectionID)
+                                 + '/items?limit=200&offset=' + str(offset),
+                                 headers=header, cookies=cookies,
+                                 verify=verify)
             while items.status_code != 200:
                 time.sleep(5)
-                items = requests.get(baseURL+'/rest/collections/'+str(collectionID)+'/items?limit=200&offset='+str(offset), headers=header, cookies=cookies, verify=verify)
+                items = requests.get(baseURL + '/rest/collections/'
+                                     + str(collectionID)
+                                     + '/items?limit=200&offset='
+                                     + str(offset), headers=header,
+                                     cookies=cookies, verify=verify)
             items = items.json()
-            for k in range (0, len (items)):
+            for k in range(0, len(items)):
                 itemID = items[k]['uuid']
                 itemList.append(itemID)
             offset = offset + 200
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
 h, m = divmod(m, 60)
-print('Item list creation time: ','%d:%02d:%02d' % (h, m, s))
+print('Item list creation time: ', '%d:%02d:%02d' % (h, m, s))
 
 recordsEdited = 0
-f=csv.writer(open(filePath+'addKeyValuePair'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
-f.writerow(['itemID']+['addedKey']+['addedValue']+['delete']+['post'])
+f = csv.writer(open(filePath + 'addKeyValuePair'
+               + datetime.now().strftime('%Y-%m-%d %H.%M.%S') + '.csv', 'w'))
+f.writerow(['itemID'] + ['addedKey'] + ['addedValue'] + ['delete'] + ['post'])
 for number, itemID in enumerate(itemList):
     itemsRemaining = len(itemList) - number
     print('Items remaining: ', itemsRemaining, 'ItemID: ', itemID)
-    metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
+    metadata = requests.get(baseURL + '/rest/items/' + str(itemID)
+                            + '/metadata', headers=header, cookies=cookies,
+                            verify=verify).json()
     itemMetadataProcessed = []
     changeRecord = True
     for metadataElement in metadata:
-        if metadataElement['key'] == addedKey and metadataElement['value'] == addedValue:
+        key = metadataElement['key']
+        value = metadataElement['value']
+        if key == addedKey and value == addedValue:
             changeRecord = False
         metadataElement.pop('schema', None)
         metadataElement.pop('element', None)
         metadataElement.pop('qualifier', None)
         itemMetadataProcessed.append(metadataElement)
-    if changeRecord == True:
+    if changeRecord is True:
         addedMetadataElement = {}
         addedMetadataElement['key'] = addedKey
         addedMetadataElement['value'] = addedValue
         addedMetadataElement['language'] = addedLanguage
         itemMetadataProcessed.append(addedMetadataElement)
-        provNote = '\''+addedKey+': '+addedValue+'\' was added through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+        provNote = '\'' + addedKey + ': ' + addedValue
+        provNote += '\' was added through a batch process on '
+        provNote += datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.'
         provNoteElement = {}
         provNoteElement['key'] = 'dc.description.provenance'
         provNoteElement['value'] = provNote
@@ -117,13 +142,18 @@ for number, itemID in enumerate(itemList):
         recordsEdited = recordsEdited + 1
         itemMetadataProcessed = json.dumps(itemMetadataProcessed)
         print('updated', itemID, recordsEdited)
-        delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
+        delete = requests.delete(baseURL + '/rest/items/' + str(itemID)
+                                 + '/metadata', headers=header,
+                                 cookies=cookies, verify=verify)
         print(delete)
-        post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+        post = requests.put(baseURL + '/rest/items/' + str(itemID)
+                            + '/metadata', headers=header, cookies=cookies,
+                            verify=verify, data=itemMetadataProcessed)
         print(post)
-        f.writerow([itemID]+[addedKey]+[addedValue]+[delete]+[post])
+        f.writerow([itemID] + [addedKey] + [addedValue] + [delete] + [post])
 
-logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
+logout = requests.post(baseURL + '/rest/logout', headers=header,
+                       cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)

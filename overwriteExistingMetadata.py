@@ -1,24 +1,27 @@
 import json
 import requests
-import secrets
 import time
 import csv
 from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the \
+secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
+        secrets = __import__(secrets)
         print('Editing Stage')
 else:
     print('Editing Stage')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fileName', help='the name of the CSV with handles and file identifiers. optional - if not provided, the script will ask for input')
+parser.add_argument('-f', '--fileName', help='the name of the CSV with handles \
+and file identifiers. optional - if not provided, the script will ask for \
+input')
 args = parser.parse_args()
 if args.fileName:
     fileName = args.fileName
@@ -45,21 +48,24 @@ print(handleIdDict)
 id = input('test')
 
 startTime = time.time()
-data = {'email':email,'password':password}
-header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
+data = {'email': email, 'password': password}
+header = {'content-type': 'application/json', 'accept': 'application/json'}
+session = requests.post(baseURL + '/rest/login', headers=header, verify=verify,
+                        params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
-headerFileUpload = {'accept':'application/json'}
+headerFileUpload = {'accept': 'application/json'}
 
-status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+status = requests.get(baseURL + '/rest/status', headers=header,
+                      cookies=cookies, verify=verify).json()
 print('authenticated')
 
 collectionMetadata = json.load(open('metadataOverwrite.json'))
 
-f=csv.writer(open(filePath+'metadataOverwrite'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
-f.writerow(['itemID']+['delete']+['post'])
+f = csv.writer(open(filePath + 'metadataOverwrite'
+               + datetime.now().strftime('%Y-%m-%d %H.%M.%S') + '.csv', 'w'))
+f.writerow(['itemID'] + ['delete'] + ['post'])
 
-for k,v in handleIdDict.items():
+for k, v in handleIdDict.items():
     for itemMetadata in collectionMetadata:
         updatedItemMetadata = {}
         updatedItemMetadataList = []
@@ -72,7 +78,8 @@ for k,v in handleIdDict.items():
         uriElement['key'] = 'dc.identifier.uri'
         uriElement['value'] = 'http://jhir.library.jhu.edu/handle/' + v
         updatedItemMetadataList.append(uriElement)
-        provNote = 'Item metadata updated through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+        provNote = 'Item metadata updated through a batch process on ' \
+            + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.'
         provNoteElement = {}
         provNoteElement['key'] = 'dc.description.provenance'
         provNoteElement['value'] = provNote
@@ -81,11 +88,14 @@ for k,v in handleIdDict.items():
 
         if fileIdentifier == k:
             print(fileIdentifier)
-            endpoint = baseURL+'/rest/handle/'+v
-            item = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+            endpoint = baseURL + '/rest/handle/' + v
+            item = requests.get(endpoint, headers=header, cookies=cookies,
+                                verify=verify).json()
             itemID = item['uuid']
-            metadata = requests.get(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify).json()
-            for l in range (0, len (metadata)):
+            metadata = requests.get(baseURL + '/rest/items/' + str(itemID)
+                                    + '/metadata', headers=header,
+                                    cookies=cookies, verify=verify).json()
+            for l in range(0, len(metadata)):
                 metadata[l].pop('schema', None)
                 metadata[l].pop('element', None)
                 metadata[l].pop('qualifier', None)
@@ -96,13 +106,18 @@ for k,v in handleIdDict.items():
                 if metadata[l]['key'] == 'dc.date.accessioned':
                     updatedItemMetadataList.append(metadata[l])
             updatedItemMetadata = json.dumps(updatedItemMetadataList)
-            delete = requests.delete(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify)
+            delete = requests.delete(baseURL + '/rest/items/' + str(itemID)
+                                     + '/metadata', headers=header,
+                                     cookies=cookies, verify=verify)
             print(delete)
-            post = requests.put(baseURL+'/rest/items/'+str(itemID)+'/metadata', headers=header, cookies=cookies, verify=verify, data=updatedItemMetadata)
+            post = requests.put(baseURL + '/rest/items/' + str(itemID)
+                                + '/metadata', headers=header, cookies=cookies,
+                                verify=verify, data=updatedItemMetadata)
             print(post)
-            f.writerow([itemID]+[delete]+[post])
+            f.writerow([itemID] + [delete] + [post])
 
-logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
+logout = requests.post(baseURL + '/rest/logout', headers=header,
+                       cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)

@@ -1,25 +1,28 @@
 import json
 import requests
-import secrets
 import time
 import csv
 from datetime import datetime
 import urllib3
 import argparse
 
-secretsVersion = input('To edit production server, enter the name of the secrets file: ')
+secretsVersion = input('To edit production server, enter the name of the \
+secrets file: ')
 if secretsVersion != '':
     try:
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
+        secrets = __import__(secrets)
         print('Editing Stage')
 else:
     print('Editing Stage')
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-1', '--replacedKey', help='the key to be replaced. optional - if not provided, the script will ask for input')
-parser.add_argument('-2', '--replacementKey', help='the replacement key. optional - if not provided, the script will ask for input')
+parser.add_argument('-1', '--replacedKey', help='the key to be replaced. \
+                    optional - if not provided, the script will ask for input')
+parser.add_argument('-2', '--replacementKey', help='the replacement key. \
+                    optional - if not provided, the script will ask for input')
 args = parser.parse_args()
 
 if args.replacedKey:
@@ -41,25 +44,33 @@ verify = secrets.verify
 skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
-data = {'email':email,'password':password}
-header = {'content-type':'application/json','accept':'application/json'}
-session = requests.post(baseURL+'/rest/login', headers=header, verify=verify, params=data).cookies['JSESSIONID']
+data = {'email': email, 'password': password}
+header = {'content-type': 'application/json', 'accept': 'application/json'}
+session = requests.post(baseURL + '/rest/login', headers=header, verify=verify,
+                        params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
-headerFileUpload = {'accept':'application/json'}
+headerFileUpload = {'accept': 'application/json'}
 
-status = requests.get(baseURL+'/rest/status', headers=header, cookies=cookies, verify=verify).json()
+status = requests.get(baseURL + '/rest/status', headers=header,
+                      cookies=cookies, verify=verify).json()
 print('authenticated')
 
-f=csv.writer(open(filePath+'replaceKey'+datetime.now().strftime('%Y-%m-%d %H.%M.%S')+'.csv', 'w'))
-f.writerow(['itemID']+['replacedKey']+['replacedValue']+['delete']+['post'])
+date = datetime.now().strftime('%Y-%m-%d %H.%M.%S')
+f = csv.writer(open(filePath + 'replaceKey' + date + '.csv', 'w'))
+f.writerow(['itemID'] + ['replacedKey'] + ['replacedValue'] + ['delete']
+           + ['post'])
 offset = 0
 recordsEdited = 0
 items = ''
 itemLinks = []
 while items != []:
-    endpoint = baseURL+'/rest/filtered-items?query_field[]='+replacedKey+'&query_op[]=exists&query_val[]=&limit=200&offset='+str(offset)
+    endpoint = baseURL + '/rest/filtered-items?query_field[]='
+    endpoint += replacedKey
+    endpoint += '&query_op[]=exists&query_val[]=&limit=200&offset='
+    endpoint += str(offset)
     print(endpoint)
-    response = requests.get(endpoint, headers=header, cookies=cookies, verify=verify).json()
+    response = requests.get(endpoint, headers=header, cookies=cookies,
+                            verify=verify).json()
     items = response['items']
     for item in items:
         itemMetadataProcessed = []
@@ -70,8 +81,9 @@ while items != []:
 for itemLink in itemLinks:
     itemMetadataProcessed = []
     print(itemLink)
-    metadata = requests.get(baseURL + itemLink + '/metadata', headers=header, cookies=cookies, verify=verify).json()
-    for l in range (0, len (metadata)):
+    metadata = requests.get(baseURL + itemLink + '/metadata', headers=header,
+                            cookies=cookies, verify=verify).json()
+    for l in range(0, len(metadata)):
         metadata[l].pop('schema', None)
         metadata[l].pop('element', None)
         metadata[l].pop('qualifier', None)
@@ -83,7 +95,10 @@ for itemLink in itemLinks:
             updatedMetadataElement['language'] = replacedElement['language']
             print(updatedMetadataElement)
             itemMetadataProcessed.append(updatedMetadataElement)
-            provNote = '\''+replacedKey+'\' was replaced by \''+replacementKey+'\' through a batch process on '+datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.'
+            provNote = '\'' + replacedKey + '\' was replaced by \''
+            provNote += replacementKey
+            date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            provNote += '\' through a batch process on ' + date + '.'
             provNoteElement = {}
             provNoteElement['key'] = 'dc.description.provenance'
             provNoteElement['value'] = provNote
@@ -93,13 +108,18 @@ for itemLink in itemLinks:
             if metadata[l] not in itemMetadataProcessed:
                 itemMetadataProcessed.append(metadata[l])
     itemMetadataProcessed = json.dumps(itemMetadataProcessed)
-    delete = requests.delete(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify)
+    delete = requests.delete(baseURL + itemLink + '/metadata', headers=header,
+                             cookies=cookies, verify=verify)
     print(delete)
-    post = requests.put(baseURL+itemLink+'/metadata', headers=header, cookies=cookies, verify=verify, data=itemMetadataProcessed)
+    post = requests.put(baseURL + itemLink + '/metadata', headers=header,
+                        cookies=cookies, verify=verify,
+                        data=itemMetadataProcessed)
     print(post)
-    f.writerow([itemLink]+[replacedElement['key']]+[replacedElement['value']]+[delete]+[post])
+    f.writerow([itemLink] + [replacedElement['key']]
+               + [replacedElement['value']] + [delete] + [post])
 
-logout = requests.post(baseURL+'/rest/logout', headers=header, cookies=cookies, verify=verify)
+logout = requests.post(baseURL + '/rest/logout', headers=header,
+                       cookies=cookies, verify=verify)
 
 elapsedTime = time.time() - startTime
 m, s = divmod(elapsedTime, 60)
