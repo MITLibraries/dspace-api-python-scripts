@@ -15,10 +15,11 @@ if secretsVersion != '':
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
-        secrets = __import__(secrets)
-        print('Editing Stage')
+        secrets = __import__('secrets')
+        print('Editing Development')
 else:
-    print('Editing Stage')
+    secrets = __import__('secrets')
+    print('Editing Development')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', help='the directory of files to be \
@@ -81,9 +82,8 @@ cookies = {'JSESSIONID': session}
 headerFileUpload = {'accept': 'application/json'}
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
-print(status)
 userFullName = status['fullname']
-print('authenticated')
+print('authenticated', userFullName)
 
 # Get collection ID
 endpoint = baseURL + '/rest/handle/' + handle

@@ -12,10 +12,11 @@ if secretsVersion != '':
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
-        secrets = __import__(secrets)
-        print('Editing Stage')
+        secrets = __import__('secrets')
+        print('Editing Development')
 else:
-    print('Editing Stage')
+    secrets = __import__('secrets')
+    print('Editing Development')
 
 baseURL = secrets.baseURL
 email = secrets.email
@@ -36,7 +37,7 @@ headerFileUpload = {'accept': 'application/json'}
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print('authenticated')
+print('authenticated', userFullName)
 
 f = csv.writer(open(filePath + 'bogusUris.csv', 'w'))
 f.writerow(['itemID'] + ['uri'])
