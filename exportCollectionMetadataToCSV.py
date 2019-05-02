@@ -11,10 +11,11 @@ if secretsVersion != '':
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
-        secrets = __import__(secrets)
-        print('Editing Stage')
+        secrets = __import__('secrets')
+        print('Editing Development')
 else:
-    print('Editing Stage')
+    secrets = __import__('secrets')
+    print('Editing Development')
 
 # login info kept in secrets.py file
 baseURL = secrets.baseURL
@@ -48,7 +49,7 @@ headerFileUpload = {'accept': 'application/json'}
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
-print('authenticated')
+print('authenticated', userFullName)
 
 endpoint = baseURL + '/rest/handle/' + handle
 collection = requests.get(endpoint, headers=header, cookies=cookies,

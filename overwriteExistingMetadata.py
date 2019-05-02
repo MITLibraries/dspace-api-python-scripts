@@ -13,10 +13,11 @@ if secretsVersion != '':
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
-        secrets = __import__(secrets)
-        print('Editing Stage')
+        secrets = __import__('secrets')
+        print('Editing Development')
 else:
-    print('Editing Stage')
+    secrets = __import__('secrets')
+    print('Editing Development')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fileName', help='the name of the CSV with handles \
@@ -57,7 +58,8 @@ headerFileUpload = {'accept': 'application/json'}
 
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
-print('authenticated')
+userFullName = status['fullname']
+print('authenticated', userFullName)
 
 collectionMetadata = json.load(open('metadataOverwrite.json'))
 

@@ -56,8 +56,6 @@ local/*
 *.json
 createItemMetadataFromCSV_*
 *.txt
-Pipfile
-Pipfile.lock
 
 # Environments
 .env

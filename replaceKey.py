@@ -13,10 +13,11 @@ if secretsVersion != '':
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
-        secrets = __import__(secrets)
-        print('Editing Stage')
+        secrets = __import__('secrets')
+        print('Editing Development')
 else:
-    print('Editing Stage')
+    secrets = __import__('secrets')
+    print('Editing Development')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--replacedKey', help='the key to be replaced. \
@@ -53,7 +54,8 @@ headerFileUpload = {'accept': 'application/json'}
 
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
-print('authenticated')
+userFullName = status['fullname']
+print('authenticated', userFullName)
 
 date = datetime.now().strftime('%Y-%m-%d %H.%M.%S')
 f = csv.writer(open(filePath + 'replaceKey' + date + '.csv', 'w'))

@@ -159,7 +159,7 @@ def main():
                             verify=args.verify, params=data,
                             timeout=args.rtimeout).cookies['JSESSIONID']
     cookies = {'JSESSIONID': session}
-    print('authenticated')
+    print('authenticated', userFullName)
 
     # NOTE: expanding items (of collections) and bitstreams (of items) to get
     # the count

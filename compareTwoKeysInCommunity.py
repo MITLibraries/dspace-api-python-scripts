@@ -11,10 +11,11 @@ if secretsVersion != '':
         secrets = __import__(secretsVersion)
         print('Editing Production')
     except ImportError:
-        secrets = __import__(secrets)
-        print('Editing Stage')
+        secrets = __import__('secrets')
+        print('Editing Development')
 else:
-    print('Editing Stage')
+    secrets = __import__('secrets')
+    print('Editing Development')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-1', '--key', help='the first key to be output. \
@@ -57,7 +58,8 @@ headerFileUpload = {'accept': 'application/json'}
 
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
-print('authenticated')
+userFullName = status['fullname']
+print('authenticated', userFullName)
 
 endpoint = baseURL + '/rest/handle/' + handle
 community = requests.get(endpoint, headers=header, cookies=cookies,
