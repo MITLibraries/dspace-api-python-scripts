@@ -3,6 +3,7 @@ import csv
 import time
 import urllib3
 import argparse
+import dsFunc
 
 secretsVersion = input('To edit production server, enter the name of the \
 secrets file: ')
@@ -96,10 +97,8 @@ for j in range(0, len(collections)):
                 itemList.append(itemID)
             offset = offset + 200
             print(offset)
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Item list creation time: ', '%d:%02d:%02d' % (h, m, s))
+
+dsFunc.elapsedTime(startTime, 'Item list creation time')
 
 valueList = []
 for number, itemID in enumerate(itemList):
@@ -123,10 +122,7 @@ for number, itemID in enumerate(itemList):
     print(itemTuple)
 print(valueList)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Value list creation time: ', '%d:%02d:%02d' % (h, m, s))
+dsFunc.elapsedTime(startTime, 'Value list creation time')
 
 f = csv.writer(open(filePath + key + '-' + key2 + 'Values.csv', 'w'))
 f.writerow(['itemID'] + [key] + [key2])
@@ -136,7 +132,5 @@ for i in range(0, len(valueList)):
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

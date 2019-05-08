@@ -3,6 +3,7 @@ import time
 import csv
 from collections import Counter
 import urllib3
+import dsFunc
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -91,10 +92,7 @@ for i in range(0, len(communities)):
                 offset = offset + 200
                 print(offset)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Item list creation time: ', '%d:%02d:%02d' % (h, m, s))
+dsFunc.elapsedTime(startTime, 'Item list creation time')
 
 # retrieve metadata from all items
 keyList = []
@@ -157,10 +155,8 @@ for concat in keyList:
     fullName = communityName + ' - ' + collectionName
     f.writerow([fullName] + [collectionID] + [collectionHandle] + [key])
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print("%d:%02d:%02d" % (h, m, s))
-
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
+
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

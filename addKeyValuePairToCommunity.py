@@ -5,6 +5,7 @@ import csv
 from datetime import datetime
 import urllib3
 import argparse
+import dsFunc
 
 secretsVersion = input('To edit production server, enter the name of the \
 secrets file: ')
@@ -101,10 +102,8 @@ for j in range(0, len(collections)):
                 itemID = items[k]['uuid']
                 itemList.append(itemID)
             offset = offset + 200
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Item list creation time: ', '%d:%02d:%02d' % (h, m, s))
+            
+dsFunc.elapsedTime(startTime, 'Item list creation time')
 
 recordsEdited = 0
 f = csv.writer(open(filePath + 'addKeyValuePair'
@@ -157,7 +156,5 @@ for number, itemID in enumerate(itemList):
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

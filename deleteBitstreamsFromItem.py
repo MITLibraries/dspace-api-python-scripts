@@ -3,6 +3,7 @@ import time
 import csv
 from datetime import datetime
 import urllib3
+import dsFunc
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -59,10 +60,8 @@ print('found %d bitstreams' % len(bitstreams))
 for k in range(0, len(bitstreams)):
     bitstreamID = bitstreams[k]['uuid']
     bitstreamList.append(bitstreamID)
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Bitstreams list creation time: ', '%d:%02d:%02d' % (h, m, s))
+
+dsFunc.elapsedTime(startTime, 'Bitstream list creation time')
 print(bitstreamList)
 
 f = csv.writer(open(filePath + 'deletedBitstreams'
@@ -80,7 +79,5 @@ for number, bitstreamID in enumerate(bitstreamList):
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

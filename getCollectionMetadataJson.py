@@ -2,6 +2,7 @@ import json
 import requests
 import time
 import urllib3
+import dsFunc
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -68,7 +69,5 @@ json.dump(metadataGroup, f)
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print("%d:%02d:%02d" % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

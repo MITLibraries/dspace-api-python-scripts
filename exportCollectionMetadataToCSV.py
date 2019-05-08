@@ -3,6 +3,7 @@ import time
 import csv
 import urllib3
 import argparse
+import dsFunc
 
 secretsVersion = input('To edit production server, enter the name of the \
 secrets file: ')
@@ -122,7 +123,5 @@ for itemID in itemList:
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')
