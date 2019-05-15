@@ -12,7 +12,6 @@ All of these scripts require a secrets.py file in the same directory that must c
         email='dspace_user@.myuni.edu'
         password='my_dspace_password'    
         filePath = '/Users/dspace_user/dspace-data-collection/data/'
-        handlePrefix = 'http://dspace.myuni.edu/handle/'
         verify = True or False (no quotes). Use False if using an SSH tunnel to connect to the DSpace API
         skipColl = A list of the 'uuid' of any collections that you wish the script to skip. (e.g. ['45794375-6640-4efe-848e-082e60bae375'])
 ```
