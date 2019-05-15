@@ -6,6 +6,7 @@ import os
 import csv
 import urllib3
 import argparse
+import dsFunc
 
 secretsVersion = input('To edit production server, enter the name of the \
 secrets file: ')
@@ -78,10 +79,8 @@ for root, dirs, files in os.walk(directory, topdown=True):
         if file.endswith(fileExtension):
             fullFilePath = os.path.join(root, file).replace('\\', '/')
             fileList[file[:file.index('.')]] = fullFilePath
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('File list creation time: ', '%d:%02d:%02d' % (h, m, s))
+
+dsFunc.elapsedTime(startTime, 'File list creation time')
 
 f = csv.writer(open(collectionName.replace(' ', '') + 'fileList.csv', 'w'))
 f.writerow(['itemID'])
@@ -213,7 +212,5 @@ for itemMetadata in collectionMetadata:
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

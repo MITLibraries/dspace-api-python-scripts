@@ -2,6 +2,7 @@ import requests
 import csv
 import time
 import urllib3
+import dsFunc
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -71,10 +72,8 @@ for i in range(0, len(communities)):
                     itemID = items[k]['uuid']
                     itemList.append(itemID)
                 offset = offset + 100
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Item list creation time: ', "%d:%02d:%02d" % (h, m, s))
+
+dsFunc.elapsedTime(startTime, 'Item list creation time')
 
 valueList = []
 for number, itemID in enumerate(itemList):
@@ -96,7 +95,5 @@ for m in range(0, len(valueList)):
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

@@ -5,6 +5,7 @@ import os.path
 from collections import Counter
 from datetime import datetime
 import urllib3
+import dsFunc
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -103,20 +104,11 @@ for number, collectionID in enumerate(collectionIds):
         offset = offset + 20
         print(offset)
 
-        setTime = time.time() - setTime
-        m, s = divmod(setTime, 60)
-        h, m = divmod(m, 60)
-        print('Set run time: ', '%d:%02d:%02d' % (h, m, s))
+        dsFunc.elapsedTime(setTime, 'Set run time')
 
-    elapsedTime = time.time() - startTime
-    m, s = divmod(elapsedTime, 60)
-    h, m = divmod(m, 60)
-    print('Collection run time: ', '%d:%02d:%02d' % (h, m, s))
+    dsFunc.elapsedTime(startTime, 'Collection run time')
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Complete value list creation time: ', '%d:%02d:%02d' % (h, m, s))
+dsFunc.elapsedTime(startTime, 'Complete value list creation time')
 #
 for fileName in os.listdir(filePathComplete):
     reader = csv.DictReader(open(filePathComplete + fileName))
@@ -133,7 +125,5 @@ for fileName in os.listdir(filePathComplete):
 logout = requests.post(baseURL + '/rest/logout', headers=header,
                        cookies=cookies, verify=verify)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

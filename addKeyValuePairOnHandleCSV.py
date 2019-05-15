@@ -4,6 +4,7 @@ import time
 import csv
 from datetime import datetime
 import urllib3
+import dsFunc
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -88,3 +89,6 @@ with open(fileName) as csvfile:
         print(post)
         f.writerow([itemID] + [addedMetadataElement['key']]
                    + [addedMetadataElement['value']] + [delete] + [post])
+
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')

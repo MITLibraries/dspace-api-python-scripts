@@ -3,6 +3,7 @@ import csv
 import time
 import os
 import argparse
+import dsFunc
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--directory', help='the directory of the files. \
@@ -34,10 +35,7 @@ for root, dirs, files in os.walk(directory, topdown=True):
             file.replace('.' + fileExtension, '')
             fileIdentifierList.append(file)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('File list creation time: ', '%d:%02d:%02d' % (h, m, s))
+dsFunc.elapsedTime(startTime, 'File list creation time')
 
 f = csv.writer(open('collectionfileList.csv', 'w'))
 f.writerow(['fileName'])
@@ -107,7 +105,5 @@ with open(fileNameCSV) as csvfile:
                     csvRow.append(row[value])
                 f.writerow(csvRow)
 
-elapsedTime = time.time() - startTime
-m, s = divmod(elapsedTime, 60)
-h, m = divmod(m, 60)
-print('Total script run time: ', '%d:%02d:%02d' % (h, m, s))
+# print script run time
+dsFunc.elapsedTime(startTime, 'Script run time')
