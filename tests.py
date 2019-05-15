@@ -4,7 +4,7 @@ import unittest
 
 
 class dsFuncTests(unittest.TestCase):
-    """Test for sucessful authentication."""
+    """Test dsFunc.py functions."""
 
     def testElapsedTime(self):
         """Test elapsed time function."""
