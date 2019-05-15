@@ -7,18 +7,7 @@ from datetime import datetime
 import argparse
 import dsFunc
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
+baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fileName', help='the name of the CSV with the \
@@ -31,13 +20,6 @@ else:
     fileName = input('Enter file name: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email': email, 'password': password}

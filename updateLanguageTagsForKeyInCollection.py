@@ -6,30 +6,12 @@ from datetime import datetime
 import urllib3
 import dsFunc
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
-
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
+baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
 
 key = input('Enter key: ')
 collectionHandle = input('Enter collection handle: ')
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 startTime = time.time()
 data = {'email': email, 'password': password}

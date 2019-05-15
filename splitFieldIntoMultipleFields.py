@@ -9,25 +9,7 @@ import ast
 import argparse
 import dsFunc
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
-
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
+baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--replacedKey', help='the key to be replaced. \

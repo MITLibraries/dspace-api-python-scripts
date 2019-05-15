@@ -7,31 +7,13 @@ from datetime import datetime
 import urllib3
 import dsFunc
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
-
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
+baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
 
 date = datetime.now().strftime('%Y-%m-%d %H.%M.%S') + '/'
 filePathComplete = filePath + 'completeValueLists' + date
 filePathUnique = filePath + 'uniqueValueLists' + date
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 startTime = time.time()
 data = {'email': email, 'password': password}
@@ -58,7 +40,7 @@ for i in range(0, len(communities)):
                                verify=verify).json()
     for j in range(0, len(collections)):
         collectionID = collections[j]['uuid']
-        if collectionID not in skippedCollections:
+        if collectionID not in skipColl:
             collectionIds.append(collectionID)
 
 os.mkdir(filePathComplete)

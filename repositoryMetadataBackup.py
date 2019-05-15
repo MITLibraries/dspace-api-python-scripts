@@ -2,31 +2,23 @@ import json
 import requests
 import time
 from datetime import datetime
+import urllib3
 import os
 import dsFunc
+import argparse
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
+baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--handlePrefix', help='Enter the handle prefix')
+args = parser.parse_args()
+
+if args.handlePrefix:
+    handlePrefix = args.handlePrefix
 else:
-    secrets = __import__('secrets')
-    print('Editing Development')
+    handlePrefix = input('Enter the handle prefix: ')
 
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-handlePrefix = secrets.handlePrefix
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
-
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 startTime = time.time()
 data = {'email': email, 'password': password}
@@ -55,7 +47,7 @@ for i in range(0, len(communities)):
                                verify=verify).json()
     for j in range(0, len(collections)):
         collectionID = collections[j]['uuid']
-        if collectionID not in skippedCollections:
+        if collectionID not in skipColl:
             collectionHandle = collections[j]['handle']
             collectionHandle = collectionHandle.replace(handlePrefix, '')
             collectionHandle = collectionHandle.replace('/', '-')

@@ -3,29 +3,20 @@ import csv
 import time
 import urllib3
 import dsFunc
+import argparse
+
+baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--handlePrefix', help='Enter the handle prefix')
+args = parser.parse_args()
+
+if args.handlePrefix:
+    handlePrefix = args.handlePrefix
+else:
+    handlePrefix = input('Enter the handle prefix: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
-
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-handlePrefix = secrets.handlePrefix
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email': email, 'password': password}
