@@ -7,18 +7,15 @@ import urllib3
 import argparse
 import dsFunc
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
+skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--key', help='the key to be added. optional - if \
@@ -50,13 +47,6 @@ else:
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
-
 startTime = time.time()
 data = {'email': email, 'password': password}
 header = {'content-type': 'application/json', 'accept': 'application/json'}
@@ -81,7 +71,7 @@ collections = requests.get(baseURL + '/rest/communities/' + str(communityID)
                            verify=verify).json()
 for j in range(0, len(collections)):
     collectionID = collections[j]['uuid']
-    if collectionID not in skippedCollections:
+    if collectionID not in skipColl:
         offset = 0
         items = ''
         while items != []:
@@ -102,7 +92,7 @@ for j in range(0, len(collections)):
                 itemID = items[k]['uuid']
                 itemList.append(itemID)
             offset = offset + 200
-            
+
 dsFunc.elapsedTime(startTime, 'Item list creation time')
 
 recordsEdited = 0

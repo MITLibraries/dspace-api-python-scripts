@@ -7,18 +7,15 @@ import urllib3
 import argparse
 import dsFunc
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
+skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--deletedKey', help='the key to be deleted. \
@@ -43,13 +40,6 @@ else:
     handle = input('Enter collection handle: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
 
 startTime = time.time()
 data = {'email': email, 'password': password}

@@ -5,27 +5,17 @@ import time
 import urllib3
 import dsFunc
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
 
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-skippedCollections = secrets.skippedCollections
+skipColl = secrets.skipColl
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 startTime = time.time()
 data = {'email': email, 'password': password}
@@ -52,7 +42,7 @@ for community in communities:
                                verify=verify).json()
     for collection in collections:
         collectionID = collection['uuid']
-        if collectionID not in skippedCollections:
+        if collectionID not in skipColl:
             collectionIds.append(collectionID)
 
 names = []

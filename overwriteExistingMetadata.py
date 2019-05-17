@@ -7,18 +7,15 @@ import urllib3
 import argparse
 import dsFunc
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
+skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--fileName', help='the name of the CSV with handles \
@@ -31,13 +28,6 @@ else:
     fileName = input('Enter file name: ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skippedCollections = secrets.skippedCollections
 
 handleIdDict = {}
 with open(fileName) as csvfile:

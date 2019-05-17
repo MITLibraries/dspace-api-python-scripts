@@ -6,6 +6,7 @@ import argparse
 import os
 import re
 from six.moves import input
+import dsFunc
 
 
 def main():
@@ -85,16 +86,15 @@ def main():
 
     args = parser.parse_args()
 
-    secretsVersion = input('To edit production server, enter the name of the \
-    secrets file: ')
-    if secretsVersion != '':
-        try:
-            secrets = __import__(secretsVersion)
-            print('Accessing Production')
-        except ImportError:
-            print('Accessing Stage')
-    else:
-        print('Accessing Stage')
+    inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
+skipColl = secrets.skipColl
 
     if not args.rtimeout:
         args.rtimeout = default_response_timeout
@@ -116,8 +116,6 @@ def main():
 
     if not args.verify:
         args.verify = secrets.verify
-
-    skippedCollections = secrets.skippedCollections
 
     if args.handle:
         handle = args.handle
@@ -159,7 +157,7 @@ def main():
                             verify=args.verify, params=data,
                             timeout=args.rtimeout).cookies['JSESSIONID']
     cookies = {'JSESSIONID': session}
-    print('authenticated', userFullName)
+    print('authenticated')
 
     # NOTE: expanding items (of collections) and bitstreams (of items) to get
     # the count

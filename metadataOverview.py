@@ -5,28 +5,17 @@ from collections import Counter
 import urllib3
 import dsFunc
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
-
-# login info kept in secrets.py file
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
 verify = secrets.verify
-skippedCollections = secrets.skippedCollections
+skipColl = secrets.skipColl
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # authentication
 startTime = time.time()
@@ -65,7 +54,7 @@ for i in range(0, len(communities)):
         collectionHandle = collections[j]['handle']
         fullName = communityName + ' - ' + collectionName
         print(collectionID)
-        if collectionID not in skippedCollections:
+        if collectionID not in skipColl:
             offset = 0
             items = ''
             while items != []:

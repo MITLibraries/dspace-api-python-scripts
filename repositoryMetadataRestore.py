@@ -3,27 +3,26 @@ import requests
 import os
 import time
 import dsFunc
+import argparse
 
-secretsVersion = input('To edit production server, enter the name of the \
-secrets file: ')
-if secretsVersion != '':
-    try:
-        secrets = __import__(secretsVersion)
-        print('Editing Production')
-    except ImportError:
-        secrets = __import__('secrets')
-        print('Editing Development')
-else:
-    secrets = __import__('secrets')
-    print('Editing Development')
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
 
 baseURL = secrets.baseURL
 email = secrets.email
 password = secrets.password
 filePath = secrets.filePath
-handlePrefix = secrets.handlePrefix
 verify = secrets.verify
-skippedCollections = secrets.skippedCollections
+skipColl = secrets.skipColl
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--handlePrefix', help='Enter the handle prefix')
+args = parser.parse_args()
+
+if args.handlePrefix:
+    handlePrefix = args.handlePrefix
+else:
+    handlePrefix = input('Enter the handle prefix: ')
 
 requests.packages.urllib3.disable_warnings()
 
