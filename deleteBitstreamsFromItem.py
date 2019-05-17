@@ -5,7 +5,15 @@ from datetime import datetime
 import urllib3
 import dsFunc
 
-baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
+skipColl = secrets.skipColl
 
 itemHandle = input('Enter item handle: ')
 

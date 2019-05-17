@@ -16,15 +16,17 @@ class dsFuncTests(unittest.TestCase):
 
     def testInstaSelect(self):
         """Test instance select function."""
-        (baseURL, email, password, filePath, verify,
-         skipColl, sec) = dsFunc.instSelect()
-        secrets = __import__(sec)
-        self.assertTrue(baseURL == secrets.baseURL)
-        self.assertTrue(email == secrets.email)
-        self.assertTrue(password == secrets.password)
-        self.assertTrue(filePath == secrets.filePath)
-        self.assertTrue(verify == secrets.verify)
-        self.assertTrue(skipColl == secrets.skipColl)
+        instArray = ['secretsProd', '', 'secrets', '#$%#%##@']
+        for inst in instArray:
+            if inst == 'secretsProd':
+                secrets = dsFunc.instSelect(inst)
+                self.assertTrue(secrets.__name__ == inst)
+            elif inst == 'secrets':
+                secrets = dsFunc.instSelect(inst)
+                self.assertTrue(secrets.__name__ == inst)
+            else:
+                secrets = dsFunc.instSelect(inst)
+                self.assertTrue(secrets.__name__ == 'secrets')
 
 
 if __name__ == '__main__':

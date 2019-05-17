@@ -7,7 +7,15 @@ import argparse
 from datetime import datetime
 import dsFunc
 
-baseURL, email, password, filePath, verify, skipColl, sec = dsFunc.instSelect()
+inst = input('To edit production server, enter the name of the secrets file: ')
+secrets = dsFunc.instSelect(inst)
+
+baseURL = secrets.baseURL
+email = secrets.email
+password = secrets.password
+filePath = secrets.filePath
+verify = secrets.verify
+skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--key', help='the key to be searched. optional - if \

@@ -9,25 +9,17 @@ def elapsedTime(startTime, label):
     return td
 
 
-def instSelect():
+def instSelect(instance):
     """Select secrets.py file for the appropriate DSpace instance."""
-    sec = input('To edit production server, enter the name of the secrets '
-                'file: ')
-    if sec != '':
+    if instance != '':
         try:
-            secrets = __import__(sec)
-            print('Editing Production')
+            secrets = __import__(instance)
+            print('Editing ' + secrets.baseURL)
         except ImportError:
             secrets = __import__('secrets')
-            print('Editing Development')
+            print('Editing ' + secrets.baseURL)
     else:
         secrets = __import__('secrets')
-        print('Editing Development')
+        print('Editing ' + secrets.baseURL)
 
-    baseURL = secrets.baseURL
-    email = secrets.email
-    password = secrets.password
-    filePath = secrets.filePath
-    verify = secrets.verify
-    skipColl = secrets.skipColl
-    return(baseURL, email, password, filePath, verify, skipColl, sec)
+    return secrets
