@@ -54,12 +54,13 @@ header = {'content-type': 'application/json', 'accept': 'application/json'}
 session = requests.post(baseURL + '/rest/login', headers=header, verify=verify,
                         params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
-headerFileUpload = {'accept': 'application/json'}
+
 
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
 print('authenticated', userFullName)
+headerFileUpload = {'accept': 'application/json'}
 
 # create file list and export csv
 fileList = {}
