@@ -18,14 +18,17 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-k', '--key', help='the key to be searched. optional - if \
-not provided, the script will ask for input')
-parser.add_argument('-1', '--replacedValue', help='the value to be replaced. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-2', '--replacementValue', help='the replacement value. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-i', '--handle', help='handle of the collection to \
-retreive. optional - if not provided, the script will ask for input')
+parser.add_argument('-k', '--key', help='the key to be searched. optional - '
+                    'if not provided, the script will ask for input')
+parser.add_argument('-1', '--replacedValue', help='the value to be replaced. '
+                    'optional - if not provided, the script will ask for'
+                    'input')
+parser.add_argument('-2', '--replacementValue', help='the replacement value. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
+parser.add_argument('-i', '--handle', help='handle of the collection to '
+                    'retreive. optional - if not provided, the script will '
+                    'ask for input')
 args = parser.parse_args()
 
 if args.key:

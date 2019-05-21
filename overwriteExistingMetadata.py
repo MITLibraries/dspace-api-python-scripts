@@ -18,9 +18,9 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fileName', help='the name of the CSV with handles \
-and file identifiers. optional - if not provided, the script will ask for \
-input')
+parser.add_argument('-f', '--fileName', help='the name of the CSV with '
+                    'handles and file identifiers. optional - if not '
+                    'provided, the script will ask for input')
 args = parser.parse_args()
 if args.fileName:
     fileName = args.fileName
@@ -71,8 +71,8 @@ for k, v in handleIdDict.items():
         uriElement['key'] = 'dc.identifier.uri'
         uriElement['value'] = 'http://jhir.library.jhu.edu/handle/' + v
         updatedItemMetadataList.append(uriElement)
-        provNote = 'Item metadata updated through a batch process on ' \
-            + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.'
+        provNote = ('Item metadata updated through a batch process on '
+                    + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.')
         provNoteElement = {}
         provNoteElement['key'] = 'dc.description.provenance'
         provNoteElement['value'] = provNote

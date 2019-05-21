@@ -18,9 +18,9 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fileName', help='the name of the CSV with the \
-bitstream name changes. optional - if not provided, the script will ask for \
-input')
+parser.add_argument('-f', '--fileName', help='the name of the CSV with the '
+                    'bitstream name changes. optional - if not provided, the '
+                    'script will ask for input')
 args = parser.parse_args()
 if args.uri:
     fileName = args.fileName

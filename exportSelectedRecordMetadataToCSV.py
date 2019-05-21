@@ -16,15 +16,16 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fileName', help='the CSV file of record handles. \
-optional - if not provided, the script will ask for input')
+parser.add_argument('-f', '--fileName', help='the CSV file of record handles. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
 args = parser.parse_args()
 
 if args.fileName:
     fileName = filePath + args.fileName
 else:
-    fileName = filePath + input('Enter the CSV file of record handles \
-    (including \'.csv\'): ')
+    fileName = filePath + input('Enter the CSV file of record handles '
+                                '(including \'.csv\'): ')
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

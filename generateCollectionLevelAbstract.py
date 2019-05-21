@@ -16,10 +16,12 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fileNameCSV', help='the metadata CSV file. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-i', '--handle', help='handle of the collection. \
-optional - if not provided, the script will ask for input')
+parser.add_argument('-f', '--fileNameCSV', help='the metadata CSV file. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
+parser.add_argument('-i', '--handle', help='handle of the collection. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
 args = parser.parse_args()
 
 if args.fileNameCSV:
