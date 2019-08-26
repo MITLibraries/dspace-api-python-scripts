@@ -45,8 +45,7 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
-secrets.py
-secretsProd.py
+secrets*
 *.pyc
 data/*
 local/*

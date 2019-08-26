@@ -7,6 +7,8 @@ verify_ssl = true
 
 [packages]
 requests = "*"
+click = "*"
+attrs = "*"
 
 [requires]
 python_version = "3.7"
