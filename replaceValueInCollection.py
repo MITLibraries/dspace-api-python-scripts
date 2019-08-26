@@ -18,14 +18,17 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-k', '--key', help='the key to be searched. optional - if \
-not provided, the script will ask for input')
-parser.add_argument('-1', '--replacedValue', help='the value to be replaced. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-2', '--replacementValue', help='the replacement value. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-i', '--handle', help='handle of the collection to \
-retreive. optional - if not provided, the script will ask for input')
+parser.add_argument('-k', '--key', help='the key to be searched. optional - '
+                    'if not provided, the script will ask for input')
+parser.add_argument('-1', '--replacedValue', help='the value to be replaced. '
+                    'optional - if not provided, the script will ask for'
+                    'input')
+parser.add_argument('-2', '--replacementValue', help='the replacement value. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
+parser.add_argument('-i', '--handle', help='handle of the collection to '
+                    'retreive. optional - if not provided, the script will '
+                    'ask for input')
 args = parser.parse_args()
 
 if args.key:
@@ -53,7 +56,7 @@ header = {'content-type': 'application/json', 'accept': 'application/json'}
 session = requests.post(baseURL + '/rest/login', headers=header, verify=verify,
                         params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
-headerFileUpload = {'accept': 'application/json'}
+
 
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()

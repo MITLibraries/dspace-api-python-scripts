@@ -19,14 +19,18 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--directory', help='the directory of the files. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-e', '--fileExtension', help='the file extension. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-i', '--communityHandle', help='handle of the community. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-n', '--collectionName', help='the name of the \
-collection. optional - if not provided, the script will ask for input')
+parser.add_argument('-d', '--directory', help='the directory of the files. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
+parser.add_argument('-e', '--fileExtension', help='the file extension. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
+parser.add_argument('-i', '--communityHandle', help='handle of the community. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
+parser.add_argument('-n', '--collectionName', help='the name of the '
+                    'collection. optional - if not provided, the script will '
+                    'ask for input')
 args = parser.parse_args()
 
 if args.directory:
@@ -54,12 +58,13 @@ header = {'content-type': 'application/json', 'accept': 'application/json'}
 session = requests.post(baseURL + '/rest/login', headers=header, verify=verify,
                         params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
-headerFileUpload = {'accept': 'application/json'}
+
 
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
 userFullName = status['fullname']
 print('authenticated', userFullName)
+headerFileUpload = {'accept': 'application/json'}
 
 # create file list and export csv
 fileList = {}
@@ -167,30 +172,34 @@ for itemMetadata in collectionMetadata:
                                   headers=header, cookies=cookies,
                                   verify=verify).json()
         bitstreamCount = len(bitstreams)
-        provNoteValue = 'Submitted by ' + userFullName + ' (' + email + ') \
-        on ' + utcTime + ' (GMT). No. of bitstreams: ' + str(bitstreamCount)
+        provNoteValue = ('Submitted by ' + userFullName + ' (' + email + ')'
+                         + ' on ' + utcTime + ' (GMT). No. of bitstreams: '
+                         + str(bitstreamCount))
         for bitstream in bitstreams:
             fileName = bitstream['name']
             size = str(bitstream['sizeBytes'])
             checksum = bitstream['checkSum']['value']
             algorithm = bitstream['checkSum']['checkSumAlgorithm']
-            provNoteValue = provNoteValue + ' ' + fileName + ': ' + size + ' \
-            bytes, checkSum: ' + checksum + ' (' + algorithm + ')'
+            provNoteValue = (provNoteValue + ' ' + fileName + ': ' + size
+                             + ' bytes, checkSum: ' + checksum + ' ('
+                             + algorithm + ')')
         provNote['value'] = provNoteValue
 
         provNote2 = {}
         provNote2['key'] = 'dc.description.provenance'
         provNote2['language'] = 'en_US'
 
-        provNote2Value = 'Made available in DSpace on ' + utcTime + ' (GMT). \
-        No. of bitstreams: ' + str(bitstreamCount)
+        provNote2Value = ('Made available in DSpace on ' + utcTime
+                          + ' (GMT). No. of bitstreams: '
+                          + str(bitstreamCount))
         for bitstream in bitstreams:
             fileName = bitstream['name']
             size = str(bitstream['sizeBytes'])
             checksum = bitstream['checkSum']['value']
             algorithm = bitstream['checkSum']['checkSumAlgorithm']
-            provNote2Value = provNote2Value + ' ' + fileName + ': ' + size + ' \
-            bytes, checkSum: ' + checksum + ' (' + algorithm + ')'
+            provNote2Value = (provNote2Value + ' ' + fileName + ': ' + size
+                              + ' bytes, checkSum: ' + checksum + ' ('
+                              + algorithm + ')')
         provNote2['value'] = provNote2Value
 
         # Post provenance notes

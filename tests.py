@@ -28,6 +28,21 @@ class dsFuncTests(unittest.TestCase):
                 secrets = dsFunc.instSelect(inst)
                 self.assertTrue(secrets.__name__ == 'secrets')
 
+    def testAuth(self):
+        """Return email to confirm acceptance of credentials."""
+        instArray = ['secretsProd', '', 'secrets', '#$%#%##@']
+        for inst in instArray:
+            secrets = dsFunc.instSelect(inst)
+            email = secrets.email
+            baseURL = secrets.baseURL
+            password = secrets.password
+            verify = secrets.verify
+            cookies, header = dsFunc.auth(email, password, baseURL, verify)
+
+            uName, authEmail = dsFunc.authConfirm(cookies, baseURL, header,
+                                                  verify)
+            self.assertIn(email, authEmail)
+
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')

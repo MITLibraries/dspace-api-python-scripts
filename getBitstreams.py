@@ -30,8 +30,8 @@ def main():
                         help='increase output verbosity')
 
     parser.add_argument('-i', '--handle',
-                        help='handle of the object to retreive. optional - if \
-                        not provided, the script will ask for input')
+                        help='handle of the object to retreive. optional - if '
+                        'not provided, the script will ask for input')
 
     # bitstream formats:
     # REM: set number of args
@@ -40,61 +40,63 @@ def main():
     # '?' == 0 or 1.
     # An int is an explicit number of arguments to accept.
     parser.add_argument('-f', '--formats', nargs='*',
-                        help='optional list of bitstream formats. will return \
-                        all formats if not provided')
+                        help='optional list of bitstream formats. will return ''
+                        'all formats if not provided')
 
     parser.add_argument('-b', '--bundles', nargs='*',
-                        help='optional list of bundles (e.g. ORIGINAL or \
-                        LICENSE). will return all bundles if not provided')
+                        help='optional list of bundles (e.g. ORIGINAL or '
+                        'LICENSE). will return all bundles if not provided')
 
     parser.add_argument('-dl', '--download', action='store_true',
-                        help='download bitstreams (rather than just retreive \
-                        metadata about them). default: false')
+                        help='download bitstreams (rather than just retreive '
+                        'metadata about them). default: false')
 
     parser.add_argument('-rt', '--rtimeout', type=int,
-                        help='response timeout - number of seconds to wait for \
-                        a response. not a timeout for a download or run of \
-                        the entire script. default: '
+                        help='response timeout - number of seconds to wait '
+                        'for a response. not a timeout for a download or run '
+                        'of the entire script. default: '
                         + str(default_response_timeout))
 
     parser.add_argument('-l', '--limit', type=int,
-                        help='limit to the number of objects to return in a \
-                        given request. default: ' + str(default_limit))
+                        help='limit to the number of objects to return in a '
+                        'given request. default: ' + str(default_limit))
 
     parser.add_argument('-u', '--baseURL',
-                        help='url of the dspace instance. can be read from \
-                        the secrets file')
+                        help='url of the dspace instance. can be read from '
+                        'the secrets file')
 
     parser.add_argument('-e', '--email',
-                        help='email of an authorized dspace user. can be \
-                        read from the secrets file')
+                        help='email of an authorized dspace user. can be '
+                        'read from the secrets file')
 
     parser.add_argument('-p', '--password',
-                        help='password of an authorized dspace user. can be \
-                        read from the secrets file')
+                        help='password of an authorized dspace user. can be '
+                        'read from the secrets file')
 
     parser.add_argument('-d', '--filePath',
-                        help='directory into which output files will be \
-                        written. can be read from the secrets file')
+                        help='directory into which output files will be '
+                        'written. can be read from the secrets file')
 
     parser.add_argument('-s', '--verify',
-                        help='ssl verification enabled (boolean) OR the path \
-                        to a CA_BUNDLE file or directory with certificates \
-                        of trusted CAs. use false if using an ssh tunnel to \
-                        connect to the dspace api. can be read from the \
+                        help='ssl verification enabled (boolean) OR the path '
+                        'to a CA_BUNDLE file or directory with certificates '
+                        'of trusted CAs. use false if using an ssh tunnel to '
+                        'connect to the dspace api. can be read from the '
                         secrets file')
 
     args = parser.parse_args()
 
-    inst = input('To edit production server, enter the name of the secrets file: ')
-secrets = dsFunc.instSelect(inst)
+    inst = input('To edit production server, enter the name of the secrets '
+                 'file: ')
 
-baseURL = secrets.baseURL
-email = secrets.email
-password = secrets.password
-filePath = secrets.filePath
-verify = secrets.verify
-skipColl = secrets.skipColl
+    secrets = dsFunc.instSelect(inst)
+
+    baseURL = secrets.baseURL
+    email = secrets.email
+    password = secrets.password
+    filePath = secrets.filePath
+    verify = secrets.verify
+    skipColl = secrets.skipColl
 
     if not args.rtimeout:
         args.rtimeout = default_response_timeout
@@ -129,14 +131,14 @@ skipColl = secrets.skipColl
             print('retreiving object with handle {}'.format(args.handle))
 
         if args.formats:
-            print('filtering results to the following bitstream \
-            formats: {}'.format(args.formats))
+            print('filtering results to the following bitstream '
+                  'formats: {}'.format(args.formats))
         else:
             print('returning bitstreams of any format')
 
         if args.bundles:
-            print('filtering results to the following bundles: \
-            {}'.format(args.bundles))
+            print('filtering results to the following bundles: '
+                  '{}'.format(args.bundles))
         else:
             print('returning bitstreams from any bundle')
 
@@ -189,8 +191,9 @@ skipColl = secrets.skipColl
         processItem(dsObject, args)
 
     else:
-        print('object is of an invalid type for this script ({}). please \
-        enter the handle of an item or a collection.'.format(dsObject['type']))
+        print('object is of an invalid type for this script ({}). please '
+              'enter the handle of an item or a '
+              'collection.'.format(dsObject['type']))
 
     logout = requests.post(args.baseURL + '/rest/logout', headers=header,
                            cookies=cookies, verify=args.verify,
@@ -226,8 +229,8 @@ def processItem(dsObject, args):
         # don't retreive more bitstreams than we have left
         if limit > bitstreamCount:
             limit = bitstreamCount
-        print('bitstreamCount: {0} offset: {1} \
-        limit: {2}'.format(bitstreamCount, offset, limit))
+        print('bitstreamCount: {0} offset: {1} '
+              'limit: {2}'.format(bitstreamCount, offset, limit))
         bitstreams = requests.get(args.baseURL + '/rest/items/' + str(itemID)
                                   + '/bitstreams?limit=' + str(limit)
                                   + '&offset=' + str(offset), headers=header,

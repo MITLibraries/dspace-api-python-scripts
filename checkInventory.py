@@ -9,17 +9,17 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-i', '--inventory', required=True,
-                        help='csv file containing the inventory. the path, if \
-                        given, can be absolute or relative to this script')
+                        help='csv file containing the inventory. the path, if '
+                        'given, can be absolute or relative to this script')
 
     parser.add_argument('-d', '--dataDir',
-                        help='directory containing the data. if omitted, data \
-                        will be read from the directory containing the \
-                        inventory file')
+                        help='directory containing the data. if omitted, data '
+                        'will be read from the directory containing the '
+                        'inventory file')
 
     parser.add_argument('-f', '--field',
-                        help='field in the csv containing the fileNames. \
-                        default: name')
+                        help='field in the csv containing the fileNames. '
+                        'default: name')
 
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')

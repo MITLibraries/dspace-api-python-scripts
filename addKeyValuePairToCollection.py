@@ -18,14 +18,16 @@ verify = secrets.verify
 skipColl = secrets.skipColl
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-k', '--key', help='the key to be added. optional - if \
-not provided, the script will ask for input')
-parser.add_argument('-v', '--value', help='the value to be added. optional - \
-if not provided, the script will ask for input')
-parser.add_argument('-l', '--language', help='the language tag to be added. \
-optional - if not provided, the script will ask for input')
-parser.add_argument('-i', '--handle', help='handle of the collection. optional \
-- if not provided, the script will ask for input')
+parser.add_argument('-k', '--key', help='the key to be added. optional - if '
+                    'not provided, the script will ask for input')
+parser.add_argument('-v', '--value', help='the value to be added. optional - '
+                    'if not provided, the script will ask for input')
+parser.add_argument('-l', '--language', help='the language tag to be added. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
+parser.add_argument('-i', '--handle', help='handle of the collection. '
+                    'optional - if not provided, the script will ask for '
+                    'input')
 args = parser.parse_args()
 
 if args.key:
@@ -53,7 +55,7 @@ header = {'content-type': 'application/json', 'accept': 'application/json'}
 session = requests.post(baseURL + '/rest/login', headers=header,
                         verify=verify, params=data).cookies['JSESSIONID']
 cookies = {'JSESSIONID': session}
-headerFileUpload = {'accept': 'application/json'}
+
 
 status = requests.get(baseURL + '/rest/status', headers=header,
                       cookies=cookies, verify=verify).json()
@@ -105,8 +107,9 @@ for number, itemID in enumerate(itemList):
     addedMetadataElement['value'] = addedValue
     addedMetadataElement['language'] = addedLanguage
     itemMetadataProcessed.append(addedMetadataElement)
-    provNote = '\'' + addedKey + ': ' + addedValue + '\' was added through a \
-    batch process on ' + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.'
+    provNote = ('\'' + addedKey + ': ' + addedValue + '\' was added through a '
+                + 'batch process on '
+                + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.')
     provNoteElement = {}
     provNoteElement['key'] = 'dc.description.provenance'
     provNoteElement['value'] = provNote
