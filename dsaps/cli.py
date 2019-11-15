@@ -1,8 +1,13 @@
+import datetime
+import logging
 import time
 
 import click
+import structlog
 
 from dsaps import models
+
+logger = structlog.get_logger()
 
 
 @click.group()
@@ -15,7 +20,22 @@ from dsaps import models
 @click.pass_context
 def main(ctx, url, email, password):
     ctx.obj = {}
-    print('Application start')
+    dt = datetime.datetime.utcnow().isoformat(timespec='seconds')
+    log_suffix = f'{dt}.log'
+    structlog.configure(processors=[
+                        structlog.stdlib.filter_by_level,
+                        structlog.stdlib.add_log_level,
+                        structlog.stdlib.PositionalArgumentsFormatter(),
+                        structlog.processors.TimeStamper(fmt="iso"),
+                        structlog.processors.JSONRenderer()
+                        ],
+                        context_class=dict,
+                        logger_factory=structlog.stdlib.LoggerFactory())
+    logging.basicConfig(format="%(message)s",
+                        handlers=[logging.FileHandler(f'logs/log-{log_suffix}',
+                                  'w')],
+                        level=logging.INFO)
+    logger.info('Application start')
     client = models.Client(url, email, password)
     start_time = time.time()
     ctx.obj['client'] = client
@@ -38,7 +58,7 @@ def search(ctx, field, string, search_type):
     client = ctx.obj['client']
     start_time = ctx.obj['start_time']
     item_links = client.filtered_item_search(field, string, search_type)
-    print(item_links)
+    logger.info(item_links)
     models.elapsed_time(start_time, 'Elapsed time')
 
 
