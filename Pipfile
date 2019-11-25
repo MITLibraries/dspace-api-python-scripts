@@ -5,10 +5,12 @@ verify_ssl = true
 
 [dev-packages]
 pytest = "*"
+requests-mock = "*"
 
 [packages]
 requests = "*"
 structlog = "*"
+attr = "*"
 
 [requires]
 python_version = "3.7"
