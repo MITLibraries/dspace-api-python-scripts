@@ -5,15 +5,18 @@ import requests
 import time
 
 import attr
+import structlog
 
 op = operator.attrgetter('name')
 Field = partial(attr.ib, default=None)
+
+logger = structlog.get_logger()
 
 
 class Client:
     def __init__(self, url, email, password):
         self.url = url
-        print('Initializing client')
+        logger.info('Initializing client')
         data = {'email': email, 'password': password}
         header = {'content-type': 'application/json', 'accept':
                   'application/json'}
@@ -25,7 +28,7 @@ class Client:
         self.user_full_name = status['fullname']
         self.cookies = cookies
         self.header = header
-        print(f'Authenticated to {self.url} as 'f'{self.user_full_name}')
+        logger.info(f'Authenticated to {self.url} as 'f'{self.user_full_name}')
 
     def get_record(self, uuid, rec_type):
         """Retrieve an individual record of a particular type."""
@@ -39,7 +42,7 @@ class Client:
         elif rec_type == 'collections':
             rec_obj = self._pop_inst(Collection, record)
         else:
-            print('Invalid record type.')
+            logger.info('Invalid record type.')
             exit()
         return rec_obj
 
@@ -52,7 +55,7 @@ class Client:
             endpoint = f'{self.url}/rest/filtered-items?query_field[]='
             endpoint += f'{key}&query_op[]={query_type}&query_val[]={string}'
             endpoint += f'{selected_collections}&limit=200&offset={offset}'
-            print(endpoint)
+            logger.info(endpoint)
             response = requests.get(endpoint, headers=self.header,
                                     cookies=self.cookies).json()
             items = response['items']
@@ -117,4 +120,4 @@ class MetadataEntry(BaseRecord):
 def elapsed_time(start_time, label):
     """Calculate elapsed time."""
     td = datetime.timedelta(seconds=time.time() - start_time)
-    print(f'{label} : {td}')
+    logger.info(f'{label} : {td}')
