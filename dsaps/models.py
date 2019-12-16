@@ -1,10 +1,12 @@
 import datetime
 from functools import partial
+import os
 import operator
 import requests
 import time
 
 import attr
+from lxml import html
 import structlog
 
 op = operator.attrgetter('name')
@@ -121,6 +123,17 @@ class MetadataEntry(BaseRecord):
     key = Field()
     value = Field()
     language = Field()
+
+
+def build_file_list_remote(directory_url, file_extension):
+    """Build list of files in local directory."""
+    file_list = {}
+    response = requests.get(directory_url)
+    links = html.fromstring(response.content).iterlinks()
+    for link in links:
+        if link[2].endswith(file_extension):
+            file_list[link[2]] = f'{directory_url}{link[2]}'
+    return file_list
 
 
 def elapsed_time(start_time, label):
