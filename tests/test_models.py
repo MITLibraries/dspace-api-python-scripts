@@ -1,5 +1,3 @@
-import os
-
 import attr
 import pytest
 import requests_mock
