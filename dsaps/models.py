@@ -14,9 +14,11 @@ logger = structlog.get_logger()
 
 
 class Client:
-    def __init__(self, url, email, password):
+    def __init__(self, url):
         self.url = url
         logger.info('Initializing client')
+
+    def authenticate(self, email, password):
         data = {'email': email, 'password': password}
         header = {'content-type': 'application/json', 'accept':
                   'application/json'}
@@ -52,12 +54,16 @@ class Client:
         items = ''
         item_links = []
         while items != []:
-            endpoint = f'{self.url}/rest/filtered-items?query_field[]='
-            endpoint += f'{key}&query_op[]={query_type}&query_val[]={string}'
-            endpoint += f'{selected_collections}&limit=200&offset={offset}'
-            logger.info(endpoint)
+            endpoint = f'{self.url}/rest/filtered-items?'
+            params = {'query_field[]': key, 'query_op[]': query_type,
+                      'query_val[]': string, '&collSel[]':
+                      selected_collections, 'limit': 200, 'offset': offset}
+            logger.info(params)
+            print(endpoint)
             response = requests.get(endpoint, headers=self.header,
-                                    cookies=self.cookies).json()
+                                    params=params, cookies=self.cookies)
+            print(f'Response url: {response.url}')
+            response = response.json()
             items = response['items']
             for item in items:
                 item_links.append(item['link'])
@@ -73,12 +79,12 @@ class Client:
             collections = self._build_uuid_list(rec_obj, kwargs, 'collections')
             rec_obj['collections'] = collections
         elif class_type == Collection:
-            items = self._build_uuid_list(rec_obj, kwargs, 'items')
+            items = self._build_uuid_list(rec_obj, 'items')
             rec_obj['items'] = items
         rec_obj = class_type(**kwargs)
         return rec_obj
 
-    def _build_uuid_list(self, rec_obj, kwargs, children):
+    def _build_uuid_list(self, rec_obj, children):
         child_list = []
         for child in rec_obj[children]:
             child_list.append(child['uuid'])

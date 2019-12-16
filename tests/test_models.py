@@ -7,15 +7,30 @@ from dsaps import models
 
 @pytest.fixture
 def client():
+    client = models.Client('mock://example.com')
+    client.header = {}
+    client.cookies = {}
+    client.user_full_name = ''
+    return client
+
+
+def test_authenticate(client):
+    """Test authenticate function."""
     with requests_mock.Mocker() as m:
-        uri1 = 'mock://example.com/rest/login'
-        uri2 = 'mock://example.com/rest/status'
+        url1 = '/rest/login'
+        url2 = '/rest/status'
+        email = 'test@test.mock'
+        password = '1234'
+        header = {'content-type': 'application/json', 'accept':
+                  'application/json'}
         cookies = {'JSESSIONID': '11111111'}
         json_object = {'fullname': 'User Name'}
-        m.post(uri1, cookies=cookies)
-        m.get(uri2, json=json_object)
-        client = models.Client('mock://example.com', 'test', 'test')
-        return client
+        m.post(url1, cookies=cookies)
+        m.get(url2, json=json_object)
+        client.authenticate(email, password)
+        assert client.user_full_name == 'User Name'
+        assert client.cookies == cookies
+        assert client.header == header
 
 
 def test_get_record(client):
@@ -28,18 +43,32 @@ def test_get_record(client):
         assert attr.asdict(rec_obj)['metadata'] == json_object['metadata']
 
 
-# def test_filtered_item_search(client):
-#     """Test filtered_item_search function."""
-#     item_links = client.filtered_item_search(key, string, query_type,
-#                                              selected_collections='')
-#     assert False
-#
-#
-# def test__pop_inst(client):
-#     rec_obj = client._pop_inst(class_type, rec_obj)
-#     assert False
-#
-#
-# def test__build_uuid_list(client):
-#     child_list = client._build_uuid_list(self, rec_obj, kwargs, children)
-#     assert False
+def test_filtered_item_search(client):
+    """Test filtered_item_search function."""
+    with requests_mock.Mocker() as m:
+        key = 'dc.title'
+        string = 'test'
+        query_type = 'contains'
+        endpoint = '/rest/filtered-items?'
+        json_object_1 = {'items': [{'link': '1234'}]}
+        json_object_2 = {'items': []}
+        m.get(endpoint, [{'json': json_object_1}, {'json': json_object_2}])
+
+        item_links = client.filtered_item_search(key, string, query_type,
+                                                 selected_collections='')
+        assert '1234' in item_links
+
+
+def test__pop_inst(client):
+    class_type = models.Collection
+    rec_obj = {'name': 'Test title', 'type': 'collection', 'items': []}
+    rec_obj = client._pop_inst(class_type, rec_obj)
+    assert type(rec_obj) == class_type
+    assert rec_obj.name == 'Test title'
+
+
+def test__build_uuid_list(client):
+    rec_obj = {'items': [{'uuid': '1234'}]}
+    children = 'items'
+    child_list = client._build_uuid_list(rec_obj, children)
+    assert '1234' in child_list

@@ -36,7 +36,8 @@ def main(ctx, url, email, password):
                                   'w')],
                         level=logging.INFO)
     logger.info('Application start')
-    client = models.Client(url, email, password)
+    client = models.Client(url)
+    client.authenticate(email, password)
     start_time = time.time()
     ctx.obj['client'] = client
     ctx.obj['start_time'] = start_time
