@@ -1,6 +1,5 @@
 import datetime
 from functools import partial
-import os
 import operator
 import requests
 import time
