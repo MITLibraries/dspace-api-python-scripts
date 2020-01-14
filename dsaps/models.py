@@ -16,17 +16,20 @@ logger = structlog.get_logger()
 
 class Client:
     def __init__(self, url):
-        self.url = url
+        header = {'content-type': 'application/json', 'accept':
+                  'application/json'}
+        self.url = url.rstrip('/')
+        self.cookies = None
+        self.header = header
         logger.info('Initializing client')
 
     def authenticate(self, email, password):
+        header = self.header
         data = {'email': email, 'password': password}
-        header = {'content-type': 'application/json', 'accept':
-                  'application/json'}
-        session = requests.post(self.url + '/rest/login', headers=header,
+        session = requests.post(f'{self.url}/login', headers=header,
                                 params=data).cookies['JSESSIONID']
         cookies = {'JSESSIONID': session}
-        status = requests.get(self.url + '/rest/status', headers=header,
+        status = requests.get(f'{self.url}/status', headers=header,
                               cookies=cookies).json()
         self.user_full_name = status['fullname']
         self.cookies = cookies
@@ -35,7 +38,7 @@ class Client:
 
     def get_record(self, uuid, rec_type):
         """Retrieve an individual record of a particular type."""
-        url = f'{self.url}/rest/{rec_type}/{uuid}?expand=all'
+        url = f'{self.url}/{rec_type}/{uuid}?expand=all'
         record = requests.get(url, headers=self.header,
                               cookies=self.cookies).json()
         if rec_type == 'items':
@@ -55,7 +58,7 @@ class Client:
         items = ''
         item_links = []
         while items != []:
-            endpoint = f'{self.url}/rest/filtered-items?'
+            endpoint = f'{self.url}/filtered-items?'
             params = {'query_field[]': key, 'query_op[]': query_type,
                       'query_val[]': string, '&collSel[]':
                       selected_collections, 'limit': 200, 'offset': offset}
@@ -70,6 +73,17 @@ class Client:
                 item_links.append(item['link'])
             offset = offset + 200
         return item_links
+
+    def post_coll_to_comm(self, comm_handle, coll_name):
+        endpoint = f'{self.url}/handle/{comm_handle}'
+        community = requests.get(endpoint, headers=self.header,
+                                 cookies=self.cookies).json()
+        comm_id = community['uuid']
+        collection = {'name': coll_name}
+        endpoint2 = f'{self.url}/communities/{comm_id}/collections'
+        coll_id = requests.post(endpoint2, headers=self.header,
+                                cookies=self.cookies, json=collection).json()
+        return coll_id['link']
 
     def _pop_inst(self, class_type, rec_obj):
         """Populate class instance with data from record."""

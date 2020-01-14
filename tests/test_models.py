@@ -7,7 +7,7 @@ from dsaps import models
 
 @pytest.fixture
 def client():
-    client = models.Client('mock://example.com')
+    client = models.Client('mock://example.com/')
     client.header = {}
     client.cookies = {}
     client.user_full_name = ''
@@ -17,26 +17,21 @@ def client():
 def test_authenticate(client):
     """Test authenticate function."""
     with requests_mock.Mocker() as m:
-        url1 = '/rest/login'
-        url2 = '/rest/status'
         email = 'test@test.mock'
         password = '1234'
-        header = {'content-type': 'application/json', 'accept':
-                  'application/json'}
         cookies = {'JSESSIONID': '11111111'}
         json_object = {'fullname': 'User Name'}
-        m.post(url1, cookies=cookies)
-        m.get(url2, json=json_object)
+        m.post('mock://example.com/login', cookies=cookies)
+        m.get('mock://example.com/status', json=json_object)
         client.authenticate(email, password)
         assert client.user_full_name == 'User Name'
         assert client.cookies == cookies
-        assert client.header == header
 
 
 def test_get_record(client):
     """Test get_record function."""
     with requests_mock.Mocker() as m:
-        uri = '/rest/items/123?expand=all'
+        uri = 'mock://example.com/items/123?expand=all'
         json_object = {'metadata': {'title': 'Sample title'}, 'type': 'item'}
         m.get(uri, json=json_object)
         rec_obj = client.get_record('123', 'items')
@@ -49,7 +44,7 @@ def test_filtered_item_search(client):
         key = 'dc.title'
         string = 'test'
         query_type = 'contains'
-        endpoint = '/rest/filtered-items?'
+        endpoint = 'mock://example.com/filtered-items?'
         json_object_1 = {'items': [{'link': '1234'}]}
         json_object_2 = {'items': []}
         m.get(endpoint, [{'json': json_object_1}, {'json': json_object_2}])
@@ -57,6 +52,19 @@ def test_filtered_item_search(client):
         item_links = client.filtered_item_search(key, string, query_type,
                                                  selected_collections='')
         assert '1234' in item_links
+
+
+def test_post_coll_to_comm(client):
+    with requests_mock.Mocker() as m:
+        comm_handle = '1234'
+        coll_name = 'Test Collection'
+        json_object_1 = {'uuid': 'a1b2'}
+        json_object_2 = {'link': '5678'}
+        m.get('mock://example.com/handle/1234', json=json_object_1)
+        m.post('mock://example.com/communities/a1b2/collections',
+               json=json_object_2)
+        coll_id = client.post_coll_to_comm(comm_handle, coll_name)
+        assert coll_id == '5678'
 
 
 def test__pop_inst(client):
