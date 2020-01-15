@@ -63,5 +63,22 @@ def search(ctx, field, string, search_type):
     models.elapsed_time(start_time, 'Elapsed time')
 
 
+@main.command()
+@click.option('-c', '--comm_handle', prompt='Enter the community handle',
+              help='The handle of the community in which to create the ,'
+              'collection.')
+@click.option('-n', '--coll_name', prompt='Enter the name of the collection',
+              help='The name of the collection to be created.')
+@click.pass_context
+def newcoll(ctx, comm_handle, coll_name):
+    client = ctx.obj['client']
+    coll_id = client.post_coll_to_comm(comm_handle, coll_name)
+    logger.info(coll_id)
+    # STEPS TO ADD
+    # post items to collections
+        # post bistreams to item_links
+        # post prov notes
+
+
 if __name__ == '__main__':
     main()
