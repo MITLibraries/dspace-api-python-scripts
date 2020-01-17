@@ -1,5 +1,8 @@
 import datetime
+import glob
+import json
 import logging
+import os
 import time
 
 import click
@@ -69,15 +72,36 @@ def search(ctx, field, string, search_type):
               'collection.')
 @click.option('-n', '--coll_name', prompt='Enter the name of the collection',
               help='The name of the collection to be created.')
+@click.option('-m', '--metadata', prompt='Enter the path of the metadata file',
+              help='The path of the JSON file of metadata.')
+@click.option('-f', '--file_path', prompt='Enter the path',
+              help='The path of the content, a URL or local drive path.')
+@click.option('-t', '--file_type', prompt='Enter the file type',
+              help='The file type to be uploaded.')
+@click.option('-i', '--ingest_type', prompt='Enter the type of ingest',
+              help='The type of ingest to perform: local, remote.',
+              type=click.Choice(['local', 'remote']))
 @click.pass_context
-def newcoll(ctx, comm_handle, coll_name):
+def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
+            ingest_type):
     client = ctx.obj['client']
+    start_time = ctx.obj['start_time']
+    coll_metadata = json.load(open(metadata))
     coll_id = client.post_coll_to_comm(comm_handle, coll_name)
-    logger.info(coll_id)
-    # STEPS TO ADD
-    # post items to collections
-        # post bistreams to item_links
-        # post prov notes
+    file_dict = {}
+    if ingest_type == 'local':
+        files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
+        for file in files:
+            file_name = os.path.basename(file).replace(f'.{file_type}', '')
+            file_dict[file_name] = file
+    elif ingest_type == 'remote':
+        file_dict = models.build_file_dict_remote(file_path, file_type,
+                                                  file_dict)
+    items = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
+                                      ingest_type)
+    for item in items:
+        logger.info(f'Item posted: {item}')
+    models.elapsed_time(start_time, 'Total runtime:')
 
 
 if __name__ == '__main__':
