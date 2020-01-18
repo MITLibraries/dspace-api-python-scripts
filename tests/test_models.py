@@ -25,7 +25,7 @@ def sample_content(tmp_path):
 
 
 def test_authenticate(client):
-    """Test authenticate function."""
+    """Test authenticate method."""
     with requests_mock.Mocker() as m:
         email = 'test@test.mock'
         password = '1234'
@@ -39,7 +39,7 @@ def test_authenticate(client):
 
 
 def test_get_record(client):
-    """Test get_record function."""
+    """Test get_record method."""
     with requests_mock.Mocker() as m:
         uri = 'mock://example.com/items/123?expand=all'
         json_object = {'metadata': {'title': 'Sample title'}, 'type': 'item'}
@@ -49,7 +49,7 @@ def test_get_record(client):
 
 
 def test_filtered_item_search(client):
-    """Test filtered_item_search function."""
+    """Test filtered_item_search method."""
     with requests_mock.Mocker() as m:
         key = 'dc.title'
         string = 'test'
@@ -65,7 +65,7 @@ def test_filtered_item_search(client):
 
 
 def test_post_coll_to_comm(client):
-    """Test post_coll_to_comm function."""
+    """Test post_coll_to_comm method."""
     with requests_mock.Mocker() as m:
         comm_handle = '1234'
         coll_name = 'Test Collection'
@@ -79,7 +79,7 @@ def test_post_coll_to_comm(client):
 
 
 def test_post_items_to_coll(client, sample_content):
-    """Test post_items_to_coll function."""
+    """Test post_items_to_coll method."""
     with requests_mock.Mocker() as m:
         coll_metadata = [{"metadata": [
                          {"key": "file_identifier",
@@ -102,7 +102,7 @@ def test_post_items_to_coll(client, sample_content):
 
 
 def test_post_bitstreams_to_item(client, sample_content):
-    """Test post_bitstreams_to_item function."""
+    """Test post_bitstreams_to_item method."""
     with requests_mock.Mocker() as m:
         item_id = 'a1b2'
         ingest_type = 'local'
@@ -118,7 +118,7 @@ def test_post_bitstreams_to_item(client, sample_content):
 
 
 def test__pop_inst(client):
-    """Test _pop_inst function."""
+    """Test _pop_inst method."""
     class_type = models.Collection
     rec_obj = {'name': 'Test title', 'type': 'collection', 'items': []}
     rec_obj = client._pop_inst(class_type, rec_obj)
@@ -127,7 +127,7 @@ def test__pop_inst(client):
 
 
 def test__build_uuid_list(client):
-    """Test _build_uuid_list function."""
+    """Test _build_uuid_list method."""
     rec_obj = {'items': [{'uuid': '1234'}]}
     children = 'items'
     child_list = client._build_uuid_list(rec_obj, children)
@@ -149,3 +149,9 @@ def test_build_file_dict_remote():
         file_list = models.build_file_dict_remote(directory_url, file_type,
                                                   file_dict)
         assert '999' in file_list
+
+
+# # How to test this? Applies to asaps as well
+# def test_create_csv_from_list():
+#     """Test create_csv_from_list function."""
+#     assert False

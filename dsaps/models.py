@@ -1,3 +1,4 @@
+import csv
 import datetime
 from functools import partial
 import operator
@@ -195,6 +196,15 @@ def build_file_dict_remote(directory_url, file_type, file_dict):
         file_identifier = link[2].replace(f'.{file_type}', '')
         file_dict[file_identifier] = f'{directory_url}{link[2]}'
     return file_dict
+
+
+def create_csv_from_list(list_name, output):
+    """Creates CSV file from list content."""
+    with open(output, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['id'])
+        for item in list_name:
+            writer.writerow([item])
 
 
 def elapsed_time(start_time, label):
