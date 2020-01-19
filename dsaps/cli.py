@@ -145,5 +145,50 @@ def reconcile(metadata_csv, file_path, file_type):
     models.create_csv_from_list(metadata_matches, 'metadata_matches.csv')
 
 
+@main.command()
+@click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
+              help='The path of the CSV file of metadata.')
+def metadatajson(metadata_csv):
+    with open(metadata_csv) as csvfile:
+        reader = csv.DictReader(csvfile)
+        metadata_group = []
+        for row in reader:
+            metadata_rec = []
+            models.metadata_csv(row, metadata_rec, 'fileIdentifier',
+                                'file_identifier', '', '')
+            models.metadata_csv(row, metadata_rec, 'dc.contributor.author',
+                                'author name - direct', '', '')
+            models.metadata_csv(row, metadata_rec, 'dc.contributor.advisor',
+                                'supervisor(s)', '', '')
+            models.metadata_csv(row, metadata_rec, 'dc.date.issued',
+                                'pub date', '', '')
+            models.metadata_csv(row, metadata_rec, 'dc.description.abstract',
+                                'Abstract', 'en_US', '')
+            models.metadata_direct(metadata_rec, 'dc.format.mimetype',
+                                   'application/pdf', 'en_US')
+            models.metadata_direct(metadata_rec, 'dc.language.iso', 'en_US',
+                                   'en_US')
+            models.metadata_direct(metadata_rec, 'dc.publisher',
+                                   'Massachusetts Institute of Technology. '
+                                   'Laboratory for Computer Science', 'en_US')
+            models.metadata_csv(row, metadata_rec,
+                                'dc.relation.ispartofseries',
+                                'file_identifier', 'en_US', '')
+            models.metadata_direct(metadata_rec, 'dc.rights',
+                                   'Educational use permitted', 'en_US')
+            models.metadata_direct(metadata_rec, 'dc.rights.uri',
+                                   'http://rightsstatements.org/vocab/'
+                                   'InC-EDU/1.0/', 'en_US')
+            models.metadata_csv(row, metadata_rec, 'dc.title', 'Title',
+                                'en_US', '')
+            models.metadata_direct(metadata_rec, 'dc.type', 'Technical Report',
+                                   'en_US')
+            item = {'metadata': metadata_rec}
+            metadata_group.append(item)
+    file_name = os.path.splitext(os.path.basename(metadata_csv))[0]
+    f = open(f'{file_name}.json', 'w')
+    json.dump(metadata_group, f)
+
+
 if __name__ == '__main__':
     main()

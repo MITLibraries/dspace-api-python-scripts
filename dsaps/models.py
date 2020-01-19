@@ -211,3 +211,39 @@ def elapsed_time(start_time, label):
     """Calculate elapsed time."""
     td = datetime.timedelta(seconds=time.time() - start_time)
     logger.info(f'{label} : {td}')
+
+
+def metadata_csv(row, metadata_rec, key, field, language, delimiter):
+    """Create metadata elements from CSV, including fields with delimiters."""
+    if row[field] != '':
+        if delimiter != '' and delimiter in row[field]:
+            values = row[field].split(delimiter)
+            for value in values:
+                if language != '':
+                    metadata_elem = {'key': key, 'language': language, 'value':
+                                     value}
+                    metadata_rec.append(metadata_elem)
+                else:
+                    metadata_elem = {'key': key, 'value': value}
+                    metadata_rec.append(metadata_elem)
+        else:
+            value = row[field]
+            if language != '':
+                metadata_elem = {'key': key, 'language': language, 'value':
+                                 value}
+                metadata_rec.append(metadata_elem)
+            else:
+                metadata_elem = {'key': key, 'value': value}
+                metadata_rec.append(metadata_elem)
+    else:
+        pass
+
+
+def metadata_direct(metadata_rec, key, value, language):
+    """Create metadata element with specified value."""
+    if language != '':
+        metadata_elem = {'key': key, 'language': language, 'value': value}
+        metadata_rec.append(metadata_elem)
+    else:
+        metadata_elem = {'key': key, 'value': value}
+        metadata_rec.append(metadata_elem)

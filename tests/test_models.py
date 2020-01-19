@@ -155,3 +155,21 @@ def test_build_file_dict_remote():
 # def test_create_csv_from_list():
 #     """Test create_csv_from_list function."""
 #     assert False
+
+
+def test_metadata_csv():
+    """Test metadata_csv function."""
+    metadata_rec = []
+    row = {'title': 'Test title'}
+    models.metadata_csv(row, metadata_rec, 'dc.title', 'title', 'en_US', '')
+    assert metadata_rec[0]['key'] == 'dc.title'
+    assert metadata_rec[0]['value'] == 'Test title'
+
+
+def test_metadata_direct():
+    """Test metadata_direct function."""
+    metadata_rec = []
+    value = 'No one may ever view this content.'
+    models.metadata_direct(metadata_rec, 'dc.rights', value, 'en_US')
+    assert metadata_rec[0]['key'] == 'dc.rights'
+    assert metadata_rec[0]['value'] == 'No one may ever view this content.'
