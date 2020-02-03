@@ -86,21 +86,22 @@ def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
             ingest_type):
     client = ctx.obj['client']
     start_time = ctx.obj['start_time']
-    coll_metadata = json.load(open(metadata))
-    coll_id = client.post_coll_to_comm(comm_handle, coll_name)
-    file_dict = {}
-    if ingest_type == 'local':
-        files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-        for file in files:
-            file_name = os.path.basename(file).replace(f'.{file_type}', '')
-            file_dict[file_name] = file
-    elif ingest_type == 'remote':
-        file_dict = models.build_file_dict_remote(file_path, file_type,
-                                                  file_dict)
-    items = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
-                                      ingest_type)
-    for item in items:
-        logger.info(f'Item posted: {item}')
+    with open(metadata, encoding='UTF-8') as fp:
+        coll_metadata = json.load(fp)
+        coll_id = client.post_coll_to_comm(comm_handle, coll_name)
+        file_dict = {}
+        if ingest_type == 'local':
+            files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
+            for file in files:
+                file_name = os.path.splitext(file)[0][file.rindex('/') + 1:]
+                file_dict[file_name] = file
+        elif ingest_type == 'remote':
+            file_dict = models.build_file_dict_remote(file_path, file_type,
+                                                      file_dict)
+        items = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
+                                          ingest_type)
+        for item in items:
+            logger.info(f'Item posted: {item}')
     models.elapsed_time(start_time, 'Total runtime:')
 
 
