@@ -1,6 +1,7 @@
 import datetime
 from functools import partial
 import operator
+import os
 import requests
 import time
 
@@ -24,6 +25,7 @@ class Client:
         logger.info('Initializing client')
 
     def authenticate(self, email, password):
+        """Authenticate user to DSpace API."""
         header = self.header
         data = {'email': email, 'password': password}
         session = requests.post(f'{self.url}/login', headers=header,
@@ -54,6 +56,7 @@ class Client:
 
     def filtered_item_search(self, key, string, query_type,
                              selected_collections=''):
+        """Performs a search against the filtered items endpoint."""
         offset = 0
         items = ''
         item_links = []
@@ -63,10 +66,9 @@ class Client:
                       'query_val[]': string, '&collSel[]':
                       selected_collections, 'limit': 200, 'offset': offset}
             logger.info(params)
-            print(endpoint)
             response = requests.get(endpoint, headers=self.header,
                                     params=params, cookies=self.cookies)
-            print(f'Response url: {response.url}')
+            logger.info(f'Response url: {response.url}')
             response = response.json()
             items = response['items']
             for item in items:
@@ -75,6 +77,7 @@ class Client:
         return item_links
 
     def post_coll_to_comm(self, comm_handle, coll_name):
+        """Posts a collection to a specified community."""
         endpoint = f'{self.url}/handle/{comm_handle}'
         community = requests.get(endpoint, headers=self.header,
                                  cookies=self.cookies).json()
@@ -83,7 +86,52 @@ class Client:
         endpoint2 = f'{self.url}/communities/{comm_id}/collections'
         coll_id = requests.post(endpoint2, headers=self.header,
                                 cookies=self.cookies, json=collection).json()
-        return coll_id['link']
+        coll_id = coll_id['uuid']
+        logger.info(f'Collection posted: {coll_id}')
+        return coll_id
+
+    def post_items_to_coll(self, coll_id, coll_metadata, file_dict,
+                           ingest_type):
+        """Posts items to a specified collection."""
+        for item_metadata in coll_metadata:
+            file_exists = ''
+            for element in [e for e in item_metadata['metadata']
+                            if e['key'] == 'file_identifier']:
+                file_identifier = element['value']
+                item_metadata['metadata'].remove(element)
+            for k in [e for e in file_dict if file_identifier in e]:
+                file_exists = True
+            if file_exists is True:
+                endpoint = f'{self.url}/collections/{coll_id}/items'
+                item_id = requests.post(endpoint, headers=self.header,
+                                        cookies=self.cookies,
+                                        json=item_metadata).json()
+                item_id = item_id['uuid']
+                bit_ids = self.post_bitstreams_to_item(item_id,
+                                                       file_identifier,
+                                                       file_dict, ingest_type)
+                for bit_id in bit_ids:
+                    logger.info(f'Bitstream posted: {bit_id}')
+            yield item_id
+
+    def post_bitstreams_to_item(self, item_id, file_identifier, file_dict,
+                                ingest_type):
+        """Posts bitstreams to a specified item."""
+        for k, v in file_dict.items():
+            if k.startswith(file_identifier):
+                bitstream = file_dict[k]
+                file_name = os.path.basename(bitstream)
+                if ingest_type == 'local':
+                    data = open(bitstream, 'rb')
+                elif ingest_type == 'remote':
+                    data = requests.get(bitstream)
+                endpoint = (f'{self.url}/items/{item_id}'
+                            + f'/bitstreams?name={file_name}')
+                header_upload = {'accept': 'application/json'}
+                bit_id = requests.post(endpoint, headers=header_upload,
+                                       cookies=self.cookies, data=data).json()
+                bit_id = bit_id['uuid']
+                yield bit_id
 
     def _pop_inst(self, class_type, rec_obj):
         """Populate class instance with data from record."""
@@ -100,6 +148,7 @@ class Client:
         return rec_obj
 
     def _build_uuid_list(self, rec_obj, children):
+        """Builds a list of the uuids for an object's children."""
         child_list = []
         for child in rec_obj[children]:
             child_list.append(child['uuid'])
@@ -138,15 +187,14 @@ class MetadataEntry(BaseRecord):
     language = Field()
 
 
-def build_file_list_remote(directory_url, file_extension):
-    """Build list of files in local directory."""
-    file_list = {}
+def build_file_dict_remote(directory_url, file_type, file_dict):
+    """Build list of files in a remote directory."""
     response = requests.get(directory_url)
     links = html.fromstring(response.content).iterlinks()
-    for link in links:
-        if link[2].endswith(file_extension):
-            file_list[link[2]] = f'{directory_url}{link[2]}'
-    return file_list
+    for link in [l for l in links if l[2].endswith(file_type)]:
+        file_identifier = link[2].replace(f'.{file_type}', '')
+        file_dict[file_identifier] = f'{directory_url}{link[2]}'
+    return file_dict
 
 
 def elapsed_time(start_time, label):
