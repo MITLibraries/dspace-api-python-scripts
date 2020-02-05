@@ -93,7 +93,7 @@ def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
         if ingest_type == 'local':
             files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
             for file in files:
-                file_name = os.path.splitext(file)[0][file.rindex('/') + 1:]
+                file_name = os.path.splitext(os.path.basename(file))[0]
                 file_dict[file_name] = file
         elif ingest_type == 'remote':
             file_dict = models.build_file_dict_remote(file_path, file_type,
