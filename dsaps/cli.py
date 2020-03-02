@@ -47,6 +47,11 @@ def main(ctx, url, email, password):
     ctx.obj['start_time'] = start_time
 
 
+@click.group()
+def aux():
+    pass
+
+
 @main.command()
 @click.option('-f', '--field', prompt='Enter the field to be searched',
               help='The field to search.')
@@ -106,7 +111,7 @@ def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
     models.elapsed_time(start_time, 'Total runtime:')
 
 
-@main.command()
+@aux.command()
 @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
               help='The path of the CSV file of metadata.')
 @click.option('-f', '--file_path', prompt='Enter the path',
@@ -145,50 +150,47 @@ def reconcile(metadata_csv, file_path, file_type):
     models.create_csv_from_list(metadata_matches, 'metadata_matches.csv')
 
 
-@main.command()
+@aux.command()
 @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
               help='The path of the CSV file of metadata.')
 def metadatajson(metadata_csv):
     with open(metadata_csv) as csvfile:
         reader = csv.DictReader(csvfile)
         metadata_group = []
+        mapping_dict = {'fileIdentifier': ['file_identifier'],
+                        'dc.contributor.author': ['author name - direct'],
+                        'dc.contributor.advisor': ['supervisor(s)'],
+                        'dc.date.issued': ['pub date'],
+                        'dc.description.abstract': ['Abstract', 'en_US'],
+                        'dc.title': ['Title', 'en_US'],
+                        'dc.relation.ispartofseries': ['file_identifier']}
         for row in reader:
             metadata_rec = []
-            models.metadata_csv(row, metadata_rec, 'fileIdentifier',
-                                'file_identifier', '', '')
-            models.metadata_csv(row, metadata_rec, 'dc.contributor.author',
-                                'author name - direct', '', '')
-            models.metadata_csv(row, metadata_rec, 'dc.contributor.advisor',
-                                'supervisor(s)', '', '')
-            models.metadata_csv(row, metadata_rec, 'dc.date.issued',
-                                'pub date', '', '')
-            models.metadata_csv(row, metadata_rec, 'dc.description.abstract',
-                                'Abstract', 'en_US', '')
-            models.metadata_direct(metadata_rec, 'dc.format.mimetype',
-                                   'application/pdf', 'en_US')
-            models.metadata_direct(metadata_rec, 'dc.language.iso', 'en_US',
-                                   'en_US')
-            models.metadata_direct(metadata_rec, 'dc.publisher',
-                                   'Massachusetts Institute of Technology. '
-                                   'Laboratory for Computer Science', 'en_US')
-            models.metadata_csv(row, metadata_rec,
-                                'dc.relation.ispartofseries',
-                                'file_identifier', 'en_US', '')
-            models.metadata_direct(metadata_rec, 'dc.rights',
-                                   'Educational use permitted', 'en_US')
-            models.metadata_direct(metadata_rec, 'dc.rights.uri',
-                                   'http://rightsstatements.org/vocab/'
-                                   'InC-EDU/1.0/', 'en_US')
-            models.metadata_csv(row, metadata_rec, 'dc.title', 'Title',
-                                'en_US', '')
-            models.metadata_direct(metadata_rec, 'dc.type', 'Technical Report',
-                                   'en_US')
+            metadata_rec = models.create_metadata_rec(mapping_dict, row,
+                                                      metadata_rec)
+            metadata_rec.append({'key': 'dc.format.mimetype', 'language':
+                                'en_US', 'value': 'application/pdf'})
+            metadata_rec.append({'key': 'dc.language.iso', 'language':
+                                'en_US', 'value': 'en_US'})
+            metadata_rec.append({'key': 'dc.publisher', 'language': 'en_US',
+                                 'value': 'Massachusetts Institute of '
+                                 'Technology. Laboratory for Computer'
+                                 'Science'})
+            metadata_rec.append({'key': 'dc.rights', 'language': 'en_US',
+                                'value': 'Educational use permitted'})
+            metadata_rec.append({'key': 'dc.rights.uri', 'language': 'en_US',
+                                 'value': 'http://rightsstatements.org/vocab/'
+                                 'InC-EDU/1.0/'})
+            metadata_rec.append({'key': 'dc.type', 'language': 'en_US',
+                                'value': 'Technical Report'})
             item = {'metadata': metadata_rec}
             metadata_group.append(item)
     file_name = os.path.splitext(os.path.basename(metadata_csv))[0]
-    f = open(f'{file_name}.json', 'w')
-    json.dump(metadata_group, f)
+    with open(f'{file_name}.json', 'w') as f:
+        json.dump(metadata_group, f)
 
+
+cli = click.CommandCollection(sources=[main, aux])
 
 if __name__ == '__main__':
-    main()
+    cli()

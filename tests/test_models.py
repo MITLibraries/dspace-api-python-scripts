@@ -159,17 +159,16 @@ def test_build_file_dict_remote():
 
 def test_metadata_csv():
     """Test metadata_csv function."""
+    row = {'title': 'Test title'}
+    metadata_elem = models.metadata_csv(row, 'dc.title', 'title', 'en_US')
+    assert metadata_elem['key'] == 'dc.title'
+    assert metadata_elem['value'] == 'Test title'
+
+
+def test_create_metadata_rec():
     metadata_rec = []
     row = {'title': 'Test title'}
-    models.metadata_csv(row, metadata_rec, 'dc.title', 'title', 'en_US', '')
+    mapping_dict = {'dc.title': ['title']}
+    metadata_rec = models.create_metadata_rec(mapping_dict, row, metadata_rec)
     assert metadata_rec[0]['key'] == 'dc.title'
     assert metadata_rec[0]['value'] == 'Test title'
-
-
-def test_metadata_direct():
-    """Test metadata_direct function."""
-    metadata_rec = []
-    value = 'No one may ever view this content.'
-    models.metadata_direct(metadata_rec, 'dc.rights', value, 'en_US')
-    assert metadata_rec[0]['key'] == 'dc.rights'
-    assert metadata_rec[0]['value'] == 'No one may ever view this content.'
