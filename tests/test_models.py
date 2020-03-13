@@ -155,3 +155,20 @@ def test_build_file_dict_remote():
 # def test_create_csv_from_list():
 #     """Test create_csv_from_list function."""
 #     assert False
+
+
+def test_metadata_csv():
+    """Test metadata_csv function."""
+    row = {'title': 'Test title'}
+    metadata_elem = models.metadata_csv(row, 'dc.title', 'title', 'en_US')
+    assert metadata_elem['key'] == 'dc.title'
+    assert metadata_elem['value'] == 'Test title'
+
+
+def test_create_metadata_rec():
+    metadata_rec = []
+    row = {'title': 'Test title'}
+    mapping_dict = {'dc.title': ['title']}
+    metadata_rec = models.create_metadata_rec(mapping_dict, row, metadata_rec)
+    assert metadata_rec[0]['key'] == 'dc.title'
+    assert metadata_rec[0]['value'] == 'Test title'

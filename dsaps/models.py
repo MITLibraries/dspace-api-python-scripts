@@ -211,3 +211,26 @@ def elapsed_time(start_time, label):
     """Calculate elapsed time."""
     td = datetime.timedelta(seconds=time.time() - start_time)
     logger.info(f'{label} : {td}')
+
+
+def metadata_csv(row, key, field, language=None):
+    """Create metadata element from CSV."""
+    value = row[field]
+    if language is not None:
+        metadata_elem = {'key': key, 'language': language, 'value':
+                         value}
+    else:
+        metadata_elem = {'key': key, 'value': value}
+    return metadata_elem
+
+
+def create_metadata_rec(mapping_dict, row, metadata_rec):
+    """Create metadata record from CSV."""
+    for k, v in mapping_dict.items():
+        if len(v) == 2:
+            metadata_elem = metadata_csv(row, k, v[0], v[1])
+        else:
+            metadata_elem = metadata_csv(row, k, v[0])
+        if metadata_elem['value'] != '':
+            metadata_rec.append(metadata_elem)
+    return metadata_rec
