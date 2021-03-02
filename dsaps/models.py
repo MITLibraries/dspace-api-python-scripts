@@ -77,6 +77,13 @@ class Client:
             offset = offset + 200
         return item_links
 
+    def get_id_from_handle(self, handle):
+        """Posts a collection to a specified community."""
+        endpoint = f'{self.url}/handle/{handle}'
+        rec_obj = requests.get(endpoint, headers=self.header,
+                               cookies=self.cookies).json()
+        return rec_obj['uuid']
+
     def post_coll_to_comm(self, comm_handle, coll_name):
         """Posts a collection to a specified community."""
         endpoint = f'{self.url}/handle/{comm_handle}'
@@ -119,13 +126,17 @@ class Client:
                                 ingest_type):
         """Posts bitstreams to a specified item."""
         for k, v in file_dict.items():
+            bitstreams = []
             if k.startswith(file_identifier):
-                bitstream = file_dict[k]
-                file_name = os.path.basename(bitstream)
+                bitstreams.append(k)
+            bitstreams.sort()
+            for bitstream in bitstreams:
+                bitstream_path = file_dict[bitstream]
+                file_name = os.path.basename(bitstream_path)
                 if ingest_type == 'local':
-                    data = open(bitstream, 'rb')
+                    data = open(bitstream_path, 'rb')
                 elif ingest_type == 'remote':
-                    data = requests.get(bitstream)
+                    data = requests.get(bitstream_path)
                 endpoint = (f'{self.url}/items/{item_id}'
                             + f'/bitstreams?name={file_name}')
                 header_upload = {'accept': 'application/json'}
@@ -192,7 +203,7 @@ def build_file_dict_remote(directory_url, file_type, file_dict):
     """Build list of files in a remote directory."""
     response = requests.get(directory_url)
     links = html.fromstring(response.content).iterlinks()
-    for link in [l for l in links if l[2].endswith(file_type)]:
+    for link in [i for i in links if i[2].endswith(file_type)]:
         file_identifier = link[2].replace(f'.{file_type}', '')
         file_dict[file_identifier] = f'{directory_url}{link[2]}'
     return file_dict
@@ -213,24 +224,38 @@ def elapsed_time(start_time, label):
     logger.info(f'{label} : {td}')
 
 
-def metadata_csv(row, key, field, language=None):
+def metadata_csv(row, key, field, language=None, delimiter=''):
     """Create metadata element from CSV."""
-    value = row[field]
-    if language is not None:
-        metadata_elem = {'key': key, 'language': language, 'value':
-                         value}
-    else:
-        metadata_elem = {'key': key, 'value': value}
-    return metadata_elem
+    metadata_elems = []
+    if row[field] != '':
+        if delimiter != '' and delimiter in row[field]:
+            values = row[field].split(delimiter)
+            for value in values:
+                if language is not None:
+                    metadata_elem = {'key': key, 'language': language, 'value':
+                                     value}
+                    metadata_elems.append(metadata_elem)
+                else:
+                    metadata_elem = {'key': key, 'value': value}
+                    metadata_elems.append(metadata_elem)
+        else:
+            value = row[field]
+            if language is not None:
+                metadata_elem = {'key': key, 'language': language, 'value':
+                                 value}
+            else:
+                metadata_elem = {'key': key, 'value': value}
+            metadata_elems.append(metadata_elem)
+    return metadata_elems
 
 
 def create_metadata_rec(mapping_dict, row, metadata_rec):
     """Create metadata record from CSV."""
     for k, v in mapping_dict.items():
-        if len(v) == 2:
-            metadata_elem = metadata_csv(row, k, v[0], v[1])
+        if len(v) == 3:
+            metadata_elems = metadata_csv(row, k, v[0], v[1], v[2])
         else:
-            metadata_elem = metadata_csv(row, k, v[0])
-        if metadata_elem['value'] != '':
+            metadata_elems = metadata_csv(row, k, v[0])
+        for metadata_elem in metadata_elems:
             metadata_rec.append(metadata_elem)
     return metadata_rec

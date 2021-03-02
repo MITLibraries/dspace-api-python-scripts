@@ -10,12 +10,12 @@ requests-mock = "*"
 [packages]
 requests = "*"
 structlog = "*"
-attr = "*"
+attrs = "*"
 click = "*"
 lxml = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
 
 [scripts]
 dsaps = "python -c \"from dsaps.cli import main; main()\""
