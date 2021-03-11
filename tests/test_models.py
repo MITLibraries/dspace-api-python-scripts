@@ -15,11 +15,20 @@ def client():
 
 
 @pytest.fixture
-def sample_content(tmp_path):
+def sample_content_1(tmp_path):
     content = 'test'
     dir = tmp_path / 'sub'
     dir.mkdir()
-    sample_content = dir / '123.pdf'
+    sample_content = dir / '123_1.pdf'
+    sample_content.write_text(content)
+    return sample_content
+
+
+@pytest.fixture
+def sample_content_2(tmp_path):
+    content = 'test'
+    dir = tmp_path / 'sub'
+    sample_content = dir / '123_2.pdf'
     sample_content.write_text(content)
     return sample_content
 
@@ -88,7 +97,7 @@ def test_post_coll_to_comm(client):
         assert coll_id == '5678'
 
 
-def test_post_items_to_coll(client, sample_content):
+def test_post_items_to_coll(client, sample_content_1):
     """Test post_items_to_coll method."""
     with requests_mock.Mocker() as m:
         coll_metadata = [{"metadata": [
@@ -101,10 +110,10 @@ def test_post_items_to_coll(client, sample_content):
                           "value": "repo/0/ao/123"}]}]
         coll_id = '789'
         ingest_type = 'local'
-        file_dict = {'123': sample_content}
+        file_dict = {'123': sample_content_1}
         item_json = {'uuid': 'a1b2', 'handle': '1111.1/1111'}
         m.post('mock://example.com/collections/789/items', json=item_json)
-        url = 'mock://example.com/items/a1b2/bitstreams?name=123.pdf'
+        url = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
         b_json = {'uuid': 'c3d4'}
         m.post(url, json=b_json)
         item_ids = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
@@ -113,20 +122,42 @@ def test_post_items_to_coll(client, sample_content):
             assert 'a1b2' == item_id
 
 
-def test_post_bitstreams_to_item(client, sample_content):
+def test_post_bitstreams_to_item(client, sample_content_1, sample_content_2):
     """Test post_bitstreams_to_item method."""
     with requests_mock.Mocker() as m:
         item_id = 'a1b2'
         ingest_type = 'local'
         file_identifier = '123'
-        file_dict = {'123': sample_content}
-        b_json = {'uuid': 'c3d4'}
-        url = 'mock://example.com/items/a1b2/bitstreams?name=123.pdf'
-        m.post(url, json=b_json)
+        file_dict = {'123_2': sample_content_2, '123_1': sample_content_1}
+        b_json_1 = {'uuid': 'c3d4'}
+        url_1 = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
+        m.post(url_1, json=b_json_1)
+        b_json_2 = {'uuid': 'e5f6'}
+        url_2 = 'mock://example.com/items/a1b2/bitstreams?name=123_2.pdf'
+        m.post(url_2, json=b_json_2)
         bit_ids = client.post_bitstreams_to_item(item_id, file_identifier,
                                                  file_dict, ingest_type)
+        bit_ids_output = []
         for bit_id in bit_ids:
-            assert 'c3d4' == bit_id
+            bit_ids_output.append(bit_id)
+        assert bit_ids_output[0] == 'c3d4'
+        assert bit_ids_output[1] == 'e5f6'
+
+
+def test_post_bitstream(client, sample_content_1):
+    """Test post_bitstream method."""
+    with requests_mock.Mocker() as m:
+        item_id = 'a1b2'
+        ingest_type = 'local'
+        file_identifier = '123'
+        file_dict = {'123': sample_content_1}
+        b_json = {'uuid': 'c3d4'}
+        url = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
+        bitstream = '123'
+        m.post(url, json=b_json)
+        bit_id = client.post_bitstream(item_id, file_identifier, file_dict,
+                                       ingest_type, bitstream)
+        assert 'c3d4' == bit_id
 
 
 def test__pop_inst(client):
@@ -169,12 +200,30 @@ def test_build_file_dict_remote():
 #     assert False
 
 
-def test_metadata_csv():
-    """Test metadata_csv function."""
+def test_metadata_elems_from_row():
+    """Test metadata_elems_from_row function."""
     row = {'title': 'Test title'}
-    metadata_elem = models.metadata_csv(row, 'dc.title', 'title', 'en_US')
+    metadata_elem = models.metadata_elems_from_row(row, 'dc.title', 'title',
+                                                   'en_US')
     assert metadata_elem[0]['key'] == 'dc.title'
     assert metadata_elem[0]['value'] == 'Test title'
+    assert metadata_elem[0]['language'] == 'en_US'
+    metadata_elem = models.metadata_elems_from_row(row, 'dc.title', 'title')
+    assert metadata_elem[0]['key'] == 'dc.title'
+    assert metadata_elem[0]['value'] == 'Test title'
+    assert 'language' not in metadata_elem[0]
+    row = {'title': ''}
+    metadata_elem = models.metadata_elems_from_row(row, 'dc.title', 'title')
+    assert metadata_elem == []
+    row = {'title': 'Test title 1|Test title 2'}
+    metadata_elem = models.metadata_elems_from_row(row, 'dc.title', 'title',
+                                                   'en_US', '|')
+    assert metadata_elem[0]['key'] == 'dc.title'
+    assert metadata_elem[0]['value'] == 'Test title 1'
+    assert metadata_elem[0]['language'] == 'en_US'
+    assert metadata_elem[1]['key'] == 'dc.title'
+    assert metadata_elem[1]['value'] == 'Test title 2'
+    assert metadata_elem[1]['language'] == 'en_US'
 
 
 # def test_create_ingest_report():

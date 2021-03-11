@@ -1,3 +1,4 @@
+import collections
 import csv
 import datetime
 from functools import partial
@@ -78,7 +79,7 @@ class Client:
         return item_links
 
     def get_id_from_handle(self, handle):
-        """Posts a collection to a specified community."""
+        """Retrieves UUID for an object based on its handle."""
         endpoint = f'{self.url}/handle/{handle}'
         rec_obj = requests.get(endpoint, headers=self.header,
                                cookies=self.cookies).json()
@@ -124,26 +125,29 @@ class Client:
 
     def post_bitstreams_to_item(self, item_id, file_identifier, file_dict,
                                 ingest_type):
-        """Posts bitstreams to a specified item."""
-        for k, v in file_dict.items():
-            bitstreams = []
-            if k.startswith(file_identifier):
-                bitstreams.append(k)
-            bitstreams.sort()
-            for bitstream in bitstreams:
-                bitstream_path = file_dict[bitstream]
-                file_name = os.path.basename(bitstream_path)
-                if ingest_type == 'local':
-                    data = open(bitstream_path, 'rb')
-                elif ingest_type == 'remote':
-                    data = requests.get(bitstream_path)
-                endpoint = (f'{self.url}/items/{item_id}'
-                            + f'/bitstreams?name={file_name}')
-                header_upload = {'accept': 'application/json'}
-                bit_id = requests.post(endpoint, headers=header_upload,
-                                       cookies=self.cookies, data=data).json()
-                bit_id = bit_id['uuid']
-                yield bit_id
+        """Post a sorted set of bitstreams to a specified item."""
+        file_dict = collections.OrderedDict(sorted(file_dict.items()))
+        for bitstream, v in file_dict.items():
+            bit_id = self.post_bitstream(item_id, file_identifier, file_dict,
+                                         ingest_type, bitstream)
+            yield bit_id
+
+    def post_bitstream(self, item_id, file_identifier, file_dict, ingest_type,
+                       bitstream):
+        """Post a bitstream to a specified item."""
+        bitstream_path = file_dict[bitstream]
+        file_name = os.path.basename(bitstream_path)
+        if ingest_type == 'local':
+            data = open(bitstream_path, 'rb')
+        elif ingest_type == 'remote':
+            data = requests.get(bitstream_path)
+        endpoint = (f'{self.url}/items/{item_id}'
+                    + f'/bitstreams?name={file_name}')
+        header_upload = {'accept': 'application/json'}
+        bit_id = requests.post(endpoint, headers=header_upload,
+                               cookies=self.cookies, data=data).json()
+        bit_id = bit_id['uuid']
+        return bit_id
 
     def _pop_inst(self, class_type, rec_obj):
         """Populate class instance with data from record."""
@@ -224,38 +228,29 @@ def elapsed_time(start_time, label):
     logger.info(f'{label} : {td}')
 
 
-def metadata_csv(row, key, field, language=None, delimiter=''):
-    """Create metadata element from CSV."""
+def metadata_elems_from_row(row, key, field, language=None, delimiter=''):
+    """Create a metadata element from a CSV row."""
     metadata_elems = []
     if row[field] != '':
-        if delimiter != '' and delimiter in row[field]:
+        if delimiter:
             values = row[field].split(delimiter)
-            for value in values:
-                if language is not None:
-                    metadata_elem = {'key': key, 'language': language, 'value':
-                                     value}
-                    metadata_elems.append(metadata_elem)
-                else:
-                    metadata_elem = {'key': key, 'value': value}
-                    metadata_elems.append(metadata_elem)
         else:
-            value = row[field]
-            if language is not None:
-                metadata_elem = {'key': key, 'language': language, 'value':
-                                 value}
-            else:
-                metadata_elem = {'key': key, 'value': value}
-            metadata_elems.append(metadata_elem)
+            values = [row[field]]
+        for value in values:
+            metadata_elem = {'key': key, 'language': language, 'value':
+                             value}
+            metadata_elems.append({k: v for k, v in metadata_elem.items()
+                                  if v is not None})
     return metadata_elems
 
 
 def create_metadata_rec(mapping_dict, row, metadata_rec):
-    """Create metadata record from CSV."""
+    """Create metadata record from a series of metadata elements."""
     for k, v in mapping_dict.items():
         if len(v) == 3:
-            metadata_elems = metadata_csv(row, k, v[0], v[1], v[2])
+            metadata_elems = metadata_elems_from_row(row, k, v[0], v[1], v[2])
         else:
-            metadata_elems = metadata_csv(row, k, v[0])
+            metadata_elems = metadata_elems_from_row(row, k, v[0])
         for metadata_elem in metadata_elems:
             metadata_rec.append(metadata_elem)
     return metadata_rec
