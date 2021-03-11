@@ -24,6 +24,8 @@ logger = structlog.get_logger()
 @click.pass_context
 def main(ctx, url, email, password):
     ctx.obj = {}
+    if os.path.isdir('logs') is False:
+        os.mkdir('logs')
     dt = datetime.datetime.utcnow().isoformat(timespec='seconds')
     log_suffix = f'{dt}.log'
     structlog.configure(processors=[
@@ -45,31 +47,6 @@ def main(ctx, url, email, password):
     start_time = time.time()
     ctx.obj['client'] = client
     ctx.obj['start_time'] = start_time
-
-
-@click.group()
-def aux():
-    pass
-
-
-@main.command()
-@click.option('-f', '--field', prompt='Enter the field to be searched',
-              help='The field to search.')
-@click.option('-s', '--string', prompt='Enter the string',
-              help='The field to search.')
-@click.option('-t', '--search_type', prompt='Enter the type of search',
-              help='The type of search.',
-              type=click.Choice(['exists', 'doesnt_exist', 'equals',
-                                 'not_equals', 'contains', 'doesnt_contain']),
-              default='contains')
-@click.pass_context
-def search(ctx, field, string, search_type):
-    # Temp function for testing
-    client = ctx.obj['client']
-    start_time = ctx.obj['start_time']
-    item_links = client.filtered_item_search(field, string, search_type)
-    logger.info(item_links)
-    models.elapsed_time(start_time, 'Elapsed time')
 
 
 @main.command()
@@ -111,7 +88,7 @@ def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
     models.elapsed_time(start_time, 'Total runtime:')
 
 
-@aux.command()
+@main.command()
 @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
               help='The path of the CSV file of metadata.')
 @click.option('-f', '--file_path', prompt='Enter the path',
@@ -150,7 +127,7 @@ def reconcile(metadata_csv, file_path, file_type):
     models.create_csv_from_list(metadata_matches, 'metadata_matches.csv')
 
 
-@aux.command()
+@main.command()
 @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
               help='The path of the CSV file of metadata.')
 def metadatajson(metadata_csv):
@@ -190,7 +167,5 @@ def metadatajson(metadata_csv):
         json.dump(metadata_group, f)
 
 
-cli = click.CommandCollection(sources=[main, aux])
-
 if __name__ == '__main__':
-    cli()
+    main()

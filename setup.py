@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='DSpace API Python Scripts',
+    name='dsaps',
     version='1.0.0',
     description='',
     packages=find_packages(exclude=['tests']),
@@ -10,7 +10,7 @@ setup(
     install_requires=[
         'requests',
         'structlog',
-        'attr',
+        'attrs',
         'click',
         'lxml',
     ],
@@ -19,5 +19,5 @@ setup(
             'dsaps=dsaps.cli:main',
         ]
     },
-    python_requires='>=3.7.1',
+    python_requires='>=3.8',
 )
