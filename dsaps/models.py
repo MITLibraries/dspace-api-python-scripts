@@ -215,7 +215,7 @@ def build_file_dict_remote(directory_url, file_type, file_dict):
 
 def create_csv_from_list(list_name, output):
     """Creates CSV file from list content."""
-    with open(output, 'w') as f:
+    with open(f'{output}.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerow(['id'])
         for item in list_name:

@@ -1,162 +1,78 @@
+import csv
+
 import attr
-import pytest
 import requests_mock
 
 from dsaps import models
 
 
-@pytest.fixture
-def client():
-    client = models.Client('mock://example.com/')
-    client.header = {}
-    client.cookies = {}
-    client.user_full_name = ''
-    return client
-
-
-@pytest.fixture
-def sample_content_1(tmp_path):
-    content = 'test'
-    dir = tmp_path / 'sub'
-    dir.mkdir()
-    sample_content = dir / '123_1.pdf'
-    sample_content.write_text(content)
-    return sample_content
-
-
-@pytest.fixture
-def sample_content_2(tmp_path):
-    content = 'test'
-    dir = tmp_path / 'sub'
-    sample_content = dir / '123_2.pdf'
-    sample_content.write_text(content)
-    return sample_content
-
-
 def test_authenticate(client):
     """Test authenticate method."""
-    with requests_mock.Mocker() as m:
-        email = 'test@test.mock'
-        password = '1234'
-        cookies = {'JSESSIONID': '11111111'}
-        user_json = {'fullname': 'User Name'}
-        m.post('mock://example.com/login', cookies=cookies)
-        m.get('mock://example.com/status', json=user_json)
-        client.authenticate(email, password)
-        assert client.user_full_name == 'User Name'
-        assert client.cookies == cookies
+    email = 'test@test.mock'
+    password = '1234'
+    client.authenticate(email, password)
+    assert client.user_full_name == 'User Name'
+    assert client.cookies == {'JSESSIONID': '11111111'}
 
 
 def test_get_record(client):
     """Test get_record method."""
-    with requests_mock.Mocker() as m:
-        uri = 'mock://example.com/items/123?expand=all'
-        rec_json = {'metadata': {'title': 'Sample title'}, 'type': 'item'}
-        m.get(uri, json=rec_json)
-        rec_obj = client.get_record('123', 'items')
-        assert attr.asdict(rec_obj)['metadata'] == rec_json['metadata']
+    rec_obj = client.get_record('123', 'items')
+    assert attr.asdict(rec_obj)['metadata'] == {'title': 'Sample title'}
 
 
 def test_filtered_item_search(client):
     """Test filtered_item_search method."""
-    with requests_mock.Mocker() as m:
-        key = 'dc.title'
-        string = 'test'
-        query_type = 'contains'
-        endpoint = 'mock://example.com/filtered-items?'
-        results_json1 = {'items': [{'link': '1234'}]}
-        results_json2 = {'items': []}
-        m.get(endpoint, [{'json': results_json1}, {'json': results_json2}])
-
-        item_links = client.filtered_item_search(key, string, query_type,
-                                                 selected_collections='')
-        assert '1234' in item_links
+    key = 'dc.title'
+    string = 'test'
+    query_type = 'contains'
+    item_links = client.filtered_item_search(key, string, query_type,
+                                             selected_collections='')
+    assert '1234' in item_links
 
 
 def test_get_id_from_handle(client):
     """Test get_id_from_handle method."""
-    with requests_mock.Mocker() as m:
-        handle = 'mock://example.com/handle/111.1111'
-        rec_json = {'uuid': '123'}
-        m.get(handle, json=rec_json)
-        id = client.get_id_from_handle('111.1111')
-        assert id == '123'
+    id = client.get_id_from_handle('111.1111')
+    assert id == '123'
 
 
 def test_post_coll_to_comm(client):
     """Test post_coll_to_comm method."""
-    with requests_mock.Mocker() as m:
-        comm_handle = '1234'
-        coll_name = 'Test Collection'
-        comm_json = {'uuid': 'a1b2'}
-        coll_json = {'uuid': '5678'}
-        m.get('mock://example.com/handle/1234', json=comm_json)
-        m.post('mock://example.com/communities/a1b2/collections',
-               json=coll_json)
-        coll_id = client.post_coll_to_comm(comm_handle, coll_name)
-        assert coll_id == '5678'
+    comm_handle = '1234'
+    coll_name = 'Test Collection'
+    coll_id = client.post_coll_to_comm(comm_handle, coll_name)
+    assert coll_id == '5678'
 
 
 def test_post_items_to_coll(client, sample_content_1):
     """Test post_items_to_coll method."""
-    with requests_mock.Mocker() as m:
-        coll_metadata = [{"metadata": [
-                         {"key": "file_identifier",
-                          "value": "123"},
-                         {"key": "dc.title", "value":
-                          "Monitoring Works: Getting Teachers",
-                          "language": "en_US"},
-                         {"key": "dc.relation.isversionof",
-                          "value": "repo/0/ao/123"}]}]
-        coll_id = '789'
-        ingest_type = 'local'
-        file_dict = {'123': sample_content_1}
-        item_json = {'uuid': 'a1b2', 'handle': '1111.1/1111'}
-        m.post('mock://example.com/collections/789/items', json=item_json)
-        url = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
-        b_json = {'uuid': 'c3d4'}
-        m.post(url, json=b_json)
-        item_ids = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
-                                             ingest_type)
-        for item_id in item_ids:
-            assert 'a1b2' == item_id
+    coll_metadata = [{"metadata": [
+                     {"key": "file_identifier",
+                      "value": "123"},
+                     {"key": "dc.title", "value":
+                      "Monitoring Works: Getting Teachers",
+                      "language": "en_US"},
+                     {"key": "dc.relation.isversionof",
+                      "value": "repo/0/ao/123"}]}]
+    coll_id = '789'
+    ingest_type = 'local'
+    file_dict = {'123': sample_content_1}
+    item_ids = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
+                                         ingest_type)
+    for item_id in item_ids:
+        assert 'a1b2' == item_id
 
 
 def test_post_bitstreams_to_item(client, sample_content_1, sample_content_2):
     """Test post_bitstreams_to_item method."""
-    with requests_mock.Mocker() as m:
-        item_id = 'a1b2'
-        ingest_type = 'local'
-        file_identifier = '123'
-        file_dict = {'123_2': sample_content_2, '123_1': sample_content_1}
-        b_json_1 = {'uuid': 'c3d4'}
-        url_1 = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
-        m.post(url_1, json=b_json_1)
-        b_json_2 = {'uuid': 'e5f6'}
-        url_2 = 'mock://example.com/items/a1b2/bitstreams?name=123_2.pdf'
-        m.post(url_2, json=b_json_2)
-        bit_ids = client.post_bitstreams_to_item(item_id, file_identifier,
-                                                 file_dict, ingest_type)
-        bit_ids_output = []
-        for bit_id in bit_ids:
-            bit_ids_output.append(bit_id)
-        assert bit_ids_output[0] == 'c3d4'
-        assert bit_ids_output[1] == 'e5f6'
-
-
-def test_post_bitstream(client, sample_content_1):
-    """Test post_bitstream method."""
-    with requests_mock.Mocker() as m:
-        item_id = 'a1b2'
-        ingest_type = 'local'
-        file_identifier = '123'
-        file_dict = {'123': sample_content_1}
-        b_json = {'uuid': 'c3d4'}
-        url = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
-        bitstream = '123'
-        m.post(url, json=b_json)
-        bit_id = client.post_bitstream(item_id, file_identifier, file_dict,
-                                       ingest_type, bitstream)
+    item_id = 'a1b2'
+    ingest_type = 'local'
+    file_identifier = '123'
+    file_dict = {'123': sample_content_1}
+    bit_ids = client.post_bitstreams_to_item(item_id, file_identifier,
+                                             file_dict, ingest_type)
+    for bit_id in bit_ids:
         assert 'c3d4' == bit_id
 
 
@@ -194,10 +110,15 @@ def test_build_file_dict_remote():
         assert '999' in file_list
 
 
-# # How to test this? Applies to asaps as well
-# def test_create_csv_from_list():
-#     """Test create_csv_from_list function."""
-#     assert False
+def test_create_csv_from_list(runner):
+    """Test create_csv_from_list function."""
+    with runner.isolated_filesystem():
+        list_name = ['123']
+        models.create_csv_from_list(list_name, 'output')
+        with open('output.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                assert row['id'] == '123'
 
 
 def test_metadata_elems_from_row():
