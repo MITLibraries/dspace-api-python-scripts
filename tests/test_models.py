@@ -45,11 +45,11 @@ def test_post_coll_to_comm(client):
     assert coll_id == '5678'
 
 
-def test_post_items_to_coll(client, sample_content_1):
+def test_post_items_to_coll(client, sample_files_dir):
     """Test post_items_to_coll method."""
     coll_metadata = [{"metadata": [
                      {"key": "file_identifier",
-                      "value": "123"},
+                      "value": "test"},
                      {"key": "dc.title", "value":
                       "Monitoring Works: Getting Teachers",
                       "language": "en_US"},
@@ -57,23 +57,39 @@ def test_post_items_to_coll(client, sample_content_1):
                       "value": "repo/0/ao/123"}]}]
     coll_id = '789'
     ingest_type = 'local'
-    file_dict = {'123': sample_content_1}
+    file_dict = {'test_01': f'{sample_files_dir}/test_01.pdf'}
     item_ids = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
                                          ingest_type)
     for item_id in item_ids:
         assert 'a1b2' == item_id
 
 
-def test_post_bitstreams_to_item(client, sample_content_1, sample_content_2):
+def test_post_bitstreams_to_item(client, sample_files_dir):
     """Test post_bitstreams_to_item method."""
     item_id = 'a1b2'
     ingest_type = 'local'
     file_identifier = '123'
-    file_dict = {'123': sample_content_1}
+    file_dict = {'test_02': f'{sample_files_dir}/test_02.pdf',
+                 'test_01': f'{sample_files_dir}/test_01.pdf'}
     bit_ids = client.post_bitstreams_to_item(item_id, file_identifier,
                                              file_dict, ingest_type)
+    bit_ids_output = []
     for bit_id in bit_ids:
-        assert 'c3d4' == bit_id
+        bit_ids_output.append(bit_id)
+    assert bit_ids_output[0] == 'c3d4'
+    assert bit_ids_output[1] == 'e5f6'
+
+
+def test_post_bitstream(client, sample_files_dir):
+    """Test post_bitstream method."""
+    item_id = 'a1b2'
+    ingest_type = 'local'
+    file_identifier = '123'
+    file_dict = {'test_01': f'{sample_files_dir}/test_01.pdf'}
+    bitstream = 'test_01'
+    bit_id = client.post_bitstream(item_id, file_identifier, file_dict,
+                                   ingest_type, bitstream)
+    assert 'c3d4' == bit_id
 
 
 def test__pop_inst(client):

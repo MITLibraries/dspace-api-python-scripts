@@ -1,3 +1,5 @@
+import csv
+
 from click.testing import CliRunner
 import pytest
 import requests_mock
@@ -37,10 +39,10 @@ def ds_mock():
         item_json = {'uuid': 'a1b2', 'handle': '1111.1/1111'}
         m.post('mock://example.com/collections/789/items', json=item_json)
         b_json_1 = {'uuid': 'c3d4'}
-        url_1 = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
+        url_1 = 'mock://example.com/items/a1b2/bitstreams?name=test_01.pdf'
         m.post(url_1, json=b_json_1)
         b_json_2 = {'uuid': 'e5f6'}
-        url_2 = 'mock://example.com/items/a1b2/bitstreams?name=123_2.pdf'
+        url_2 = 'mock://example.com/items/a1b2/bitstreams?name=test_02.pdf'
         m.post(url_2, json=b_json_2)
         yield m
 
@@ -51,19 +53,18 @@ def runner():
 
 
 @pytest.fixture(autouse=True)
-def sample_content_1(tmp_path):
-    content = 'test'
-    dir = tmp_path / 'sub'
-    dir.mkdir()
-    sample_content = dir / '123_1.pdf'
-    sample_content.write_text(content)
-    return sample_content
-
-
-@pytest.fixture(autouse=True)
-def sample_content_2(tmp_path):
-    content = 'test'
-    dir = tmp_path / 'sub'
-    sample_content = dir / '123_2.pdf'
-    sample_content.write_text(content)
-    return sample_content
+def sample_files_dir(tmp_path):
+    sample_files_dir = tmp_path / 'files'
+    sample_files_dir.mkdir()
+    with open(f'{sample_files_dir}/test_01.pdf', 'w'):
+        pass
+    with open(f'{sample_files_dir}/test_02.pdf', 'w'):
+        pass
+    with open(f'{sample_files_dir}/best_01.pdf', 'w'):
+        pass
+    with open(f'{sample_files_dir}/metadata.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['uri'] + ['title'] + ['file_identifier'])
+        writer.writerow(['/repo/0/ao/123'] + ['Test Item'] + ['test'])
+        writer.writerow(['/repo/0/ao/456'] + ['Tast Item'] + ['tast'])
+    return str(sample_files_dir)

@@ -9,7 +9,7 @@ import time
 import click
 import structlog
 
-from dsaps import models
+from dsaps import models, workflows
 
 logger = structlog.get_logger()
 
@@ -96,35 +96,7 @@ def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
 @click.option('-t', '--file_type', prompt='Enter the file type',
               help='The file type to be uploaded.')
 def reconcile(metadata_csv, file_path, file_type):
-    if file_path.startswith('http'):
-        file_dict = models.build_file_dict_remote(file_path, file_type, {})
-    else:
-        files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-        for file in files:
-            file_name = os.path.splitext(os.path.basename(file))[0]
-            file_dict[file_name] = file
-    metadata_ids = []
-    with open(metadata_csv) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            value = row['file_identifier']
-            metadata_ids.append(value)
-    file_matches = []
-    file_ids = []
-    for file_id, v in file_dict.items():
-        file_ids.append(file_id)
-        for metadata_id in [m for m in metadata_ids if file_id == m]:
-            file_matches.append(file_id)
-    metadata_matches = []
-    for metadata_id in metadata_ids:
-        for file_id in file_dict:
-            if file_id == metadata_id:
-                metadata_matches.append(metadata_id)
-    no_files = set(metadata_ids) - set(metadata_matches)
-    no_metadata = set(file_ids) - set(file_matches)
-    models.create_csv_from_list(no_metadata, 'no_metadata.csv')
-    models.create_csv_from_list(no_files, 'no_files.csv')
-    models.create_csv_from_list(metadata_matches, 'metadata_matches.csv')
+    workflows.reconcile_files_and_metadata(metadata_csv, file_path, file_type)
 
 
 @main.command()
