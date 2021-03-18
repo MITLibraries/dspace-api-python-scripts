@@ -45,7 +45,7 @@ def test_post_coll_to_comm(client):
     assert coll_id == '5678'
 
 
-def test_post_items_to_coll(client, sample_files_dir):
+def test_post_items_to_coll(client, input_dir):
     """Test post_items_to_coll method."""
     coll_metadata = [{"metadata": [
                      {"key": "file_identifier",
@@ -57,38 +57,35 @@ def test_post_items_to_coll(client, sample_files_dir):
                       "value": "repo/0/ao/123"}]}]
     coll_id = '789'
     ingest_type = 'local'
-    file_dict = {'test_01': f'{sample_files_dir}/test_01.pdf'}
+    file_dict = {'test_01': f'{input_dir}test_01.pdf'}
     item_ids = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
                                          ingest_type)
     for item_id in item_ids:
         assert 'a1b2' == item_id
 
 
-def test_post_bitstreams_to_item(client, sample_files_dir):
+def test_post_bitstreams_to_item(client, input_dir):
     """Test post_bitstreams_to_item method."""
     item_id = 'a1b2'
     ingest_type = 'local'
     file_identifier = '123'
-    file_dict = {'test_02': f'{sample_files_dir}/test_02.pdf',
-                 'test_01': f'{sample_files_dir}/test_01.pdf'}
+    file_dict = {'test_02': f'{input_dir}more_files/test_02.pdf',
+                 'test_01': f'{input_dir}test_01.pdf'}
     bit_ids = client.post_bitstreams_to_item(item_id, file_identifier,
                                              file_dict, ingest_type)
-    bit_ids_output = []
-    for bit_id in bit_ids:
-        bit_ids_output.append(bit_id)
-    assert bit_ids_output[0] == 'c3d4'
-    assert bit_ids_output[1] == 'e5f6'
+    assert next(bit_ids) == 'c3d4'
+    assert next(bit_ids) == 'e5f6'
 
 
-def test_post_bitstream(client, sample_files_dir):
+def test_post_bitstream(client, input_dir):
     """Test post_bitstream method."""
     item_id = 'a1b2'
-    ingest_type = 'local'
-    file_identifier = '123'
-    file_dict = {'test_01': f'{sample_files_dir}/test_01.pdf'}
+    file_dict = {'test_01': f'{input_dir}test_01.pdf'}
     bitstream = 'test_01'
-    bit_id = client.post_bitstream(item_id, file_identifier, file_dict,
-                                   ingest_type, bitstream)
+    bit_id = client.post_bitstream(item_id, file_dict, 'local', bitstream)
+    assert 'c3d4' == bit_id
+    file_dict = {'test_01': 'mock://remoteserver.com/files/test_01.pdf'}
+    bit_id = client.post_bitstream(item_id, file_dict, 'remote', bitstream)
     assert 'c3d4' == bit_id
 
 
@@ -126,15 +123,14 @@ def test_build_file_dict_remote():
         assert '999' in file_list
 
 
-def test_create_csv_from_list(runner):
+def test_create_csv_from_list(output_dir):
     """Test create_csv_from_list function."""
-    with runner.isolated_filesystem():
-        list_name = ['123']
-        models.create_csv_from_list(list_name, 'output')
-        with open('output.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                assert row['id'] == '123'
+    list_name = ['123']
+    models.create_csv_from_list(list_name, f'{output_dir}output')
+    with open(f'{output_dir}output.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            assert row['id'] == '123'
 
 
 def test_metadata_elems_from_row():

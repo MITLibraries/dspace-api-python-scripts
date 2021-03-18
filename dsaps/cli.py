@@ -91,12 +91,17 @@ def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
 @main.command()
 @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
               help='The path of the CSV file of metadata.')
+@click.option('-o', '--output_path', prompt='Enter the output path',
+              default='', help='The path of the output files, include '
+              '/ at the end of the path')
 @click.option('-f', '--file_path', prompt='Enter the path',
-              help='The path of the content, a URL or local drive path.')
+              help='The path of the content, a URL or local drive path.'
+              'Include / at the end of a local drive path.')
 @click.option('-t', '--file_type', prompt='Enter the file type',
               help='The file type to be uploaded.')
-def reconcile(metadata_csv, file_path, file_type):
-    workflows.reconcile_files_and_metadata(metadata_csv, file_path, file_type)
+def reconcile(metadata_csv, file_path, file_type, output_path):
+    workflows.reconcile_files_and_metadata(metadata_csv, output_path,
+                                           file_path, file_type)
 
 
 @main.command()

@@ -128,11 +128,11 @@ class Client:
         """Post a sorted set of bitstreams to a specified item."""
         file_dict = collections.OrderedDict(sorted(file_dict.items()))
         for bitstream, v in file_dict.items():
-            bit_id = self.post_bitstream(item_id, file_identifier, file_dict,
-                                         ingest_type, bitstream)
+            bit_id = self.post_bitstream(item_id, file_dict, ingest_type,
+                                         bitstream)
             yield bit_id
 
-    def post_bitstream(self, item_id, file_identifier, file_dict, ingest_type,
+    def post_bitstream(self, item_id, file_dict, ingest_type,
                        bitstream):
         """Post a bitstream to a specified item."""
         bitstream_path = file_dict[bitstream]
