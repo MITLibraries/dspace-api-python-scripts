@@ -18,14 +18,48 @@ def create_file_dict(file_path, file_type):
     return file_dict
 
 
+def create_json_metadata(metadata_csv, multiple_terms):
+    """Creates JSON metadata from a CSV."""
+    with open(metadata_csv) as csvfile:
+        reader = csv.DictReader(csvfile)
+        metadata_group = []
+        mapping_dict = {'file_identifier': ['file_identifier'],
+                        'dc.title': ['title', 'en_US'],
+                        'dc.relation.isversionof': ['uri']}
+        for row in reader:
+            metadata_rec = []
+            if multiple_terms == 'delimited':
+                metadata_rec = models.create_metadata_rec(mapping_dict, row,
+                                                          metadata_rec)
+            else:
+                for csv_key, csv_value in row.items():
+                    if csv_value is not None:
+                        if csv_key[-1].isdigit():
+                            dc_key = csv_key[:-2]
+                        else:
+                            dc_key = csv_key
+                        if dc_key not in ['dc.contributor.author',
+                                          'dc.date.issued', 'file_identifier']:
+                            metadata_elems = models.metadata_csv(row, dc_key,
+                                                                 csv_key,
+                                                                 'en_US')
+                        else:
+                            metadata_elems = models.metadata_csv(row, dc_key,
+                                                                 csv_key)
+                        for metadata_elem in metadata_elems:
+                            metadata_rec.append(metadata_elem)
+            item = {'metadata': metadata_rec}
+            metadata_group.append(item)
+        return metadata_group
+
+
 def create_metadata_id_list(metadata_csv):
     """Creates a list of IDs from a metadata CSV"""
     metadata_ids = []
     with open(metadata_csv) as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
-            value = row['file_identifier']
-            metadata_ids.append(value)
+        for row in [r for r in reader if r['file_identifier'] != '']:
+            metadata_ids.append(row['file_identifier'])
     return metadata_ids
 
 
@@ -47,6 +81,26 @@ def match_metadata_to_files(file_dict, metadata_ids):
                         if f.startswith(metadata_id)]:
             metadata_matches.append(metadata_id)
     return metadata_matches
+
+
+def populate_new_coll(client, comm_handle, coll_name, metadata, file_path,
+                      file_type, ingest_type, ingest_data, ingest_report):
+    """Creates a new collection and populates it with item records."""
+    coll_id = client.post_coll_to_comm(comm_handle, coll_name)
+    file_dict = {}
+    if ingest_type == 'local':
+        files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
+        for file in files:
+            file_name = os.path.splitext(os.path.basename(file))[0]
+            file_dict[file_name] = file
+    elif ingest_type == 'remote':
+        file_dict = models.build_file_dict_remote(file_path, file_type,
+                                                  file_dict)
+    items = client.post_items_to_coll(coll_id, metadata, file_dict,
+                                      ingest_type, ingest_data,
+                                      ingest_report)
+    for item in items:
+        yield item
 
 
 def reconcile_files_and_metadata(metadata_csv, output_path, file_path,

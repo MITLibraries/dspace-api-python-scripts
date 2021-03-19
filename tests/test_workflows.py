@@ -38,6 +38,16 @@ def test_match_metadata_to_files():
     assert 'test' in file_matches
 
 
+def test_populate_new_coll(client, json_metadata, input_dir):
+    """Test populate_new_coll function."""
+    coll_name = 'Collection Name'
+    items = workflows.populate_new_coll(client, '111.1111', coll_name,
+                                        json_metadata, input_dir, 'pdf',
+                                        'local', {}, 'True')
+    for item in items:
+        assert item == 'e5f6'
+
+
 def test_reconcile_files_and_metadata(input_dir, output_dir):
     """Test reconcile function."""
     metadata_path = f'{input_dir}metadata.csv'

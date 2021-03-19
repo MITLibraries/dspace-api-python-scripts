@@ -100,7 +100,7 @@ class Client:
         return coll_id
 
     def post_items_to_coll(self, coll_id, coll_metadata, file_dict,
-                           ingest_type):
+                           ingest_type, ingest_data, ingest_report):
         """Posts items to a specified collection."""
         for item_metadata in coll_metadata:
             file_exists = ''
@@ -108,28 +108,36 @@ class Client:
                             if e['key'] == 'file_identifier']:
                 file_identifier = element['value']
                 item_metadata['metadata'].remove(element)
-            for k in [e for e in file_dict if file_identifier in e]:
+            if ingest_report:
+                for element in [e for e in item_metadata['metadata']
+                                if e['key'] == 'dc.relation.isversionof']:
+                    uri = element['value']
+            for k in [e for e in file_dict if e.startswith(file_identifier)]:
                 file_exists = True
             if file_exists is True:
                 endpoint = f'{self.url}/collections/{coll_id}/items'
-                item_id = requests.post(endpoint, headers=self.header,
-                                        cookies=self.cookies,
-                                        json=item_metadata).json()
-                item_id = item_id['uuid']
+                post_resp = requests.post(endpoint, headers=self.header,
+                                          cookies=self.cookies,
+                                          json=item_metadata).json()
+                item_id = post_resp['uuid']
+                handle = post_resp['handle']
                 bit_ids = self.post_bitstreams_to_item(item_id,
                                                        file_identifier,
                                                        file_dict, ingest_type)
                 for bit_id in bit_ids:
                     logger.info(f'Bitstream posted: {bit_id}')
+                if ingest_report is True:
+                    ingest_data[uri] = handle
             yield item_id
 
     def post_bitstreams_to_item(self, item_id, file_identifier, file_dict,
                                 ingest_type):
         """Post a sorted set of bitstreams to a specified item."""
         file_dict = collections.OrderedDict(sorted(file_dict.items()))
-        for bitstream, v in file_dict.items():
-            bit_id = self.post_bitstream(item_id, file_dict, ingest_type,
-                                         bitstream)
+        for bitstream in [k for k, v in file_dict.items()
+                          if k.startswith(file_identifier)]:
+            bit_id = self.post_bitstream(item_id, file_dict,
+                                         ingest_type, bitstream)
             yield bit_id
 
     def post_bitstream(self, item_id, file_dict, ingest_type,
@@ -215,8 +223,8 @@ def build_file_dict_remote(directory_url, file_type, file_dict):
 
 def create_csv_from_list(list_name, output):
     """Creates CSV file from list content."""
-    with open(f'{output}.csv', 'w') as f:
-        writer = csv.writer(f)
+    with open(f'{output}.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
         writer.writerow(['id'])
         for item in list_name:
             writer.writerow([item])
@@ -242,6 +250,15 @@ def metadata_elems_from_row(row, key, field, language=None, delimiter=''):
             metadata_elems.append({k: v for k, v in metadata_elem.items()
                                   if v is not None})
     return metadata_elems
+
+
+def create_ingest_report(ingest_data, file_name):
+    """Creates ingest report of handles and DOS links."""
+    with open(f'{file_name}.csv', 'w') as writecsv:
+        writer = csv.writer(writecsv)
+        writer.writerow(['uri'] + ['link'])
+        for uri, handle in ingest_data.items():
+            writer.writerow([uri] + [f'https://hdl.handle.net/{handle}'])
 
 
 def create_metadata_rec(mapping_dict, row, metadata_rec):
