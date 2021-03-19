@@ -1,3 +1,5 @@
+import csv
+
 from click.testing import CliRunner
 import pytest
 import requests_mock
@@ -5,7 +7,7 @@ import requests_mock
 from dsaps import models
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def client():
     client = models.Client('mock://example.com/')
     client.header = {}
@@ -15,7 +17,7 @@ def client():
 
 
 @pytest.fixture(autouse=True)
-def ds_mock():
+def web_mock():
     with requests_mock.Mocker() as m:
         cookies = {'JSESSIONID': '11111111'}
         m.post('mock://example.com/login', cookies=cookies)
@@ -37,33 +39,44 @@ def ds_mock():
         item_json = {'uuid': 'a1b2', 'handle': '1111.1/1111'}
         m.post('mock://example.com/collections/789/items', json=item_json)
         b_json_1 = {'uuid': 'c3d4'}
-        url_1 = 'mock://example.com/items/a1b2/bitstreams?name=123_1.pdf'
+        url_1 = 'mock://example.com/items/a1b2/bitstreams?name=test_01.pdf'
         m.post(url_1, json=b_json_1)
         b_json_2 = {'uuid': 'e5f6'}
-        url_2 = 'mock://example.com/items/a1b2/bitstreams?name=123_2.pdf'
+        url_2 = 'mock://example.com/items/a1b2/bitstreams?name=test_02.pdf'
         m.post(url_2, json=b_json_2)
+        m.get('mock://remoteserver.com/files/test_01.pdf', content=b'')
         yield m
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def runner():
     return CliRunner()
 
 
-@pytest.fixture(autouse=True)
-def sample_content_1(tmp_path):
-    content = 'test'
-    dir = tmp_path / 'sub'
-    dir.mkdir()
-    sample_content = dir / '123_1.pdf'
-    sample_content.write_text(content)
-    return sample_content
+@pytest.fixture()
+def input_dir(tmp_path):
+    input_dir = tmp_path / 'files'
+    input_dir.mkdir()
+    input_2nd_lvl = input_dir / 'more_files'
+    input_2nd_lvl.mkdir()
+    with open(f'{input_dir}/test_01.pdf', 'w'):
+        pass
+    with open(f'{input_2nd_lvl}/test_02.pdf', 'w'):
+        pass
+    with open(f'{input_dir}/best_01.pdf', 'w'):
+        pass
+    with open(f'{input_dir}/test_01.jpg', 'w'):
+        pass
+    with open(f'{input_dir}/metadata.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['uri'] + ['title'] + ['file_identifier'])
+        writer.writerow(['/repo/0/ao/123'] + ['Test Item'] + ['test'])
+        writer.writerow(['/repo/0/ao/456'] + ['Tast Item'] + ['tast'])
+    return str(f'{input_dir}/')
 
 
-@pytest.fixture(autouse=True)
-def sample_content_2(tmp_path):
-    content = 'test'
-    dir = tmp_path / 'sub'
-    sample_content = dir / '123_2.pdf'
-    sample_content.write_text(content)
-    return sample_content
+@pytest.fixture()
+def output_dir(tmp_path):
+    output_dir = tmp_path / 'output'
+    output_dir.mkdir()
+    return str(f'{output_dir}/')
