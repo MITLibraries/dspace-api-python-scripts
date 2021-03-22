@@ -1,6 +1,5 @@
 import csv
 import datetime
-import glob
 import json
 import logging
 import os
@@ -16,11 +15,10 @@ logger = structlog.get_logger()
 
 @click.group()
 @click.option('--url', envvar='DSPACE_URL')
-@click.option('-e', '--email', prompt='Enter email',
+@click.option('-e', '--email', prompt='Enter email', envvar='TEST_EMAIL',
               help='The email of the user for authentication.')
-@click.option('-p', '--password', prompt='Enter password',
-              envvar='TEST_PASS', hide_input=True,
-              help='The password for authentication.')
+@click.option('-p', '--password', prompt='Enter password', envvar='TEST_PASS',
+              hide_input=True, help='The password for authentication.')
 @click.pass_context
 def main(ctx, url, email, password):
     ctx.obj = {}
@@ -47,6 +45,7 @@ def main(ctx, url, email, password):
     start_time = time.time()
     ctx.obj['client'] = client
     ctx.obj['start_time'] = start_time
+    ctx.obj['log_suffix'] = log_suffix
 
 
 @main.command()
@@ -55,8 +54,8 @@ def main(ctx, url, email, password):
               'collection.')
 @click.option('-n', '--coll_name', prompt='Enter the name of the collection',
               help='The name of the collection to be created.')
-@click.option('-m', '--metadata', prompt='Enter the path of the metadata file',
-              help='The path of the JSON file of metadata.')
+@click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
+              help='The path of the CSV file of metadata.')
 @click.option('-f', '--file_path', prompt='Enter the path',
               help='The path of the content, a URL or local drive path.')
 @click.option('-t', '--file_type', prompt='Enter the file type',
@@ -65,26 +64,15 @@ def main(ctx, url, email, password):
               help='The type of ingest to perform: local, remote.',
               type=click.Choice(['local', 'remote']))
 @click.pass_context
-def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
+def newcoll(ctx, comm_handle, coll_name, metadata_csv, file_path, file_type,
             ingest_type):
     client = ctx.obj['client']
     start_time = ctx.obj['start_time']
-    with open(metadata, encoding='UTF-8') as fp:
-        coll_metadata = json.load(fp)
-        coll_id = client.post_coll_to_comm(comm_handle, coll_name)
-        file_dict = {}
-        if ingest_type == 'local':
-            files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-            for file in files:
-                file_name = os.path.splitext(os.path.basename(file))[0]
-                file_dict[file_name] = file
-        elif ingest_type == 'remote':
-            file_dict = models.build_file_dict_remote(file_path, file_type,
-                                                      file_dict)
-        items = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
-                                          ingest_type)
-        for item in items:
-            logger.info(f'Item posted: {item}')
+    items = workflows.populate_new_coll(client, comm_handle, coll_name,
+                                        {}, file_path, file_type,
+                                        ingest_type)
+    for item in items:
+        logger.info(f'Item posted: {item}')
     models.elapsed_time(start_time, 'Total runtime:')
 
 

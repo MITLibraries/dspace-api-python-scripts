@@ -34,15 +34,15 @@ def test_filtered_item_search(client):
 def test_get_id_from_handle(client):
     """Test get_id_from_handle method."""
     id = client.get_id_from_handle('111.1111')
-    assert id == '123'
+    assert id == 'a1b2'
 
 
 def test_post_coll_to_comm(client):
     """Test post_coll_to_comm method."""
-    comm_handle = '1234'
+    comm_handle = '111.1111'
     coll_name = 'Test Collection'
     coll_id = client.post_coll_to_comm(comm_handle, coll_name)
-    assert coll_id == '5678'
+    assert coll_id == 'c3d4'
 
 
 def test_post_items_to_coll(client, input_dir):
@@ -55,38 +55,38 @@ def test_post_items_to_coll(client, input_dir):
                       "language": "en_US"},
                      {"key": "dc.relation.isversionof",
                       "value": "repo/0/ao/123"}]}]
-    coll_id = '789'
+    coll_id = 'c3d4'
     ingest_type = 'local'
     file_dict = {'test_01': f'{input_dir}test_01.pdf'}
     item_ids = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
                                          ingest_type)
     for item_id in item_ids:
-        assert 'a1b2' == item_id
+        assert 'e5f6' == item_id
 
 
 def test_post_bitstreams_to_item(client, input_dir):
     """Test post_bitstreams_to_item method."""
-    item_id = 'a1b2'
+    item_id = 'e5f6'
     ingest_type = 'local'
-    file_identifier = '123'
+    file_identifier = 'test'
     file_dict = {'test_02': f'{input_dir}more_files/test_02.pdf',
                  'test_01': f'{input_dir}test_01.pdf'}
     bit_ids = client.post_bitstreams_to_item(item_id, file_identifier,
                                              file_dict, ingest_type)
-    assert next(bit_ids) == 'c3d4'
-    assert next(bit_ids) == 'e5f6'
+    assert next(bit_ids) == 'g7h8'
+    assert next(bit_ids) == 'i9j0'
 
 
 def test_post_bitstream(client, input_dir):
     """Test post_bitstream method."""
-    item_id = 'a1b2'
+    item_id = 'e5f6'
     file_dict = {'test_01': f'{input_dir}test_01.pdf'}
     bitstream = 'test_01'
     bit_id = client.post_bitstream(item_id, file_dict, 'local', bitstream)
-    assert 'c3d4' == bit_id
+    assert 'g7h8' == bit_id
     file_dict = {'test_01': 'mock://remoteserver.com/files/test_01.pdf'}
     bit_id = client.post_bitstream(item_id, file_dict, 'remote', bitstream)
-    assert 'c3d4' == bit_id
+    assert 'g7h8' == bit_id
 
 
 def test__pop_inst(client):
@@ -157,10 +157,6 @@ def test_metadata_elems_from_row():
     assert metadata_elem[1]['key'] == 'dc.title'
     assert metadata_elem[1]['value'] == 'Test title 2'
     assert metadata_elem[1]['language'] == 'en_US'
-
-
-# def test_create_ingest_report():
-#     assert False
 
 
 def test_create_metadata_rec():

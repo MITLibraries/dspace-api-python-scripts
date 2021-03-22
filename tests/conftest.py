@@ -29,23 +29,31 @@ def web_mock():
         results_json2 = {'items': []}
         m.get('mock://example.com/filtered-items?', [{'json': results_json1},
               {'json': results_json2}])
-        rec_json = {'uuid': '123'}
+        rec_json = {'uuid': 'a1b2'}
         m.get('mock://example.com/handle/111.1111', json=rec_json)
-        comm_json = {'uuid': 'a1b2'}
-        m.get('mock://example.com/handle/1234', json=comm_json)
-        coll_json = {'uuid': '5678'}
+        coll_json = {'uuid': 'c3d4'}
         m.post('mock://example.com/communities/a1b2/collections',
                json=coll_json)
-        item_json = {'uuid': 'a1b2', 'handle': '1111.1/1111'}
-        m.post('mock://example.com/collections/789/items', json=item_json)
-        b_json_1 = {'uuid': 'c3d4'}
-        url_1 = 'mock://example.com/items/a1b2/bitstreams?name=test_01.pdf'
+        item_json = {'uuid': 'e5f6', 'handle': '222.2222'}
+        m.post('mock://example.com/collections/c3d4/items', json=item_json)
+        b_json_1 = {'uuid': 'g7h8'}
+        url_1 = 'mock://example.com/items/e5f6/bitstreams?name=test_01.pdf'
         m.post(url_1, json=b_json_1)
-        b_json_2 = {'uuid': 'e5f6'}
-        url_2 = 'mock://example.com/items/a1b2/bitstreams?name=test_02.pdf'
+        b_json_2 = {'uuid': 'i9j0'}
+        url_2 = 'mock://example.com/items/e5f6/bitstreams?name=test_02.pdf'
         m.post(url_2, json=b_json_2)
         m.get('mock://remoteserver.com/files/test_01.pdf', content=b'')
         yield m
+
+
+@pytest.fixture()
+def json_metadata():
+    json_metadata = [{'metadata': [
+                     {'key': 'file_identifier', 'value': 'test'},
+                     {'key': 'dc.title', 'value': 'Test Item'},
+                     {'key': 'dc.relation.isversionof',
+                      'value': '/repo/0/ao/123'}]}]
+    return json_metadata
 
 
 @pytest.fixture()

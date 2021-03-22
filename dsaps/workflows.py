@@ -23,9 +23,8 @@ def create_metadata_id_list(metadata_csv):
     metadata_ids = []
     with open(metadata_csv) as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
-            value = row['file_identifier']
-            metadata_ids.append(value)
+        for row in [r for r in reader if r['file_identifier'] != '']:
+            metadata_ids.append(row['file_identifier'])
     return metadata_ids
 
 
@@ -47,6 +46,25 @@ def match_metadata_to_files(file_dict, metadata_ids):
                         if f.startswith(metadata_id)]:
             metadata_matches.append(metadata_id)
     return metadata_matches
+
+
+def populate_new_coll(client, comm_handle, coll_name, metadata, file_path,
+                      file_type, ingest_type):
+    """Creates a new collection and populates it with item records."""
+    coll_id = client.post_coll_to_comm(comm_handle, coll_name)
+    file_dict = {}
+    if ingest_type == 'local':
+        files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
+        for file in files:
+            file_name = os.path.splitext(os.path.basename(file))[0]
+            file_dict[file_name] = file
+    elif ingest_type == 'remote':
+        file_dict = models.build_file_dict_remote(file_path, file_type,
+                                                  file_dict)
+    items = client.post_items_to_coll(coll_id, metadata, file_dict,
+                                      ingest_type)
+    for item in items:
+        yield item
 
 
 def reconcile_files_and_metadata(metadata_csv, output_path, file_path,
