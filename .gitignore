@@ -178,6 +178,7 @@ local/*
 !data/.keep
 .profile
 *.csv
+!tests/files/*.csv
 *.json
 createItemMetadataFromCSV_*
 *.txt
