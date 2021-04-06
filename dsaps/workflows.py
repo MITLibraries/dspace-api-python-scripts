@@ -1,21 +1,24 @@
+import csv
 import glob
 import os
 
 import structlog
 
-from dsaps import helpers, models
+from dsaps.helpers import files_from_location
+from dsaps.models import Collection, Item
 
 logger = structlog.get_logger()
 
 
-def append_items_to_coll(client, coll_handle, ingest_type, file_path,
-                         file_type, json_metadata, ingest_data, ingest_report):
-    """Append items to an existing collection."""
-    coll_id = client.get_id_from_handle(coll_handle)
-    items = populate_coll(client, ingest_type, file_path, file_type,
-                          json_metadata, ingest_report, coll_id, ingest_data)
-    for item in items:
-        yield item
+# def append_items_to_collection(client, collection_handle, field_map,
+#                                metadata_csv_reader, directory, file_type='*'):
+#     """Append items to an existing collection given a collection handle, a CSV of metadata for the items, a mapping dictionary of CSV fields to DSpace metadata elements, a directory of files, and optionally limiting to a single file type."""
+#     collection_uuid = client.get_id_from_handle(collection_handle)
+#     collection = Collection(handle=collection_handle, uuid=collection_uuid)
+#     collection.items_from_csv(metadata_csv_reader, field_map)
+#     for item in collection.items:
+#         item.bitstreams_from_directory(directory)
+#     collection.post_items(client)
 
 
 def populate_coll(client, ingest_type, file_path, file_type, json_metadata,

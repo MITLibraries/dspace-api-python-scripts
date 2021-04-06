@@ -13,15 +13,6 @@ import structlog
 logger = structlog.get_logger()
 
 
-def build_file_dict_remote(directory_url, file_type, file_dict):
-    """Build list of files in a remote directory."""
-    response = requests.get(directory_url)
-    links = html.fromstring(response.content).iterlinks()
-    for link in [i for i in links if i[2].endswith(file_type)]:
-        file_identifier = link[2].replace(f'.{file_type}', '')
-        file_dict[file_identifier] = f'{directory_url}{link[2]}'
-    return file_dict
-
 
 def create_csv_from_list(list_name, output):
     """Creates CSV file from list content."""

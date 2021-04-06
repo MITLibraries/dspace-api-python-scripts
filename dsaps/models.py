@@ -1,15 +1,17 @@
 from functools import partial
+import glob
 import operator
 import os
-import requests
-
-import attr
 import structlog
 
-op = operator.attrgetter('name')
+import attr
+import requests
+
 Field = partial(attr.ib, default=None)
+Group = partial(attr.ib, default=[])
 
 logger = structlog.get_logger()
+op = operator.attrgetter('name')
 
 
 class Client:
@@ -81,15 +83,16 @@ class Client:
         return rec_obj
 
     def post_bitstream(self, item_id, bitstream):
-        """Post a bitstream to a specified item."""
-        file_name = os.path.basename(bitstream.name)
+        """Posts a bitstream to a specified item and returns the bitstream
+        ID."""
         endpoint = (f'{self.url}/items/{item_id}'
-                    + f'/bitstreams?name={file_name}')
+                    f'/bitstreams?name={bitstream.name}')
         header_upload = {'accept': 'application/json'}
-        bit_id = requests.post(endpoint, headers=header_upload,
-                               cookies=self.cookies, data=bitstream).json()
-        bit_id = bit_id['uuid']
-        return bit_id
+        data = open(bitstream.file_path, 'rb')
+        response = requests.post(endpoint, headers=header_upload,
+                                 cookies=self.cookies, data=data).json()
+        bitstream_id = response['uuid']
+        return bitstream_id
 
     def post_coll_to_comm(self, comm_handle, coll_name):
         """Posts a collection to a specified community."""
@@ -105,20 +108,13 @@ class Client:
         logger.info(f'Collection posted: {coll_id}')
         return coll_id
 
-    def post_item_to_coll(self, coll_id, item, ingest_data, ingest_type,
-                          ingest_report_id):
-        """Posts item to a specified collection."""
-        endpoint = f'{self.url}/collections/{coll_id}/items'
-        post_resp = requests.post(endpoint, headers=self.header,
-                                  cookies=self.cookies,
-                                  json=item.metadata).json()
-        item_id = post_resp['uuid']
-        handle = post_resp['handle']
-        for bitstream in item.bitstreams:
-            bit_id = self.post_bitstream(item_id, bitstream)
-            logger.info(f'Bitstream posted: {bit_id}')
-        if ingest_report_id != '':
-            ingest_data[ingest_report_id] = handle
+    def post_item_to_collection(self, collection_id, item):
+        """Posts item to a specified collection and returns the item ID."""
+        endpoint = f'{self.url}/collections/{collection_id}/items'
+        post_response = requests.post(endpoint, headers=self.header,
+                                      cookies=self.cookies,
+                                      json=attr.asdict(item)['metadata']).json()
+        item_id = post_response['uuid']
         return item_id
 
     def _pop_inst(self, class_type, rec_obj):
@@ -154,7 +150,21 @@ class BaseRecord:
 
 @attr.s
 class Collection(BaseRecord):
-    items = Field()
+    items = Group()
+
+    def post_items(self, client):
+        for item in self.items:
+            item_id = client.post_item_to_collection(self.uuid, item)
+            for bitstream in item.bitstreams:
+                client.post_bitstream(item_id, bitstream)
+                yield item, bitstream
+
+    @classmethod
+    def from_csv(cls, csv_reader, field_map):
+        items = [
+            Item.metadata_from_row(row, field_map) for row in csv_reader
+            ]
+        return cls(items=items)
 
 
 @attr.s
@@ -164,12 +174,47 @@ class Community(BaseRecord):
 
 @attr.s
 class Item(BaseRecord):
-    metadata = Field()
-    bitstreams = Field()
+    metadata = Group()
+    bitstreams = Group()
+
+    def bitstreams_from_directory(self, directory, file_type='*'):
+        file_identifier = [m.value for m in self.metadata if
+                           m.key == 'file_identifier'][0]
+        file_list = glob.iglob(
+            f'{directory}/**/{file_identifier}*.{file_type}', recursive=True
+            )
+        self.bitstreams = [
+            Bitstream(name=os.path.basename(f),
+                      file_path=f) for f in file_list
+            ]
+
+    @classmethod
+    def metadata_from_row(cls, row, field_map):
+        metadata = []
+        for f in field_map:
+            field = row[field_map[f]['csv_field_name']]
+            delimiter = field_map[f]['delimiter']
+            language = field_map[f]['language']
+            if delimiter:
+                metadata.extend([
+                    MetadataEntry(key=f, value=v, language=language)
+                    for v in field.split(delimiter)
+                    ])
+            else:
+                metadata.append(
+                    MetadataEntry(key=f, value=field, language=language)
+                    )
+        return cls(metadata=metadata)
 
 
 @attr.s
-class MetadataEntry(BaseRecord):
+class Bitstream():
+    name = Field()
+    file_path = Field()
+
+
+@attr.s
+class MetadataEntry():
     key = Field()
     value = Field()
     language = Field()

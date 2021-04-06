@@ -1,3 +1,6 @@
+import csv
+import json
+
 from click.testing import CliRunner
 import pytest
 import requests_mock
@@ -32,11 +35,25 @@ def input_dir(tmp_path):
 
 
 @pytest.fixture()
+def aspace_delimited_csv():
+    with open('tests/files/aspace_metadata_delimited.csv') as f:
+        reader = csv.DictReader(f)
+        yield reader
+
+
+@pytest.fixture()
 def json_metadata_delim():
     json_metadata = metadata.create_json_metadata(
         'tests/files/metadata_delim.csv', 'delimited'
     )
     return json_metadata
+
+
+@pytest.fixture()
+def aspace_mapping():
+    with open('tests/files/aspace_mapping.json') as f:
+        mapping = json.load(f)
+        yield mapping
 
 
 @pytest.fixture()

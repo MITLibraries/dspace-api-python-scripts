@@ -37,7 +37,8 @@ def test_get_record(client):
 def test_post_bitstream(client, input_dir):
     """Test post_bitstream method."""
     item_id = 'e5f6'
-    bitstream = open(f'{input_dir}test_01.pdf', 'rb')
+    bitstream = models.Bitstream(name='test_01.pdf',
+                                 file_path=f'{input_dir}test_01.pdf')
     bit_id = client.post_bitstream(item_id, bitstream)
     assert 'g7h8' == bit_id
 
@@ -50,24 +51,23 @@ def test_post_coll_to_comm(client):
     assert coll_id == 'c3d4'
 
 
-def test_post_item_to_coll(client, input_dir):
-    """Test post_items_to_coll method."""
+def test_post_item_to_collection(client, input_dir):
+    """Test post_item_to_collection method."""
     item = models.Item()
-    item_metadata = {"metadata": [
-                     {"key": "file_identifier",
-                      "value": "test"},
-                     {"key": "dc.title", "value":
-                      "Monitoring Works: Getting Teachers",
-                      "language": "en_US"},
-                     {"key": "dc.relation.isversionof",
-                      "value": "repo/0/ao/123"}]}
-    item.bitstreams = [open(f'{input_dir}test_01.pdf', 'rb')]
-    item.metadata = item_metadata
+    item.bitstreams = [
+        models.Bitstream(name='test_01.pdf',
+                         file_path=f'{input_dir}test_01.pdf')
+        ]
+    item.metadata = [
+        models.MetadataEntry(key='file_identifier', value='test'),
+        models.MetadataEntry(key='dc.title',
+                             value='Monitoring Works: Getting Teachers',
+                             language='en_US'),
+        models.MetadataEntry(key='dc.relation.isversionof',
+                             value='repo/0/ao/123')
+        ]
     coll_id = 'c3d4'
-    ingest_type = 'local'
-    ingest_report_id = '/repo/0/ao/123'
-    item_id = client.post_item_to_coll(coll_id, item, {}, ingest_type,
-                                       ingest_report_id)
+    item_id = client.post_item_to_collection(coll_id, item)
     assert 'e5f6' == item_id
 
 
@@ -86,3 +86,37 @@ def test__build_uuid_list(client):
     children = 'items'
     child_list = client._build_uuid_list(rec_obj, children)
     assert '1234' in child_list
+
+
+def test_collection_from_csv(aspace_delimited_csv, aspace_mapping):
+    collection = models.Collection.from_csv(
+        aspace_delimited_csv, aspace_mapping
+        )
+    assert 2 == len(collection.items)
+
+
+def test_collection_post_items(client, input_dir):
+    raise # TODO: add test for this
+
+
+def test_item_bitstreams_from_directory(input_dir):
+    item = models.Item(metadata=[models.MetadataEntry(
+        key='file_identifier', value='test', language=None
+        )])
+    item.bitstreams_from_directory(input_dir)
+    assert 3 == len(item.bitstreams)
+
+
+def test_item_metadata_from_row(aspace_delimited_csv, aspace_mapping):
+    row = next(aspace_delimited_csv)
+    item = models.Item.metadata_from_row(row, aspace_mapping)
+    assert attr.asdict(item)['metadata'] == [
+        {'key': 'file_identifier', 'value': 'tast', 'language': None},
+        {'key': 'dc.title', 'value': 'Tast Item', 'language': 'en_US'},
+        {'key': 'dc.relation.isversionof', 'value': '/repo/0/ao/456',
+         'language': None},
+        {'key': 'dc.contributor.author', 'value': 'Smith, John',
+         'language': None},
+        {'key': 'dc.contributor.author', 'value': 'Smith, Jane',
+         'language': None}
+        ]
