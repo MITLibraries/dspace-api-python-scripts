@@ -14,7 +14,7 @@ from dsaps import helpers
 logger = structlog.get_logger()
 
 
-@click.group()
+@click.group(chain=True)
 @click.option('--url', envvar='DSPACE_URL')
 @click.option('-e', '--email', envvar='TEST_EMAIL',
               help='The email of the user for authentication.')
@@ -50,9 +50,6 @@ def main(ctx, url, email, password):
 
 
 @main.command()
-@click.option('-c', '--collection-handle', required=True,
-              help='The handle of the collection to which items are being '
-              'added.')
 @click.option('-m', '--metadata-csv', required=True,
               help='The full path to the CSV file of metadata for the items.')
 @click.option('--field-map', required=True,
@@ -66,64 +63,50 @@ def main(ctx, url, email, password):
 @click.option('-r', '--ingest-report', is_flag=True,
               help='Create ingest report for updating other systems.')
 @click.pass_context
-def additems(ctx, collection_handle, metadata_csv, field_map,
-             directory, file_type, ingest_report):
+def additems(ctx, metadata_csv, field_map, directory, file_type,
+             ingest_report):
     client = ctx.obj['client']
     start_time = ctx.obj['start_time']
+    collection_uuid = ctx.obj['collection_uuid']
     with open(metadata_csv, 'r') as csvfile, open(field_map, 'r') as jsonfile:
         metadata = csv.DictReader(csvfile)
         mapping = json.load(jsonfile)
         collection = Collection.from_csv(metadata, mapping)
     for item in collection.items:
         item.bitstreams_from_directory(directory, file_type)
-    collection_uuid = client.get_id_from_handle(collection_handle)
-    collection.handle = collection_handle
     collection.uuid = collection_uuid
-    collection.post_items(client)
+    items = collection.post_items(client)
+    if ingest_report:
+        report_name = metadata_csv.replace('.csv', '-ingest.csv')
+        helpers.create_ingest_report(items, report_name)
     helpers.elapsed_time(start_time, 'Total runtime:')
 
-#
-# @main.command()
-# @click.option('-c', '--comm_handle', prompt='Enter the community handle',
-#               help='The handle of the community in which to create the ,'
-#               'collection.')
-# @click.option('-n', '--coll_name', prompt='Enter the name of the collection',
-#               help='The name of the collection to be created.')
-# @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
-#               help='The path of the CSV file of metadata.')
-# @click.option('-f', '--file_path', prompt='Enter the path',
-#               help='The path of the content, a URL or local drive path.')
-# @click.option('-t', '--file_type', prompt='Enter the file type',
-#               help='The file type to be uploaded.')
-# @click.option('-i', '--ingest_type', prompt='Enter the type of ingest',
-#               help='The type of ingest to perform: local, remote.',
-#               type=click.Choice(['local', 'remote']), default='remote')
-# @click.option('-r', '--ingest_report', prompt='Create an ingest report?',
-#               help='Create ingest report for updating other systems',
-#               default=False)
-# @click.option('-u', '--multiple_terms', prompt='Method of separating terms?',
-#               help='The way multiple terms are separated in the metadata CSV.',
-#               type=click.Choice(['delimited', 'num_columns']),
-#               default='delimited')
-# @click.pass_context
-# def newcoll(ctx, comm_handle, coll_name, metadata_csv, file_path, file_type,
-#             ingest_type, ingest_report, multiple_terms):
-#     client = ctx.obj['client']
-#     start_time = ctx.obj['start_time']
-#     ingest_data = {}
-#     json_metadata = metadata.create_json_metadata(metadata_csv, multiple_terms)
-#     items = workflows.populate_new_coll(client, comm_handle, coll_name,
-#                                         ingest_type, file_path, file_type,
-#                                         json_metadata, ingest_report,
-#                                         ingest_data)
-#     for item in items:
-#         logger.info(f'Item posted: {item}')
-#     if ingest_report == 'True':
-#         report_name = metadata_csv.replace('.csv', '-ingest.csv')
-#         helpers.create_ingest_report(ingest_data, report_name)
-#     helpers.elapsed_time(start_time, 'Total runtime:')
-#
-#
+
+@main.command()
+@click.option('-c', '--collection-handle', required=True,
+              help='The handle of the collection to which items are being '
+              'added.')
+@click.pass_context
+def existingcollection(ctx, collection_handle):
+    client = ctx.obj['client']
+    collection_uuid = client.get_id_from_handle(collection_handle)
+    ctx.obj['collection_uuid'] = collection_uuid
+
+
+@main.command()
+@click.option('-c', '--community-handle', required=True,
+              help='The handle of the community in which to create the ,'
+              'collection.')
+@click.option('-n', '--collection-name', required=True,
+              help='The name of the collection to be created.')
+@click.pass_context
+def newcollection(ctx, community_handle, collection_name):
+    client = ctx.obj['client']
+    collection_uuid = client.post_coll_to_comm(community_handle,
+                                               collection_name)
+    ctx.obj['collection_uuid'] = collection_uuid
+
+
 # @main.command()
 # @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
 #               help='The path of the CSV file of metadata.')

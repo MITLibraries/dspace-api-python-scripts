@@ -51,7 +51,14 @@ def json_metadata_delim():
 
 @pytest.fixture()
 def aspace_mapping():
-    with open('tests/files/aspace_mapping.json') as f:
+    with open('config/aspace_mapping.json') as f:
+        mapping = json.load(f)
+        yield mapping
+
+
+@pytest.fixture()
+def standard_mapping():
+    with open('config/standard_mapping.json') as f:
         mapping = json.load(f)
         yield mapping
 

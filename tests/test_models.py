@@ -95,23 +95,28 @@ def test_collection_from_csv(aspace_delimited_csv, aspace_mapping):
     assert 2 == len(collection.items)
 
 
-def test_collection_post_items(client, input_dir):
-    raise # TODO: add test for this
+def test_collection_post_items(client, input_dir, aspace_delimited_csv,
+                               aspace_mapping):
+    collection = models.Collection.from_csv(
+        aspace_delimited_csv, aspace_mapping
+        )
+    collection.uuid = 'c3d4'
+    items = collection.post_items(client)
+    for item in items:
+        assert item.handle == '222.2222'
+        assert item.uuid == 'e5f6'
 
 
 def test_item_bitstreams_from_directory(input_dir):
-    item = models.Item(metadata=[models.MetadataEntry(
-        key='file_identifier', value='test', language=None
-        )])
+    item = models.Item(file_identifier='test')
     item.bitstreams_from_directory(input_dir)
     assert 3 == len(item.bitstreams)
 
 
-def test_item_metadata_from_row(aspace_delimited_csv, aspace_mapping):
+def test_item_from_row(aspace_delimited_csv, standard_mapping):
     row = next(aspace_delimited_csv)
-    item = models.Item.metadata_from_row(row, aspace_mapping)
+    item = models.Item.from_row(row, standard_mapping)
     assert attr.asdict(item)['metadata'] == [
-        {'key': 'file_identifier', 'value': 'tast', 'language': None},
         {'key': 'dc.title', 'value': 'Tast Item', 'language': 'en_US'},
         {'key': 'dc.relation.isversionof', 'value': '/repo/0/ao/456',
          'language': None},

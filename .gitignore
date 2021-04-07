@@ -180,5 +180,6 @@ local/*
 *.csv
 !tests/files/*.csv
 *.json
+!config/*.json
 createItemMetadataFromCSV_*
 *.txt

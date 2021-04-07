@@ -1,17 +1,13 @@
-import collections
 import csv
 import datetime
 import glob
 import os
-import requests
 import time
 
-from lxml import html
 import structlog
 
 
 logger = structlog.get_logger()
-
 
 
 def create_csv_from_list(list_name, output):
@@ -25,24 +21,23 @@ def create_csv_from_list(list_name, output):
 
 def create_file_dict(file_path, file_type):
     """Creates a dict of file IDs and file paths."""
-    if file_path.startswith('http'):
-        file_dict = build_file_dict_remote(file_path, file_type, {})
-    else:
-        files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-        file_dict = {}
-        for file in files:
-            file_name = os.path.splitext(os.path.basename(file))[0]
-            file_dict[file_name] = file
+    files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
+    file_dict = {}
+    for file in files:
+        file_name = os.path.splitext(os.path.basename(file))[0]
+        file_dict[file_name] = file
     return file_dict
 
 
-def create_ingest_report(ingest_data, file_name):
-    """Creates ingest report of handles and DOS links."""
-    with open(f'{file_name}.csv', 'w') as writecsv:
+def create_ingest_report(items, file_name):
+    """Creates ingest report of other systems' identifiers with a newly created
+     DSpace handle."""
+    with open(f'{file_name}', 'w') as writecsv:
         writer = csv.writer(writecsv)
         writer.writerow(['uri'] + ['link'])
-        for uri, handle in ingest_data.items():
-            writer.writerow([uri] + [f'https://hdl.handle.net/{handle}'])
+        for item in items:
+            writer.writerow([item.source_system_identifier]
+                            + [f'https://hdl.handle.net/{item.handle}'])
 
 
 def create_metadata_id_list(metadata_csv):
@@ -79,22 +74,6 @@ def match_metadata_to_files(file_dict, metadata_ids):
                         if f.startswith(metadata_id)]:
             metadata_matches.append(metadata_id)
     return metadata_matches
-
-
-def select_bitstreams(ingest_type, file_dict, file_identifier):
-    """Select the appropriate bitstreams for posting to an item."""
-    sel_bitstreams = []
-    file_dict = collections.OrderedDict(sorted(file_dict.items()))
-    for k in [e for e in file_dict if e.startswith(file_identifier)]:
-        pass
-    for bitstream_id in [k for k, v in file_dict.items()
-                         if k.startswith(file_identifier)]:
-        if ingest_type == 'local':
-            data = open(file_dict[bitstream_id], 'rb')
-        elif ingest_type == 'remote':
-            data = requests.get(file_dict[bitstream_id]).content
-        sel_bitstreams.append(data)
-    return sel_bitstreams
 
 
 def update_metadata_csv(metadata_csv, output_path, metadata_matches):
