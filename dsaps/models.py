@@ -59,7 +59,7 @@ class Client:
             offset = offset + 200
         return item_links
 
-    def get_id_from_handle(self, handle):
+    def get_uuid_from_handle(self, handle):
         """Retrieves UUID for an object based on its handle."""
         hdl_endpoint = f'{self.url}/handle/{handle}'
         rec_obj = requests.get(hdl_endpoint, headers=self.header,
@@ -82,41 +82,41 @@ class Client:
             exit()
         return rec_obj
 
-    def post_bitstream(self, item_id, bitstream):
+    def post_bitstream(self, item_uuid, bitstream):
         """Posts a bitstream to a specified item and returns the bitstream
         ID."""
-        endpoint = (f'{self.url}/items/{item_id}'
+        endpoint = (f'{self.url}/items/{item_uuid}'
                     f'/bitstreams?name={bitstream.name}')
         header_upload = {'accept': 'application/json'}
         data = open(bitstream.file_path, 'rb')
         response = requests.post(endpoint, headers=header_upload,
                                  cookies=self.cookies, data=data).json()
-        bitstream_id = response['uuid']
-        return bitstream_id
+        bitstream_uuid = response['uuid']
+        return bitstream_uuid
 
     def post_coll_to_comm(self, comm_handle, coll_name):
         """Posts a collection to a specified community."""
         hdl_endpoint = f'{self.url}/handle/{comm_handle}'
         community = requests.get(hdl_endpoint, headers=self.header,
                                  cookies=self.cookies).json()
-        comm_id = community['uuid']
-        uuid_endpoint = f'{self.url}/communities/{comm_id}/collections'
-        coll_id = requests.post(uuid_endpoint, headers=self.header,
-                                cookies=self.cookies,
-                                json={'name': coll_name}).json()
-        coll_id = coll_id['uuid']
-        logger.info(f'Collection posted: {coll_id}')
-        return coll_id
+        comm_uuid = community['uuid']
+        uuid_endpoint = f'{self.url}/communities/{comm_uuid}/collections'
+        coll_uuid = requests.post(uuid_endpoint, headers=self.header,
+                                  cookies=self.cookies,
+                                  json={'name': coll_name}).json()
+        coll_uuid = coll_uuid['uuid']
+        logger.info(f'Collection posted: {coll_uuid}')
+        return coll_uuid
 
-    def post_item_to_collection(self, collection_id, item):
+    def post_item_to_collection(self, collection_uuid, item):
         """Posts item to a specified collection and returns the item ID."""
-        endpoint = f'{self.url}/collections/{collection_id}/items'
+        endpoint = f'{self.url}/collections/{collection_uuid}/items'
         post_response = requests.post(
             endpoint, headers=self.header, cookies=self.cookies,
             json={'metadata': attr.asdict(item)['metadata']}).json()
-        item_id = post_response['uuid']
-        item.handle = post_response['handle']
-        return item_id
+        item_uuid = post_response['uuid']
+        item_handle = post_response['handle']
+        return item_uuid, item_handle
 
     def _pop_inst(self, class_type, rec_obj):
         """Populate class instance with data from record."""
@@ -155,12 +155,15 @@ class Collection(BaseRecord):
 
     def post_items(self, client):
         for item in self.items:
-            item_id = client.post_item_to_collection(self.uuid, item)
-            item.uuid = item_id
-            logger.info(f'Item posted: {item_id}')
+            item_uuid, item_handle = client.post_item_to_collection(self.uuid,
+                                                                    item)
+            item.uuid = item_uuid
+            item.handle = item_handle
+            logger.info(f'Item posted: {item_uuid}')
             for bitstream in item.bitstreams:
-                bitstream_id = client.post_bitstream(item_id, bitstream)
-                logger.info(f'Bitstream posted: {bitstream_id}')
+                bitstream_uuid = client.post_bitstream(item_uuid, bitstream)
+                bitstream.uuid = bitstream_uuid
+                logger.info(f'Bitstream posted: {bitstream_uuid}')
             yield item
 
     @classmethod
@@ -188,14 +191,11 @@ class Item(BaseRecord):
             f'{directory}/**/{self.file_identifier}*.{file_type}',
             recursive=True
             )
-        file_list = []
-        for file in files:
-            file_list.append(file)
-        file_list.sort()
         self.bitstreams = [
             Bitstream(name=os.path.basename(f),
-                      file_path=f) for f in file_list
+                      file_path=f) for f in files
             ]
+        self.bitstreams.sort(key=lambda x: x.name)
 
     @classmethod
     def from_row(cls, row, field_map):

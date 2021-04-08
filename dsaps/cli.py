@@ -15,10 +15,10 @@ logger = structlog.get_logger()
 
 
 @click.group(chain=True)
-@click.option('--url', envvar='DSPACE_URL')
-@click.option('-e', '--email', envvar='TEST_EMAIL',
+@click.option('--url', envvar='DSPACE_URL', required=True,)
+@click.option('-e', '--email', envvar='TEST_EMAIL', required=True,
               help='The email of the user for authentication.')
-@click.option('-p', '--password', envvar='TEST_PASS',
+@click.option('-p', '--password', envvar='TEST_PASS', required=True,
               hide_input=True, help='The password for authentication.')
 @click.pass_context
 def main(ctx, url, email, password):
@@ -51,8 +51,9 @@ def main(ctx, url, email, password):
 
 @main.command()
 @click.option('-m', '--metadata-csv', required=True,
+              type=click.Path(exists=True),
               help='The full path to the CSV file of metadata for the items.')
-@click.option('--field-map', required=True,
+@click.option('--field-map', required=True, type=click.Path(exists=True),
               help='Path to JSON field mapping file')
 @click.option('-d', '--directory', required=True,
               help='The full path to the content, either a directory of files '
@@ -62,12 +63,25 @@ def main(ctx, url, email, password):
               'type.', default='*')
 @click.option('-r', '--ingest-report', is_flag=True,
               help='Create ingest report for updating other systems.')
+@click.option('-c', '--collection-handle',
+              help='The handle of the collection to which items are being '
+              'added.', default=None)
 @click.pass_context
-def additems(ctx, metadata_csv, field_map, directory, file_type,
-             ingest_report):
+def additems(ctx, metadata_csv, field_map, directory, file_type, ingest_report,
+             collection_handle):
+    """Adds items to a specified collection from a metadata CSV, a field
+     mapping file, and a directory of files. May be run in conjunction with the
+     newcollection CLI commands."""
     client = ctx.obj['client']
     start_time = ctx.obj['start_time']
-    collection_uuid = ctx.obj['collection_uuid']
+    if 'collection_uuid' not in ctx.obj and collection_handle is None:
+        raise click.UsageError('collection_handle option must be used or '
+                               'additems must be run after newcollection '
+                               'command.')
+    elif 'collection_uuid' in ctx.obj:
+        collection_uuid = ctx.obj['collection_uuid']
+    else:
+        collection_uuid = client.get_uuid_from_handle(collection_handle)
     with open(metadata_csv, 'r') as csvfile, open(field_map, 'r') as jsonfile:
         metadata = csv.DictReader(csvfile)
         mapping = json.load(jsonfile)
@@ -79,18 +93,8 @@ def additems(ctx, metadata_csv, field_map, directory, file_type,
     if ingest_report:
         report_name = metadata_csv.replace('.csv', '-ingest.csv')
         helpers.create_ingest_report(items, report_name)
-    helpers.elapsed_time(start_time, 'Total runtime:')
-
-
-@main.command()
-@click.option('-c', '--collection-handle', required=True,
-              help='The handle of the collection to which items are being '
-              'added.')
-@click.pass_context
-def existingcollection(ctx, collection_handle):
-    client = ctx.obj['client']
-    collection_uuid = client.get_id_from_handle(collection_handle)
-    ctx.obj['collection_uuid'] = collection_uuid
+    elapsed_time = datetime.timedelta(seconds=time.time() - start_time)
+    logger.info(f'Total runtime : {elapsed_time}')
 
 
 @main.command()
@@ -101,6 +105,9 @@ def existingcollection(ctx, collection_handle):
               help='The name of the collection to be created.')
 @click.pass_context
 def newcollection(ctx, community_handle, collection_name):
+    """Posts a new collection to a specified community. Used in conjunction
+     with the additems CLI command to populate the new collection with
+     items."""
     client = ctx.obj['client']
     collection_uuid = client.post_coll_to_comm(community_handle,
                                                collection_name)

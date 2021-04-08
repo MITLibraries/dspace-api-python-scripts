@@ -5,7 +5,7 @@ from dsaps import metadata
 
 def test_create_json_metadata(input_dir, json_metadata_delim):
     """Test create_json_metadata function."""
-    md_group = metadata.create_json_metadata('tests/files/metadata_delim.csv',
+    md_group = metadata.create_json_metadata('tests/fixtures/metadata_delim.csv',
                                              'delimited')
     assert md_group[0]['metadata'] == json_metadata_delim[0]['metadata']
     assert md_group[1]['metadata'] == json_metadata_delim[1]['metadata']
@@ -17,7 +17,7 @@ def test_create_metadata_rec_delim(json_metadata_delim):
                     'dc.title': ['title', 'en_US'],
                     'dc.relation.isversionof': ['uri'],
                     'dc.contributor.author': ['authors', None, '|']}
-    with open('tests/files/metadata_delim.csv') as csvfile:
+    with open('tests/fixtures/metadata_delim.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         metadata_rec_1 = metadata.create_metadata_rec_delim(mapping_dict,
                                                             next(reader), [])
@@ -29,7 +29,7 @@ def test_create_metadata_rec_delim(json_metadata_delim):
 
 def test_create_metadata_rec_num_col(json_metadata_num_col):
     """Test create_metadata_rec_num_col function."""
-    with open('tests/files/metadata_num_col.csv') as csvfile:
+    with open('tests/fixtures/metadata_num_col.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         metadata_rec = metadata.create_metadata_rec_num_col(next(reader), [])
         assert metadata_rec == json_metadata_num_col[0]['metadata']

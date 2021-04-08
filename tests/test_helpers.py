@@ -59,7 +59,7 @@ def test_create_ingest_report(runner, output_dir):
 
 def test_create_metadata_id_list(input_dir):
     """Test create_metadata_id_list function."""
-    metadata_path = 'tests/files/metadata_delim.csv'
+    metadata_path = 'tests/fixtures/metadata_delim.csv'
     metadata_ids = helpers.create_metadata_id_list(metadata_path)
     assert 'test' in metadata_ids
     assert 'tast' in metadata_ids
@@ -87,8 +87,8 @@ def test_match_metadata_to_files():
 def test_update_metadata_csv(input_dir, output_dir):
     """Test update_metadata_csv function."""
     metadata_matches = ['test']
-    helpers.update_metadata_csv('tests/files/metadata_delim.csv', output_dir,
-                                metadata_matches)
+    helpers.update_metadata_csv('tests/fixtures/metadata_delim.csv',
+                                output_dir, metadata_matches)
     with open(f'{output_dir}updated-metadata_delim.csv') as csvfile2:
         reader = csv.DictReader(csvfile2)
         for row in reader:

@@ -1,8 +1,6 @@
 import csv
-import datetime
 import glob
 import os
-import time
 
 import structlog
 
@@ -34,7 +32,7 @@ def create_ingest_report(items, file_name):
      DSpace handle."""
     with open(f'{file_name}', 'w') as writecsv:
         writer = csv.writer(writecsv)
-        writer.writerow(['uri'] + ['link'])
+        writer.writerow(['uri', 'link'])
         for item in items:
             writer.writerow([item.source_system_identifier]
                             + [f'https://hdl.handle.net/{item.handle}'])
@@ -48,12 +46,6 @@ def create_metadata_id_list(metadata_csv):
         for row in [r for r in reader if r['file_identifier'] != '']:
             metadata_ids.append(row['file_identifier'])
     return metadata_ids
-
-
-def elapsed_time(start_time, label):
-    """Calculate elapsed time."""
-    td = datetime.timedelta(seconds=time.time() - start_time)
-    logger.info(f'{label} : {td}')
 
 
 def match_files_to_metadata(file_dict, metadata_ids):

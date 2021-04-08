@@ -36,7 +36,7 @@ def input_dir(tmp_path):
 
 @pytest.fixture()
 def aspace_delimited_csv():
-    with open('tests/files/aspace_metadata_delimited.csv') as f:
+    with open('tests/fixtures/aspace_metadata_delimited.csv') as f:
         reader = csv.DictReader(f)
         yield reader
 
@@ -44,7 +44,7 @@ def aspace_delimited_csv():
 @pytest.fixture()
 def json_metadata_delim():
     json_metadata = metadata.create_json_metadata(
-        'tests/files/metadata_delim.csv', 'delimited'
+        'tests/fixtures/metadata_delim.csv', 'delimited'
     )
     return json_metadata
 
@@ -58,7 +58,7 @@ def aspace_mapping():
 
 @pytest.fixture()
 def standard_mapping():
-    with open('config/standard_mapping.json') as f:
+    with open('tests/fixtures/standard_mapping.json') as f:
         mapping = json.load(f)
         yield mapping
 
@@ -66,7 +66,7 @@ def standard_mapping():
 @pytest.fixture()
 def json_metadata_num_col():
     json_metadata = metadata.create_json_metadata(
-        'tests/files/metadata_num_col.csv', 'num_columns'
+        'tests/fixtures/metadata_num_col.csv', 'num_columns'
     )
     return json_metadata
 

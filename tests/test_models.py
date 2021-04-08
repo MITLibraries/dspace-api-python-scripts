@@ -22,9 +22,9 @@ def test_filtered_item_search(client):
     assert '1234' in item_links
 
 
-def test_get_id_from_handle(client):
-    """Test get_id_from_handle method."""
-    id = client.get_id_from_handle('111.1111')
+def test_get_uuid_from_handle(client):
+    """Test get_uuid_from_handle method."""
+    id = client.get_uuid_from_handle('111.1111')
     assert id == 'a1b2'
 
 
@@ -36,19 +36,19 @@ def test_get_record(client):
 
 def test_post_bitstream(client, input_dir):
     """Test post_bitstream method."""
-    item_id = 'e5f6'
+    item_uuid = 'e5f6'
     bitstream = models.Bitstream(name='test_01.pdf',
                                  file_path=f'{input_dir}test_01.pdf')
-    bit_id = client.post_bitstream(item_id, bitstream)
-    assert 'g7h8' == bit_id
+    bit_uuid = client.post_bitstream(item_uuid, bitstream)
+    assert bit_uuid == 'g7h8'
 
 
 def test_post_coll_to_comm(client):
     """Test post_coll_to_comm method."""
     comm_handle = '111.1111'
     coll_name = 'Test Collection'
-    coll_id = client.post_coll_to_comm(comm_handle, coll_name)
-    assert coll_id == 'c3d4'
+    coll_uuid = client.post_coll_to_comm(comm_handle, coll_name)
+    assert coll_uuid == 'c3d4'
 
 
 def test_post_item_to_collection(client, input_dir):
@@ -66,9 +66,10 @@ def test_post_item_to_collection(client, input_dir):
         models.MetadataEntry(key='dc.relation.isversionof',
                              value='repo/0/ao/123')
         ]
-    coll_id = 'c3d4'
-    item_id = client.post_item_to_collection(coll_id, item)
-    assert 'e5f6' == item_id
+    coll_uuid = 'c3d4'
+    item_uuid, item_handle = client.post_item_to_collection(coll_uuid, item)
+    assert item_uuid == 'e5f6'
+    assert item_handle == '222.2222'
 
 
 def test__pop_inst(client):
@@ -111,6 +112,13 @@ def test_item_bitstreams_from_directory(input_dir):
     item = models.Item(file_identifier='test')
     item.bitstreams_from_directory(input_dir)
     assert 3 == len(item.bitstreams)
+    assert item.bitstreams[0].name == 'test_01.jpg'
+    assert item.bitstreams[1].name == 'test_01.pdf'
+    assert item.bitstreams[2].name == 'test_02.pdf'
+    item.bitstreams_from_directory(input_dir, 'pdf')
+    assert 2 == len(item.bitstreams)
+    assert item.bitstreams[0].name == 'test_01.pdf'
+    assert item.bitstreams[1].name == 'test_02.pdf'
 
 
 def test_item_from_row(aspace_delimited_csv, standard_mapping):
