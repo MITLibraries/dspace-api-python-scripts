@@ -1,0 +1,22 @@
+{
+  "file_identifier": {
+    "csv_field_name": "file_identifier",
+    "language": null,
+    "delimiter": ""
+  },
+  "dc.title": {
+    "csv_field_name": "title",
+    "language": "en_US",
+    "delimiter": ""
+  },
+  "dc.relation.isversionof": {
+    "csv_field_name": "uri",
+    "language": null,
+    "delimiter": ""
+  },
+  "dc.contributor.author": {
+    "csv_field_name": "authors",
+    "language": null,
+    "delimiter": "|"
+  }
+}

@@ -178,6 +178,9 @@ local/*
 !data/.keep
 .profile
 *.csv
+!tests/fixtures/*.csv
 *.json
+!config/*.json
+!tests/fixtures/*.json
 createItemMetadataFromCSV_*
 *.txt

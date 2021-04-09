@@ -2,20 +2,40 @@ import csv
 import glob
 import os
 
-from dsaps import models
+import structlog
+
+
+logger = structlog.get_logger()
+
+
+def create_csv_from_list(list_name, output):
+    """Creates CSV file from list content."""
+    with open(f'{output}.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['id'])
+        for item in list_name:
+            writer.writerow([item])
 
 
 def create_file_dict(file_path, file_type):
     """Creates a dict of file IDs and file paths."""
-    if file_path.startswith('http'):
-        file_dict = models.build_file_dict_remote(file_path, file_type, {})
-    else:
-        files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-        file_dict = {}
-        for file in files:
-            file_name = os.path.splitext(os.path.basename(file))[0]
-            file_dict[file_name] = file
+    files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
+    file_dict = {}
+    for file in files:
+        file_name = os.path.splitext(os.path.basename(file))[0]
+        file_dict[file_name] = file
     return file_dict
+
+
+def create_ingest_report(items, file_name):
+    """Creates ingest report of other systems' identifiers with a newly created
+     DSpace handle."""
+    with open(f'{file_name}', 'w') as writecsv:
+        writer = csv.writer(writecsv)
+        writer.writerow(['uri', 'link'])
+        for item in items:
+            writer.writerow([item.source_system_identifier]
+                            + [f'https://hdl.handle.net/{item.handle}'])
 
 
 def create_metadata_id_list(metadata_csv):
@@ -23,9 +43,8 @@ def create_metadata_id_list(metadata_csv):
     metadata_ids = []
     with open(metadata_csv) as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
-            value = row['file_identifier']
-            metadata_ids.append(value)
+        for row in [r for r in reader if r['file_identifier'] != '']:
+            metadata_ids.append(row['file_identifier'])
     return metadata_ids
 
 
@@ -47,23 +66,6 @@ def match_metadata_to_files(file_dict, metadata_ids):
                         if f.startswith(metadata_id)]:
             metadata_matches.append(metadata_id)
     return metadata_matches
-
-
-def reconcile_files_and_metadata(metadata_csv, output_path, file_path,
-                                 file_type):
-    """Runs a reconciliation of files and metadata."""
-    file_dict = create_file_dict(file_path, file_type)
-    file_ids = file_dict.keys()
-    metadata_ids = create_metadata_id_list(metadata_csv)
-    metadata_matches = match_metadata_to_files(file_dict, metadata_ids)
-    file_matches = match_files_to_metadata(file_dict, metadata_ids)
-    no_files = set(metadata_ids) - set(metadata_matches)
-    no_metadata = set(file_ids) - set(file_matches)
-    models.create_csv_from_list(no_metadata, f'{output_path}no_metadata')
-    models.create_csv_from_list(no_files, f'{output_path}no_files')
-    models.create_csv_from_list(metadata_matches,
-                                f'{output_path}metadata_matches')
-    update_metadata_csv(metadata_csv, output_path, metadata_matches)
 
 
 def update_metadata_csv(metadata_csv, output_path, metadata_matches):

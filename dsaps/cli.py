@@ -1,6 +1,5 @@
 import csv
 import datetime
-import glob
 import json
 import logging
 import os
@@ -9,18 +8,18 @@ import time
 import click
 import structlog
 
-from dsaps import models, workflows
+from dsaps.models import Client, Collection
+from dsaps import helpers
 
 logger = structlog.get_logger()
 
 
-@click.group()
-@click.option('--url', envvar='DSPACE_URL')
-@click.option('-e', '--email', prompt='Enter email',
+@click.group(chain=True)
+@click.option('--url', envvar='DSPACE_URL', required=True,)
+@click.option('-e', '--email', envvar='TEST_EMAIL', required=True,
               help='The email of the user for authentication.')
-@click.option('-p', '--password', prompt='Enter password',
-              envvar='TEST_PASS', hide_input=True,
-              help='The password for authentication.')
+@click.option('-p', '--password', envvar='TEST_PASS', required=True,
+              hide_input=True, help='The password for authentication.')
 @click.pass_context
 def main(ctx, url, email, password):
     ctx.obj = {}
@@ -42,106 +41,93 @@ def main(ctx, url, email, password):
                                   'w')],
                         level=logging.INFO)
     logger.info('Application start')
-    client = models.Client(url)
+    client = Client(url)
     client.authenticate(email, password)
     start_time = time.time()
     ctx.obj['client'] = client
     ctx.obj['start_time'] = start_time
+    ctx.obj['log_suffix'] = log_suffix
 
 
 @main.command()
-@click.option('-c', '--comm_handle', prompt='Enter the community handle',
-              help='The handle of the community in which to create the ,'
-              'collection.')
-@click.option('-n', '--coll_name', prompt='Enter the name of the collection',
-              help='The name of the collection to be created.')
-@click.option('-m', '--metadata', prompt='Enter the path of the metadata file',
-              help='The path of the JSON file of metadata.')
-@click.option('-f', '--file_path', prompt='Enter the path',
-              help='The path of the content, a URL or local drive path.')
-@click.option('-t', '--file_type', prompt='Enter the file type',
-              help='The file type to be uploaded.')
-@click.option('-i', '--ingest_type', prompt='Enter the type of ingest',
-              help='The type of ingest to perform: local, remote.',
-              type=click.Choice(['local', 'remote']))
+@click.option('-m', '--metadata-csv', required=True,
+              type=click.Path(exists=True),
+              help='The full path to the CSV file of metadata for the items.')
+@click.option('--field-map', required=True, type=click.Path(exists=True),
+              help='Path to JSON field mapping file')
+@click.option('-d', '--directory', required=True,
+              help='The full path to the content, either a directory of files '
+              'or a URL for the storage location.')
+@click.option('-t', '--file-type',
+              help='The file type to be uploaded, if limited to one file '
+              'type.', default='*')
+@click.option('-r', '--ingest-report', is_flag=True,
+              help='Create ingest report for updating other systems.')
+@click.option('-c', '--collection-handle',
+              help='The handle of the collection to which items are being '
+              'added.', default=None)
 @click.pass_context
-def newcoll(ctx, comm_handle, coll_name, metadata, file_path, file_type,
-            ingest_type):
+def additems(ctx, metadata_csv, field_map, directory, file_type, ingest_report,
+             collection_handle):
+    """Adds items to a specified collection from a metadata CSV, a field
+     mapping file, and a directory of files. May be run in conjunction with the
+     newcollection CLI commands."""
     client = ctx.obj['client']
     start_time = ctx.obj['start_time']
-    with open(metadata, encoding='UTF-8') as fp:
-        coll_metadata = json.load(fp)
-        coll_id = client.post_coll_to_comm(comm_handle, coll_name)
-        file_dict = {}
-        if ingest_type == 'local':
-            files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-            for file in files:
-                file_name = os.path.splitext(os.path.basename(file))[0]
-                file_dict[file_name] = file
-        elif ingest_type == 'remote':
-            file_dict = models.build_file_dict_remote(file_path, file_type,
-                                                      file_dict)
-        items = client.post_items_to_coll(coll_id, coll_metadata, file_dict,
-                                          ingest_type)
-        for item in items:
-            logger.info(f'Item posted: {item}')
-    models.elapsed_time(start_time, 'Total runtime:')
+    if 'collection_uuid' not in ctx.obj and collection_handle is None:
+        raise click.UsageError('collection_handle option must be used or '
+                               'additems must be run after newcollection '
+                               'command.')
+    elif 'collection_uuid' in ctx.obj:
+        collection_uuid = ctx.obj['collection_uuid']
+    else:
+        collection_uuid = client.get_uuid_from_handle(collection_handle)
+    with open(metadata_csv, 'r') as csvfile, open(field_map, 'r') as jsonfile:
+        metadata = csv.DictReader(csvfile)
+        mapping = json.load(jsonfile)
+        collection = Collection.from_csv(metadata, mapping)
+    for item in collection.items:
+        item.bitstreams_from_directory(directory, file_type)
+    collection.uuid = collection_uuid
+    items = collection.post_items(client)
+    if ingest_report:
+        report_name = metadata_csv.replace('.csv', '-ingest.csv')
+        helpers.create_ingest_report(items, report_name)
+    elapsed_time = datetime.timedelta(seconds=time.time() - start_time)
+    logger.info(f'Total runtime : {elapsed_time}')
 
 
 @main.command()
-@click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
-              help='The path of the CSV file of metadata.')
-@click.option('-o', '--output_path', prompt='Enter the output path',
-              default='', help='The path of the output files, include '
-              '/ at the end of the path')
-@click.option('-f', '--file_path', prompt='Enter the path',
-              help='The path of the content, a URL or local drive path.'
-              'Include / at the end of a local drive path.')
-@click.option('-t', '--file_type', prompt='Enter the file type',
-              help='The file type to be uploaded.')
-def reconcile(metadata_csv, file_path, file_type, output_path):
-    workflows.reconcile_files_and_metadata(metadata_csv, output_path,
-                                           file_path, file_type)
+@click.option('-c', '--community-handle', required=True,
+              help='The handle of the community in which to create the ,'
+              'collection.')
+@click.option('-n', '--collection-name', required=True,
+              help='The name of the collection to be created.')
+@click.pass_context
+def newcollection(ctx, community_handle, collection_name):
+    """Posts a new collection to a specified community. Used in conjunction
+     with the additems CLI command to populate the new collection with
+     items."""
+    client = ctx.obj['client']
+    collection_uuid = client.post_coll_to_comm(community_handle,
+                                               collection_name)
+    ctx.obj['collection_uuid'] = collection_uuid
 
 
-@main.command()
-@click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
-              help='The path of the CSV file of metadata.')
-def metadatajson(metadata_csv):
-    with open(metadata_csv) as csvfile:
-        reader = csv.DictReader(csvfile)
-        metadata_group = []
-        mapping_dict = {'fileIdentifier': ['file_identifier'],
-                        'dc.contributor.author': ['author name - direct'],
-                        'dc.contributor.advisor': ['supervisor(s)'],
-                        'dc.date.issued': ['pub date'],
-                        'dc.description.abstract': ['Abstract', 'en_US'],
-                        'dc.title': ['Title', 'en_US'],
-                        'dc.relation.ispartofseries': ['file_identifier']}
-        for row in reader:
-            metadata_rec = []
-            metadata_rec = models.create_metadata_rec(mapping_dict, row,
-                                                      metadata_rec)
-            metadata_rec.append({'key': 'dc.format.mimetype', 'language':
-                                'en_US', 'value': 'application/pdf'})
-            metadata_rec.append({'key': 'dc.language.iso', 'language':
-                                'en_US', 'value': 'en_US'})
-            metadata_rec.append({'key': 'dc.publisher', 'language': 'en_US',
-                                 'value': 'Massachusetts Institute of '
-                                 'Technology. Laboratory for Computer'
-                                 'Science'})
-            metadata_rec.append({'key': 'dc.rights', 'language': 'en_US',
-                                'value': 'Educational use permitted'})
-            metadata_rec.append({'key': 'dc.rights.uri', 'language': 'en_US',
-                                 'value': 'http://rightsstatements.org/vocab/'
-                                 'InC-EDU/1.0/'})
-            metadata_rec.append({'key': 'dc.type', 'language': 'en_US',
-                                'value': 'Technical Report'})
-            item = {'metadata': metadata_rec}
-            metadata_group.append(item)
-    file_name = os.path.splitext(os.path.basename(metadata_csv))[0]
-    with open(f'{file_name}.json', 'w') as f:
-        json.dump(metadata_group, f)
+# @main.command()
+# @click.option('-m', '--metadata_csv', prompt='Enter the metadata CSV file',
+#               help='The path of the CSV file of metadata.')
+# @click.option('-o', '--output_path', prompt='Enter the output path',
+#               default='', help='The path of the output files, include '
+#               '/ at the end of the path')
+# @click.option('-f', '--file_path', prompt='Enter the path',
+#               help='The path of the content, a URL or local drive path.'
+#               'Include / at the end of a local drive path.')
+# @click.option('-t', '--file_type', prompt='Enter the file type',
+#               help='The file type to be uploaded.')
+# def reconcile(metadata_csv, file_path, file_type, output_path):
+#     workflows.reconcile_files_and_metadata(metadata_csv, output_path,
+#                                            file_path, file_type)
 
 
 if __name__ == '__main__':

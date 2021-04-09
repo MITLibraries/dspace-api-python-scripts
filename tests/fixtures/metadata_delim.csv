@@ -1,0 +1,3 @@
+uri,title,file_identifier,authors
+/repo/0/ao/123,Test Item,test,"Smith, Jane"
+/repo/0/ao/456,Tast Item,tast,"Smith, John|Smith, Jane"
