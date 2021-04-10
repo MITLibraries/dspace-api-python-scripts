@@ -3,26 +3,6 @@ import csv
 from dsaps import helpers
 from dsaps.models import Item
 
-# from dsaps.helpers import files_from_location
-#
-#
-# def test_file_list_from_location_with_file_type(input_dir):
-#     files = files_from_location(input_dir, 'pdf')
-#     assert 3 == len(files)
-#     assert {'name': 'test_01', 'path': f'{input_dir}test_01.pdf'} in files
-#     assert {'name': 'test_02',
-#             'path': f'{input_dir}more_files/test_02.pdf'} in files
-#
-#
-# def test_file_list_from_location_without_file_type(input_dir):
-#     files = files_from_location(input_dir)
-#     assert 4 == len(files)
-#     assert {'name': 'test_01', 'path': f'{input_dir}test_01.pdf'} in files
-#     assert {'name': 'test_02',
-#             'path': f'{input_dir}more_files/test_02.pdf'} in files
-#     assert {'name': 'test_01', 'path': f'{input_dir}test_01.jpg'} in files
-#
-
 
 def test_create_csv_from_list(output_dir):
     """Test create_csv_from_list function."""
@@ -34,12 +14,11 @@ def test_create_csv_from_list(output_dir):
             assert row['id'] == '123'
 
 
-def test_create_file_dict(input_dir):
+def test_create_file_list(input_dir):
     """Test create_file_dict function."""
-    file_dict = helpers.create_file_dict(input_dir, 'pdf')
-    assert file_dict['test_02'] == f'{input_dir}more_files/test_02.pdf'
-    assert file_dict['test_01'] == f'{input_dir}test_01.pdf'
-    assert file_dict['best_01'] == f'{input_dir}best_01.pdf'
+    file_list = helpers.create_file_list(input_dir, 'pdf')
+    for file_id in ['test_02.pdf', 'test_01.pdf', 'best_01.pdf']:
+        assert file_id in file_list
 
 
 def test_create_ingest_report(runner, output_dir):

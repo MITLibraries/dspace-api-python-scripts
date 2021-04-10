@@ -2,11 +2,6 @@ import csv
 import glob
 import os
 
-import structlog
-
-
-logger = structlog.get_logger()
-
 
 def create_csv_from_list(list_name, output):
     """Creates CSV file from list content."""
@@ -17,14 +12,13 @@ def create_csv_from_list(list_name, output):
             writer.writerow([item])
 
 
-def create_file_dict(file_path, file_type):
+def create_file_list(file_path, file_type):
     """Creates a dict of file IDs and file paths."""
     files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-    file_dict = {}
+    file_list = []
     for file in files:
-        file_name = os.path.splitext(os.path.basename(file))[0]
-        file_dict[file_name] = file
-    return file_dict
+        file_list.append(os.path.basename(file))
+    return file_list
 
 
 def create_ingest_report(items, file_name):
@@ -48,21 +42,21 @@ def create_metadata_id_list(metadata_csv):
     return metadata_ids
 
 
-def match_files_to_metadata(file_dict, metadata_ids):
+def match_files_to_metadata(file_list, metadata_ids):
     """Creates a list of files matched to metadata records."""
     file_matches = []
-    for file_id, v in file_dict.items():
+    for file_id in file_list:
         for metadata_id in [m for m in metadata_ids
                             if file_id.startswith(m)]:
             file_matches.append(file_id)
     return file_matches
 
 
-def match_metadata_to_files(file_dict, metadata_ids):
+def match_metadata_to_files(file_list, metadata_ids):
     """Creates a list of metadata records matched to files."""
     metadata_matches = []
     for metadata_id in metadata_ids:
-        for file_id in [f for f in file_dict
+        for file_id in [f for f in file_list
                         if f.startswith(metadata_id)]:
             metadata_matches.append(metadata_id)
     return metadata_matches

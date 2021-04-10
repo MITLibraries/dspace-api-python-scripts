@@ -5,7 +5,7 @@ from click.testing import CliRunner
 import pytest
 import requests_mock
 
-from dsaps import metadata, models
+from dsaps import models
 
 
 @pytest.fixture()
@@ -42,14 +42,6 @@ def aspace_delimited_csv():
 
 
 @pytest.fixture()
-def json_metadata_delim():
-    json_metadata = metadata.create_json_metadata(
-        'tests/fixtures/metadata_delim.csv', 'delimited'
-    )
-    return json_metadata
-
-
-@pytest.fixture()
 def aspace_mapping():
     with open('config/aspace_mapping.json') as f:
         mapping = json.load(f)
@@ -61,14 +53,6 @@ def standard_mapping():
     with open('tests/fixtures/standard_mapping.json') as f:
         mapping = json.load(f)
         yield mapping
-
-
-@pytest.fixture()
-def json_metadata_num_col():
-    json_metadata = metadata.create_json_metadata(
-        'tests/fixtures/metadata_num_col.csv', 'num_columns'
-    )
-    return json_metadata
 
 
 @pytest.fixture()
