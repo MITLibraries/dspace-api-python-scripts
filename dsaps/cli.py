@@ -13,6 +13,16 @@ from dsaps import helpers
 
 logger = structlog.get_logger()
 
+cwd = os.getcwd()
+
+
+def validate_path(ctx, param, value):
+    """Validates th formatting of The submitted path"""
+    if value[-1] == '/':
+        return value
+    else:
+        raise click.BadParameter('Include / at the end of the path.')
+
 
 @click.group(chain=True)
 @click.option('--url', envvar='DSPACE_URL', required=True,)
@@ -51,11 +61,13 @@ def main(ctx, url, email, password):
 
 @main.command()
 @click.option('-m', '--metadata-csv', required=True,
-              type=click.Path(exists=True),
+              type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path to the CSV file of metadata for the items.')
-@click.option('--field-map', required=True, type=click.Path(exists=True),
+@click.option('--field-map', required=True,
+              type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path to JSON field mapping file.')
 @click.option('-d', '--content-directory', required=True,
+              type=click.Path(exists=True, dir_okay=True, file_okay=False),
               help='The full path to the content, either a directory of files '
               'or a URL for the storage location.')
 @click.option('-t', '--file-type',
@@ -116,15 +128,19 @@ def newcollection(ctx, community_handle, collection_name):
 
 @main.command()
 @click.option('-m', '--metadata-csv', required=True,
+              type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path of the CSV file of metadata.')
-@click.option('-o', '--output-directory', default='', required=True,
+@click.option('-o', '--output-directory',
+              type=click.Path(exists=True, dir_okay=True, file_okay=False),
+              default=f'{cwd}/', callback=validate_path,
               help='The path of the output files, include / at the end of the '
               'path.')
 @click.option('-d', '--content-directory', required=True,
               help='The full path to the content, either a directory of files '
               'or a URL for the storage location.')
-@click.option('-t', '--file-type', required=True,
-              help='The file type to be uploaded.')
+@click.option('-t', '--file-type',
+              help='The file type to be uploaded, if limited to one file '
+              'type.', default='*')
 def reconcile(metadata_csv, output_directory, content_directory, file_type):
     """Runs a reconciliation of the specified files and metadata that produces
      reports of files with no metadata, metadata with no files, metadata

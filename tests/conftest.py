@@ -68,7 +68,7 @@ def runner():
 
 
 @pytest.fixture(autouse=True)
-def web_mock(input_dir):
+def web_mock():
     with requests_mock.Mocker() as m:
         cookies = {'JSESSIONID': '11111111'}
         m.post('mock://example.com/login', cookies=cookies)

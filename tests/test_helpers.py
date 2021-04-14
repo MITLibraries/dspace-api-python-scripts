@@ -15,7 +15,7 @@ def test_create_csv_from_list(output_dir):
 
 
 def test_create_file_list(input_dir):
-    """Test create_file_dict function."""
+    """Test create_file_list function."""
     file_list = helpers.create_file_list(input_dir, 'pdf')
     for file_id in ['test_02.pdf', 'test_01.pdf', 'best_01.pdf']:
         assert file_id in file_list
@@ -46,19 +46,18 @@ def test_create_metadata_id_list(input_dir):
 
 def test_match_files_to_metadata():
     """Test match_files_to_metadata function."""
-    file_dict = {'test_01': 'files/test_01.pdf'}
+    file_list = ['test_01.pdf']
     metadata_ids = ['test', 'tast']
-    file_matches = helpers.match_files_to_metadata(file_dict, metadata_ids)
+    file_matches = helpers.match_files_to_metadata(file_list, metadata_ids)
     assert len(file_matches) == 1
-    assert 'test_01' in file_matches
+    assert 'test_01.pdf' in file_matches
 
 
 def test_match_metadata_to_files():
     """Test match_metadata_to_files function."""
-    file_dict = {'test_01': 'files/test_01.pdf',
-                 'tast_01': 'files/tast_01.pdf'}
+    file_list = ['test_01.pdf', 'tast_01.pdf']
     metadata_ids = ['test']
-    file_matches = helpers.match_metadata_to_files(file_dict, metadata_ids)
+    file_matches = helpers.match_metadata_to_files(file_list, metadata_ids)
     assert len(file_matches) == 1
     assert 'test' in file_matches
 
