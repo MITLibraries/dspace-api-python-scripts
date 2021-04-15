@@ -13,8 +13,6 @@ from dsaps import helpers
 
 logger = structlog.get_logger()
 
-cwd = os.getcwd()
-
 
 def validate_path(ctx, param, value):
     """Validates th formatting of The submitted path"""
@@ -131,8 +129,8 @@ def newcollection(ctx, community_handle, collection_name):
               type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path of the CSV file of metadata.')
 @click.option('-o', '--output-directory',
-              type=click.Path(exists=True, dir_okay=True, file_okay=False),
-              default=f'{cwd}/', callback=validate_path,
+              type=click.Path(exists=True, file_okay=False),
+              default=f'{os.getcwd()}/', callback=validate_path,
               help='The path of the output files, include / at the end of the '
               'path.')
 @click.option('-d', '--content-directory', required=True,
