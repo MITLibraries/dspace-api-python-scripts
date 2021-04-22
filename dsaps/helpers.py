@@ -2,11 +2,6 @@ import csv
 import glob
 import os
 
-import structlog
-
-
-logger = structlog.get_logger()
-
 
 def create_csv_from_list(list_name, output):
     """Creates CSV file from list content."""
@@ -17,14 +12,11 @@ def create_csv_from_list(list_name, output):
             writer.writerow([item])
 
 
-def create_file_dict(file_path, file_type):
-    """Creates a dict of file IDs and file paths."""
+def create_file_list(file_path, file_type):
+    """Creates a list of file names."""
     files = glob.glob(f'{file_path}/**/*.{file_type}', recursive=True)
-    file_dict = {}
-    for file in files:
-        file_name = os.path.splitext(os.path.basename(file))[0]
-        file_dict[file_name] = file
-    return file_dict
+    file_list = [os.path.basename(file) for file in files]
+    return file_list
 
 
 def create_ingest_report(items, file_name):
@@ -43,37 +35,32 @@ def create_metadata_id_list(metadata_csv):
     metadata_ids = []
     with open(metadata_csv) as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in [r for r in reader if r['file_identifier'] != '']:
-            metadata_ids.append(row['file_identifier'])
+        metadata_ids = [row['file_identifier'] for row in reader
+                        if row['file_identifier'] != '']
     return metadata_ids
 
 
-def match_files_to_metadata(file_dict, metadata_ids):
+def match_files_to_metadata(file_list, metadata_ids):
     """Creates a list of files matched to metadata records."""
-    file_matches = []
-    for file_id, v in file_dict.items():
-        for metadata_id in [m for m in metadata_ids
-                            if file_id.startswith(m)]:
-            file_matches.append(file_id)
+    file_matches = [file_id for metadata_id in metadata_ids
+                    for file_id in file_list
+                    if file_id.startswith(metadata_id)]
     return file_matches
 
 
-def match_metadata_to_files(file_dict, metadata_ids):
+def match_metadata_to_files(file_list, metadata_ids):
     """Creates a list of metadata records matched to files."""
-    metadata_matches = []
-    for metadata_id in metadata_ids:
-        for file_id in [f for f in file_dict
-                        if f.startswith(metadata_id)]:
-            metadata_matches.append(metadata_id)
+    metadata_matches = [metadata_id for f in file_list for metadata_id in
+                        metadata_ids if f.startswith(metadata_id)]
     return metadata_matches
 
 
-def update_metadata_csv(metadata_csv, output_path, metadata_matches):
+def update_metadata_csv(metadata_csv, output_directory, metadata_matches):
     """Creates an updated CSV of metadata records with matching files."""
     with open(metadata_csv) as csvfile:
         reader = csv.DictReader(csvfile)
         upd_md_file_name = f'updated-{os.path.basename(metadata_csv)}'
-        with open(f'{output_path}{upd_md_file_name}', 'w') as updated_csv:
+        with open(f'{output_directory}{upd_md_file_name}', 'w') as updated_csv:
             writer = csv.DictWriter(updated_csv, fieldnames=reader.fieldnames)
             writer.writeheader()
             for row in reader:

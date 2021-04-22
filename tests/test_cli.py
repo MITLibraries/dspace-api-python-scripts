@@ -12,7 +12,7 @@ def test_additems(runner, input_dir):
                             'tests/fixtures/metadata_delim.csv',
                             '--field-map',
                             'tests/fixtures/standard_mapping.json',
-                            '--directory', input_dir,
+                            '--content-directory', input_dir,
                             '--file-type', 'pdf',
                             '--collection-handle', '333.3333'])
     assert result.exit_code == 0
@@ -28,7 +28,7 @@ def test_additems(runner, input_dir):
                             'tests/fixtures/metadata_delim.csv',
                             '--field-map',
                             'tests/fixtures/standard_mapping.json',
-                            '--directory', input_dir,
+                            '--content-directory', input_dir,
                             '--file-type', 'pdf'])
     assert result.exit_code == 0
 
@@ -45,16 +45,17 @@ def test_newcollection(runner, input_dir):
     assert result.exit_code == 0
 
 
-# def test_reconcile(runner, input_dir, output_dir):
-#     """Test reconcile command."""
-#     result = runner.invoke(main,
-#                            ['--url', 'mock://example.com/',
-#                             '--email', 'test@test.mock',
-#                             '--password', '1234',
-#                             'reconcile',
-#                             '--metadata_csv', 'tests/fixtures/metadata_delim.csv',
-#                             '--file_path', input_dir,
-#                             '--file_type', 'pdf',
-#                             '--output_path', output_dir
-#                             ])
-#     assert result.exit_code == 0
+def test_reconcile(runner, input_dir, output_dir):
+    """Test reconcile command."""
+    result = runner.invoke(main,
+                           ['--url', 'mock://example.com/',
+                            '--email', 'test@test.mock',
+                            '--password', '1234',
+                            'reconcile',
+                            '--metadata-csv',
+                            'tests/fixtures/metadata_delim.csv',
+                            '--output-directory', output_dir,
+                            '--content-directory', input_dir,
+                            '--file-type', 'pdf'
+                            ])
+    assert result.exit_code == 0
