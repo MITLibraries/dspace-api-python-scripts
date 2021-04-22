@@ -59,11 +59,13 @@ def main(ctx, url, email, password):
 
 @main.command()
 @click.option('-m', '--metadata-csv', required=True,
-              type=click.Path(exists=True),
+              type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path to the CSV file of metadata for the items.')
-@click.option('-f', '--field-map', required=True, type=click.Path(exists=True),
+@click.option('-f', '--field-map', required=True,
+              type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path to JSON field mapping file.')
 @click.option('-d', '--content-directory', required=True,
+              type=click.Path(exists=True, dir_okay=True, file_okay=False),
               help='The full path to the content, either a directory of files '
               'or a URL for the storage location.')
 @click.option('-t', '--file-type',
