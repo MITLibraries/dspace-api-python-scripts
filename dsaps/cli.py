@@ -61,7 +61,7 @@ def main(ctx, url, email, password):
 @click.option('-m', '--metadata-csv', required=True,
               type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path to the CSV file of metadata for the items.')
-@click.option('--field-map', required=True,
+@click.option('-f', '--field-map', required=True,
               type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='The path to JSON field mapping file.')
 @click.option('-d', '--content-directory', required=True,
