@@ -39,8 +39,7 @@ Option (short) | Option (long)             | Description
 
 #### Example Usage
 ```
-dsaps --url https://dspace.com/rest -e abc@def.com additems -m coll_metadata.csv
--f config/aspace_mapping.json -d /files/pdfs -t pdf -r -c 111.1/111111
+pipenv run dsaps --url https://dspace.com/rest -e abc@def.com -p ******** additems -m coll_metadata.csv -f config/aspace_mapping.json -d /files/pdfs -t pdf -r -c 111.1/111111
 ```
 
 ### newcollection
@@ -53,9 +52,7 @@ Option (short) | Option (long)            | Description
 
 #### Example Usage
 ```
-dsaps --url https://dspace.com/rest -e abc@def.com newcollection -c 222.2/222222
--n Test\ Collection additems -m coll_metadata.csv -f config/aspace_mapping.json 
--d /files/pdfs -t pdf -r
+pipenv run dsaps --url https://dspace.com/rest -e abc@def.com -p ******** newcollection -c 222.2/222222 -n Test\ Collection additems -m coll_metadata.csv -f config/aspace_mapping.json -d /files/pdfs -t pdf -r
 ```
 
 ### reconcile
@@ -71,6 +68,5 @@ Option (short) | Option (long)             | Description
 
 #### Example Usage
 ```
-dsaps --url https://dspace.com/rest -e abc@def.com reconcile -m coll_metadata.csv 
--o /output -d /files/pdfs -t pdf
+pipenv run dsaps --url https://dspace.com/rest -e abc@def.com -p ******** reconcile -m coll_metadata.csv -o /output -d /files/pdfs -t pdf
 ```
