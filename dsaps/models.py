@@ -205,8 +205,10 @@ class Item(BaseRecord):
             if f == 'file_identifier':
                 file_identifier = field
                 continue  # file_identifier is not included in DSpace metadata
-            if f == 'dc.relation.isversionof':
+            if f == 'source_system_identifier':
                 source_system_identifier = field
+                continue  # source_system_identifier is not included in DSpace
+                # metadata
             delimiter = field_map[f]['delimiter']
             language = field_map[f]['language']
             if delimiter:

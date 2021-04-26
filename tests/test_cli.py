@@ -9,9 +9,8 @@ def test_additems(runner, input_dir):
                             '--password', '1234',
                             'additems',
                             '--metadata-csv',
-                            'tests/fixtures/metadata_delim.csv',
-                            '--field-map',
-                            'tests/fixtures/standard_mapping.json',
+                            'tests/fixtures/aspace_metadata_delimited.csv',
+                            '--field-map', 'config/aspace_mapping.json',
                             '--content-directory', input_dir,
                             '--file-type', 'pdf',
                             '--collection-handle', '333.3333'])
@@ -25,9 +24,8 @@ def test_additems(runner, input_dir):
                             '--collection-name', 'Test Collection',
                             'additems',
                             '--metadata-csv',
-                            'tests/fixtures/metadata_delim.csv',
-                            '--field-map',
-                            'tests/fixtures/standard_mapping.json',
+                            'tests/fixtures/aspace_metadata_delimited.csv',
+                            '--field-map', 'config/aspace_mapping.json',
                             '--content-directory', input_dir,
                             '--file-type', 'pdf'])
     assert result.exit_code == 0
@@ -53,7 +51,7 @@ def test_reconcile(runner, input_dir, output_dir):
                             '--password', '1234',
                             'reconcile',
                             '--metadata-csv',
-                            'tests/fixtures/metadata_delim.csv',
+                            'tests/fixtures/aspace_metadata_delimited.csv',
                             '--output-directory', output_dir,
                             '--content-directory', input_dir,
                             '--file-type', 'pdf'
