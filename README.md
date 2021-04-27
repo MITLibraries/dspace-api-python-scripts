@@ -1,6 +1,6 @@
 # dsaps
 
-This command line application provides several ways of interacting with the [DSpace](https://github.com/DSpace/DSpace) API. This application was written for DSpace 6.3, it has not been tested against other DSpace versions.
+This command line application provides several ways of interacting with the [DSpace](https://github.com/DSpace/DSpace) API. This application was written for DSpace 6.3, it has not been tested against other DSpace versions. Previously, this branch of the repository was a set of self-contained scripts that could be run independently, those scripts can be found as a [release](https://github.com/MITLibraries/dspace-api-python-scripts/releases/tag/v1.0).
 
 ## Installation
 Clone the repository and install using [pipenv](https://github.com/pypa/pipenv):
