@@ -1,3 +1,3 @@
-uri,title,file_identifier,authors
-/repo/0/ao/456,Tast Item,tast,"Smith, John|Smith, Jane"
-/repo/0/ao/123,Test Item,test,"Smith, Jane"
+uri,title,file_identifier,author,description,rights_statement,rights_uri
+/repo/0/ao/456,Tast Item,tast,"Smith, John|Smith, Jane","More info at /repo/0/ao/456","Totally Free","http://free.gov"
+/repo/0/ao/123,Test Item,test,"Smith, Jane","More info at /repo/0/ao/123","Totally Free","http://free.gov"

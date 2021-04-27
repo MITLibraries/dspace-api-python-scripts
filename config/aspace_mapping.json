@@ -9,8 +9,28 @@
     "language": "en_US",
     "delimiter": ""
   },
-  "dc.relation.isversionof": {
+  "source_system_identifier": {
     "csv_field_name": "uri",
+    "language": null,
+    "delimiter": ""
+  },
+  "dc.contributor.author": {
+    "csv_field_name": "author",
+    "language": null,
+    "delimiter": "|"
+  },
+  "dc.description": {
+    "csv_field_name": "description",
+    "language": "en_US",
+    "delimiter": ""
+  },
+  "dc.rights": {
+    "csv_field_name": "rights_statement",
+    "language": "en_US",
+    "delimiter": ""
+  },
+  "dc.rights.uri": {
+    "csv_field_name": "rights_uri",
     "language": null,
     "delimiter": ""
   }

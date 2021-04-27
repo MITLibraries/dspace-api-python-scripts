@@ -121,15 +121,17 @@ def test_item_bitstreams_from_directory(input_dir):
     assert item.bitstreams[1].name == 'test_02.pdf'
 
 
-def test_item_from_row(aspace_delimited_csv, standard_mapping):
+def test_item_from_row(aspace_delimited_csv, aspace_mapping):
     row = next(aspace_delimited_csv)
-    item = models.Item.from_row(row, standard_mapping)
+    item = models.Item.from_row(row, aspace_mapping)
     assert attr.asdict(item)['metadata'] == [
         {'key': 'dc.title', 'value': 'Tast Item', 'language': 'en_US'},
-        {'key': 'dc.relation.isversionof', 'value': '/repo/0/ao/456',
-         'language': None},
         {'key': 'dc.contributor.author', 'value': 'Smith, John',
          'language': None},
         {'key': 'dc.contributor.author', 'value': 'Smith, Jane',
-         'language': None}
+         'language': None},
+        {'key': 'dc.description', 'value': 'More info at /repo/0/ao/456',
+         'language': 'en_US'},
+        {'key': 'dc.rights', 'value': 'Totally Free', 'language': 'en_US'},
+        {'key': 'dc.rights.uri', 'value': 'http://free.gov', 'language': None}
         ]
