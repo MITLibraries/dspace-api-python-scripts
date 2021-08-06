@@ -15,7 +15,7 @@ logger = structlog.get_logger()
 
 
 def validate_path(ctx, param, value):
-    """Validates th formatting of The submitted path"""
+    """Validates the formatting of the submitted path"""
     if value[-1] == '/':
         return value
     else:
@@ -24,9 +24,9 @@ def validate_path(ctx, param, value):
 
 @click.group(chain=True)
 @click.option('--url', envvar='DSPACE_URL', required=True,)
-@click.option('-e', '--email', envvar='TEST_EMAIL', required=True,
+@click.option('-e', '--email', envvar='DSPACE_EMAIL', required=True,
               help='The email of the user for authentication.')
-@click.option('-p', '--password', envvar='TEST_PASS', required=True,
+@click.option('-p', '--password', envvar='DSPACE_PASSWORD', required=True,
               hide_input=True, help='The password for authentication.')
 @click.pass_context
 def main(ctx, url, email, password):
@@ -79,7 +79,7 @@ def main(ctx, url, email, password):
 @click.pass_context
 def additems(ctx, metadata_csv, field_map, content_directory, file_type,
              ingest_report, collection_handle):
-    """Adds items to a specified collection from a metadata CSV, a field
+    """Add items to a specified collection from a metadata CSV, a field
      mapping file, and a directory of files. May be run in conjunction with the
      newcollection CLI command."""
     client = ctx.obj['client']
@@ -95,9 +95,9 @@ def additems(ctx, metadata_csv, field_map, content_directory, file_type,
     with open(metadata_csv, 'r') as csvfile, open(field_map, 'r') as jsonfile:
         metadata = csv.DictReader(csvfile)
         mapping = json.load(jsonfile)
-        collection = Collection.from_csv(metadata, mapping)
+        collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
     for item in collection.items:
-        item.bitstreams_from_directory(content_directory, file_type)
+        item.get_bitstreams_in_directory(content_directory, file_type)
     collection.uuid = collection_uuid
     items = collection.post_items(client)
     if ingest_report:
@@ -115,7 +115,7 @@ def additems(ctx, metadata_csv, field_map, content_directory, file_type,
               help='The name of the collection to be created.')
 @click.pass_context
 def newcollection(ctx, community_handle, collection_name):
-    """Posts a new collection to a specified community. Used in conjunction
+    """Post a new collection to a specified community. Used in conjunction
      with the additems CLI command to populate the new collection with
      items."""
     client = ctx.obj['client']
@@ -140,7 +140,7 @@ def newcollection(ctx, community_handle, collection_name):
               help='The file type to be uploaded, if limited to one file '
               'type.', default='*')
 def reconcile(metadata_csv, output_directory, content_directory, file_type):
-    """Runs a reconciliation of the specified files and metadata that produces
+    """Run a reconciliation of the specified files and metadata to produce
      reports of files with no metadata, metadata with no files, metadata
      matched to files, and an updated version of the metadata CSV with only
      the records that have matching files."""
@@ -156,7 +156,3 @@ def reconcile(metadata_csv, output_directory, content_directory, file_type):
                                  f'{output_directory}metadata_matches')
     helpers.update_metadata_csv(metadata_csv, output_directory,
                                 metadata_matches)
-
-
-if __name__ == '__main__':
-    main()
