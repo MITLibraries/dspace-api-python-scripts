@@ -6,6 +6,12 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 requests-mock = "*"
+black = "==21.7b0"
+isort = "*"
+flake8 = "*"
+bandit = "*"
+coveralls = "*"
+pytest-cov = "*"
 
 [packages]
 requests = "*"
@@ -13,6 +19,7 @@ structlog = "*"
 attrs = "*"
 click = "*"
 lxml = "*"
+
 
 [requires]
 python_version = "3.9"
