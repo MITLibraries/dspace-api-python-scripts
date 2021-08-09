@@ -108,22 +108,22 @@ def test_collection_post_items(client, input_dir, aspace_delimited_csv,
         assert item.uuid == 'e5f6'
 
 
-def test_item_get_bitstreams_in_directory(input_dir):
+def test_item_bitstreams_in_directory(input_dir):
     item = models.Item(file_identifier='test')
-    item.get_bitstreams_in_directory(input_dir)
+    item.bitstreams_in_directory(input_dir)
     assert 3 == len(item.bitstreams)
     assert item.bitstreams[0].name == 'test_01.jpg'
     assert item.bitstreams[1].name == 'test_01.pdf'
     assert item.bitstreams[2].name == 'test_02.pdf'
-    item.get_bitstreams_in_directory(input_dir, 'pdf')
+    item.bitstreams_in_directory(input_dir, 'pdf')
     assert 2 == len(item.bitstreams)
     assert item.bitstreams[0].name == 'test_01.pdf'
     assert item.bitstreams[1].name == 'test_02.pdf'
 
 
-def test_item_create_item_metadata_from_csv_row(aspace_delimited_csv, aspace_mapping):
+def test_item_metadata_from_csv_row(aspace_delimited_csv, aspace_mapping):
     row = next(aspace_delimited_csv)
-    item = models.Item.create_item_metadata_from_csv_row(row, aspace_mapping)
+    item = models.Item.metadata_from_csv_row(row, aspace_mapping)
     assert attr.asdict(item)['metadata'] == [
         {'key': 'dc.title', 'value': 'Tast Item', 'language': 'en_US'},
         {'key': 'dc.contributor.author', 'value': 'Smith, John',

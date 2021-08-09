@@ -172,7 +172,7 @@ class Collection(BaseRecord):
         """Create metadata for the collection's items based on a CSV and a JSON mapping
         field map."""
         items = [
-            Item.create_item_metadata_from_csv_row(row, field_map) for row in csv_reader
+            Item.metadata_from_csv_row(row, field_map) for row in csv_reader
         ]
         return cls(items=items)
 
@@ -189,8 +189,8 @@ class Item(BaseRecord):
     file_identifier = Field()
     source_system_identifier = Field()
 
-    def get_bitstreams_in_directory(self, directory, file_type='*'):
-        """Get bitstreams from the specified directory and sort them."""
+    def bitstreams_in_directory(self, directory, file_type="*"):
+        """Create a list of bitstreams from the specified directory and sort the list."""
         files = glob.iglob(
             f'{directory}/**/{self.file_identifier}*.{file_type}',
             recursive=True
@@ -202,7 +202,7 @@ class Item(BaseRecord):
         self.bitstreams.sort(key=lambda x: x.name)
 
     @classmethod
-    def create_item_metadata_from_csv_row(cls, row, field_map):
+    def metadata_from_csv_row(cls, row, field_map):
         """Create metadata for an item based on a CSV row and a JSON mapping field map."""
         metadata = []
         for f in field_map:

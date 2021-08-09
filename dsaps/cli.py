@@ -97,7 +97,7 @@ def additems(ctx, metadata_csv, field_map, content_directory, file_type,
         mapping = json.load(jsonfile)
         collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
     for item in collection.items:
-        item.get_bitstreams_in_directory(content_directory, file_type)
+        item.bitstreams_in_directory(content_directory, file_type)
     collection.uuid = collection_uuid
     items = collection.post_items(client)
     if ingest_report:
