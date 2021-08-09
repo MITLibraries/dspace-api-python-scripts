@@ -39,7 +39,7 @@ class Client:
 
     def filtered_item_search(self, key, string, query_type,
                              selected_collections=''):
-        """Performs a search against the filtered items endpoint."""
+        """Perform a search against the filtered items endpoint."""
         offset = 0
         items = ''
         item_links = []
@@ -60,30 +60,30 @@ class Client:
         return item_links
 
     def get_uuid_from_handle(self, handle):
-        """Retrieves UUID for an object based on its handle."""
+        """Get UUID for an object based on its handle."""
         hdl_endpoint = f'{self.url}/handle/{handle}'
         rec_obj = requests.get(hdl_endpoint, headers=self.header,
                                cookies=self.cookies).json()
         return rec_obj['uuid']
 
-    def get_record(self, uuid, rec_type):
-        """Retrieve an individual record of a particular type."""
-        url = f'{self.url}/{rec_type}/{uuid}?expand=all'
+    def get_record(self, uuid, record_type):
+        """Get an individual record of a specified type."""
+        url = f'{self.url}/{record_type}/{uuid}?expand=all'
         record = requests.get(url, headers=self.header,
                               cookies=self.cookies).json()
-        if rec_type == 'items':
-            rec_obj = self._pop_inst(Item, record)
-        elif rec_type == 'communities':
-            rec_obj = self._pop_inst(Community, record)
-        elif rec_type == 'collections':
-            rec_obj = self._pop_inst(Collection, record)
+        if record_type == 'items':
+            rec_obj = self._populate_class_instance(Item, record)
+        elif record_type == 'communities':
+            rec_obj = self._populate_class_instance(Community, record)
+        elif record_type == 'collections':
+            rec_obj = self._populate_class_instance(Collection, record)
         else:
             logger.info('Invalid record type.')
             exit()
         return rec_obj
 
     def post_bitstream(self, item_uuid, bitstream):
-        """Posts a bitstream to a specified item and returns the bitstream
+        """Post a bitstream to a specified item and return the bitstream
         ID."""
         endpoint = (f'{self.url}/items/{item_uuid}'
                     f'/bitstreams?name={bitstream.name}')
@@ -95,7 +95,7 @@ class Client:
         return bitstream_uuid
 
     def post_coll_to_comm(self, comm_handle, coll_name):
-        """Posts a collection to a specified community."""
+        """Post a collection to a specified community."""
         hdl_endpoint = f'{self.url}/handle/{comm_handle}'
         community = requests.get(hdl_endpoint, headers=self.header,
                                  cookies=self.cookies).json()
@@ -109,7 +109,7 @@ class Client:
         return coll_uuid
 
     def post_item_to_collection(self, collection_uuid, item):
-        """Posts item to a specified collection and returns the item ID."""
+        """Post item to a specified collection and return the item ID."""
         endpoint = f'{self.url}/collections/{collection_uuid}/items'
         post_response = requests.post(
             endpoint, headers=self.header, cookies=self.cookies,
@@ -118,7 +118,7 @@ class Client:
         item_handle = post_response['handle']
         return item_uuid, item_handle
 
-    def _pop_inst(self, class_type, rec_obj):
+    def _populate_class_instance(self, class_type, rec_obj):
         """Populate class instance with data from record."""
         fields = [op(field) for field in attr.fields(class_type)]
         kwargs = {k: v for k, v in rec_obj.items() if k in fields}
@@ -133,7 +133,7 @@ class Client:
         return rec_obj
 
     def _build_uuid_list(self, rec_obj, children):
-        """Builds a list of the uuids for an object's children."""
+        """Build list of the uuids of the object's children."""
         child_list = []
         for child in rec_obj[children]:
             child_list.append(child['uuid'])
@@ -154,6 +154,7 @@ class Collection(BaseRecord):
     items = Group()
 
     def post_items(self, client):
+        """Post items to collection."""
         for item in self.items:
             item_uuid, item_handle = client.post_item_to_collection(self.uuid,
                                                                     item)
@@ -167,10 +168,12 @@ class Collection(BaseRecord):
             yield item
 
     @classmethod
-    def from_csv(cls, csv_reader, field_map):
+    def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
+        """Create metadata for the collection's items based on a CSV and a JSON mapping
+        field map."""
         items = [
-            Item.from_row(row, field_map) for row in csv_reader
-            ]
+            Item.metadata_from_csv_row(row, field_map) for row in csv_reader
+        ]
         return cls(items=items)
 
 
@@ -186,19 +189,21 @@ class Item(BaseRecord):
     file_identifier = Field()
     source_system_identifier = Field()
 
-    def bitstreams_from_directory(self, directory, file_type='*'):
+    def bitstreams_in_directory(self, directory, file_type="*"):
+        """Create a list of bitstreams from the specified directory and sort the list."""
         files = glob.iglob(
             f'{directory}/**/{self.file_identifier}*.{file_type}',
             recursive=True
-            )
+        )
         self.bitstreams = [
             Bitstream(name=os.path.basename(f),
                       file_path=f) for f in files
-            ]
+        ]
         self.bitstreams.sort(key=lambda x: x.name)
 
     @classmethod
-    def from_row(cls, row, field_map):
+    def metadata_from_csv_row(cls, row, field_map):
+        """Create metadata for an item based on a CSV row and a JSON mapping field map."""
         metadata = []
         for f in field_map:
             field = row[field_map[f]['csv_field_name']]
@@ -215,11 +220,11 @@ class Item(BaseRecord):
                 metadata.extend([
                     MetadataEntry(key=f, value=v, language=language)
                     for v in field.split(delimiter)
-                    ])
+                ])
             else:
                 metadata.append(
                     MetadataEntry(key=f, value=field, language=language)
-                    )
+                )
         return cls(metadata=metadata, file_identifier=file_identifier,
                    source_system_identifier=source_system_identifier)
 

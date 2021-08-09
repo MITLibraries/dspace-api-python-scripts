@@ -57,7 +57,7 @@ def test_post_item_to_collection(client, input_dir):
     item.bitstreams = [
         models.Bitstream(name='test_01.pdf',
                          file_path=f'{input_dir}test_01.pdf')
-        ]
+    ]
     item.metadata = [
         models.MetadataEntry(key='file_identifier', value='test'),
         models.MetadataEntry(key='dc.title',
@@ -65,18 +65,18 @@ def test_post_item_to_collection(client, input_dir):
                              language='en_US'),
         models.MetadataEntry(key='dc.relation.isversionof',
                              value='repo/0/ao/123')
-        ]
+    ]
     coll_uuid = 'c3d4'
     item_uuid, item_handle = client.post_item_to_collection(coll_uuid, item)
     assert item_uuid == 'e5f6'
     assert item_handle == '222.2222'
 
 
-def test__pop_inst(client):
-    """Test _pop_inst method."""
+def test__populate_class_instance(client):
+    """Test _populate_class_instance method."""
     class_type = models.Collection
     rec_obj = {'name': 'Test title', 'type': 'collection', 'items': []}
-    rec_obj = client._pop_inst(class_type, rec_obj)
+    rec_obj = client._populate_class_instance(class_type, rec_obj)
     assert type(rec_obj) == class_type
     assert rec_obj.name == 'Test title'
 
@@ -89,18 +89,18 @@ def test__build_uuid_list(client):
     assert '1234' in child_list
 
 
-def test_collection_from_csv(aspace_delimited_csv, aspace_mapping):
-    collection = models.Collection.from_csv(
+def test_collection_create_metadata_for_items_from_csv(aspace_delimited_csv, aspace_mapping):
+    collection = models.Collection.create_metadata_for_items_from_csv(
         aspace_delimited_csv, aspace_mapping
-        )
+    )
     assert 2 == len(collection.items)
 
 
 def test_collection_post_items(client, input_dir, aspace_delimited_csv,
                                aspace_mapping):
-    collection = models.Collection.from_csv(
+    collection = models.Collection.create_metadata_for_items_from_csv(
         aspace_delimited_csv, aspace_mapping
-        )
+    )
     collection.uuid = 'c3d4'
     items = collection.post_items(client)
     for item in items:
@@ -108,22 +108,22 @@ def test_collection_post_items(client, input_dir, aspace_delimited_csv,
         assert item.uuid == 'e5f6'
 
 
-def test_item_bitstreams_from_directory(input_dir):
+def test_item_bitstreams_in_directory(input_dir):
     item = models.Item(file_identifier='test')
-    item.bitstreams_from_directory(input_dir)
+    item.bitstreams_in_directory(input_dir)
     assert 3 == len(item.bitstreams)
     assert item.bitstreams[0].name == 'test_01.jpg'
     assert item.bitstreams[1].name == 'test_01.pdf'
     assert item.bitstreams[2].name == 'test_02.pdf'
-    item.bitstreams_from_directory(input_dir, 'pdf')
+    item.bitstreams_in_directory(input_dir, 'pdf')
     assert 2 == len(item.bitstreams)
     assert item.bitstreams[0].name == 'test_01.pdf'
     assert item.bitstreams[1].name == 'test_02.pdf'
 
 
-def test_item_from_row(aspace_delimited_csv, aspace_mapping):
+def test_item_metadata_from_csv_row(aspace_delimited_csv, aspace_mapping):
     row = next(aspace_delimited_csv)
-    item = models.Item.from_row(row, aspace_mapping)
+    item = models.Item.metadata_from_csv_row(row, aspace_mapping)
     assert attr.asdict(item)['metadata'] == [
         {'key': 'dc.title', 'value': 'Tast Item', 'language': 'en_US'},
         {'key': 'dc.contributor.author', 'value': 'Smith, John',
@@ -134,4 +134,4 @@ def test_item_from_row(aspace_delimited_csv, aspace_mapping):
          'language': 'en_US'},
         {'key': 'dc.rights', 'value': 'Totally Free', 'language': 'en_US'},
         {'key': 'dc.rights.uri', 'value': 'http://free.gov', 'language': None}
-        ]
+    ]
