@@ -38,12 +38,6 @@ class Client:
         self.header = header
         logger.info(f"Authenticated to {self.url} as " f"{self.user_full_name}")
 
-    def delete_record(self, uuid, record_type):
-        """Delete record based on specified UUID and record type."""
-        endpoint = f"{self.url}/{record_type}/{uuid}"
-        response = requests.delete(endpoint, headers=self.header, cookies=self.cookies)
-        return response.status_code
-
     def filtered_item_search(self, key, string, query_type, selected_collections=""):
         """Perform a search against the filtered items endpoint."""
         offset = 0
@@ -103,8 +97,8 @@ class Client:
         response = requests.post(
             endpoint, headers=header_upload, cookies=self.cookies, data=data
         ).json()
-        bitstream_uuid = response["uuid"]
-        return bitstream_uuid
+        bitstream.uuid = response["uuid"]
+        return bitstream.uuid
 
     def post_coll_to_comm(self, comm_handle, coll_name):
         """Post a collection to a specified community."""
@@ -215,6 +209,14 @@ class Item(BaseRecord):
         ]
         self.bitstreams.sort(key=lambda x: x.name)
 
+    def delete(self, client):
+        """Delete item."""
+        endpoint = f"{client.url}/items/{self.uuid}"
+        response = requests.delete(
+            endpoint, headers=client.header, cookies=client.cookies
+        )
+        return response.status_code
+
     @classmethod
     def metadata_from_csv_row(cls, row, field_map):
         """Create metadata for an item based on a CSV row and a JSON mapping field map."""
@@ -249,9 +251,17 @@ class Item(BaseRecord):
 
 
 @attr.s
-class Bitstream:
+class Bitstream(BaseRecord):
     name = Field()
     file_path = Field()
+
+    def delete(self, client):
+        """Delete bitstream."""
+        endpoint = f"{client.url}/bitstreams/{self.uuid}"
+        response = requests.delete(
+            endpoint, headers=client.header, cookies=client.cookies
+        )
+        return response.status_code
 
 
 @attr.s
