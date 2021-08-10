@@ -38,6 +38,12 @@ class Client:
         self.header = header
         logger.info(f"Authenticated to {self.url} as " f"{self.user_full_name}")
 
+    def delete_record(self, uuid, record_type):
+        """Delete record based on specified UUID and record type."""
+        endpoint = f"{self.url}/{record_type}/{uuid}"
+        response = requests.delete(endpoint, headers=self.header, cookies=self.cookies)
+        return response.status_code
+
     def filtered_item_search(self, key, string, query_type, selected_collections=""):
         """Perform a search against the filtered items endpoint."""
         offset = 0

@@ -81,8 +81,8 @@ def web_mock():
         m.post("mock://example.com/login", cookies=cookies)
         user_json = {"fullname": "User Name"}
         m.get("mock://example.com/status", json=user_json)
-        rec_json = {"metadata": {"title": "Sample title"}, "type": "item"}
-        m.get("mock://example.com/items/123?expand=all", json=rec_json)
+        item_metadata_json = {"metadata": {"title": "Sample title"}, "type": "item"}
+        m.get("mock://example.com/items/123?expand=all", json=item_metadata_json)
         results_json1 = {"items": [{"link": "1234"}]}
         results_json2 = {"items": []}
         m.get(
@@ -91,19 +91,20 @@ def web_mock():
         )
         rec_json = {"uuid": "a1b2"}
         m.get("mock://example.com/handle/111.1111", json=rec_json)
-        coll_json = {"uuid": "c3d4"}
-        m.post("mock://example.com/communities/a1b2/collections", json=coll_json)
+        collection_json = {"uuid": "c3d4"}
+        m.post("mock://example.com/communities/a1b2/collections", json=collection_json)
         item_json = {"uuid": "e5f6", "handle": "222.2222"}
         m.post("mock://example.com/collections/c3d4/items", json=item_json)
-        b_json_1 = {"uuid": "g7h8"}
+        bitstream_json_1 = {"uuid": "g7h8"}
         url_1 = "mock://example.com/items/e5f6/bitstreams?name=test_01.pdf"
-        m.post(url_1, json=b_json_1)
-        b_json_2 = {"uuid": "i9j0"}
+        m.post(url_1, json=bitstream_json_1)
+        bitstream_json_2 = {"uuid": "i9j0"}
         url_2 = "mock://example.com/items/e5f6/bitstreams?name=test_02.pdf"
-        m.post(url_2, json=b_json_2)
+        m.post(url_2, json=bitstream_json_2)
         m.get("mock://remoteserver.com/files/test_01.pdf", content=b"Sample")
-        coll_json = {"uuid": "k1l2"}
-        m.get("mock://example.com/handle/333.3333", json=coll_json)
+        collection_json = {"uuid": "k1l2"}
+        m.get("mock://example.com/handle/333.3333", json=collection_json)
         item_json_2 = {"uuid": "e5f6", "handle": "222.2222"}
         m.post("mock://example.com/collections/k1l2/items", json=item_json_2)
+        m.delete("mock://example.com/items/g7h8", status_code=200)
         yield m

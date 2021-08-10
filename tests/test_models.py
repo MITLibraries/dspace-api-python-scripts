@@ -12,6 +12,12 @@ def test_authenticate(client):
     assert client.cookies == {"JSESSIONID": "11111111"}
 
 
+def test_delete_record(client):
+    """Test delete_record method."""
+    response = client.delete_record("g7h8", "items")
+    assert response == 200
+
+
 def test_filtered_item_search(client):
     """Test filtered_item_search method."""
     key = "dc.title"
