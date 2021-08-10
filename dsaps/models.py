@@ -183,9 +183,7 @@ class Collection(BaseRecord):
     def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
         """Create metadata for the collection's items based on a CSV and a JSON mapping
         field map."""
-        items = [
-            Item.metadata_from_csv_row(row, field_map) for row in csv_reader
-        ]
+        items = [Item.metadata_from_csv_row(row, field_map) for row in csv_reader]
         return cls(items=items)
 
 
