@@ -12,12 +12,6 @@ def test_authenticate(client):
     assert client.cookies == {"JSESSIONID": "11111111"}
 
 
-def test_delete_record(client):
-    """Test delete_record method."""
-    response = client.delete_record("g7h8", "items")
-    assert response == 200
-
-
 def test_filtered_item_search(client):
     """Test filtered_item_search method."""
     key = "dc.title"
@@ -115,6 +109,12 @@ def test_collection_post_items(client, input_dir, aspace_delimited_csv, aspace_m
         assert item.uuid == "e5f6"
 
 
+def test_item_delete(client):
+    item = models.Item(uuid="m3n4")
+    response = item.delete(client)
+    assert response == 200
+
+
 def test_item_bitstreams_in_directory(input_dir):
     item = models.Item(file_identifier="test")
     item.bitstreams_in_directory(input_dir)
@@ -143,3 +143,9 @@ def test_item_metadata_from_csv_row(aspace_delimited_csv, aspace_mapping):
         {"key": "dc.rights", "value": "Totally Free", "language": "en_US"},
         {"key": "dc.rights.uri", "value": "http://free.gov", "language": None},
     ]
+
+
+def test_bitstream_delete(client):
+    bitstream = models.Bitstream(uuid="o5p6")
+    response = bitstream.delete(client)
+    assert response == 200

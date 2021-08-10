@@ -92,5 +92,6 @@ def web_mock():
         m.get("mock://example.com/handle/333.3333", json=collection_json)
         item_json_2 = {"uuid": "e5f6", "handle": "222.2222"}
         m.post("mock://example.com/collections/k1l2/items", json=item_json_2)
-        m.delete("mock://example.com/items/g7h8", status_code=200)
+        m.delete("mock://example.com/items/m3n4", status_code=200)
+        m.delete("mock://example.com/bitstreams/o5p6", status_code=200)
         yield m
