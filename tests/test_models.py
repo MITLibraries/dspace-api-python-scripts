@@ -122,9 +122,49 @@ def test_item_bitstreams_in_directory(input_dir):
     assert item.bitstreams[1].name == "test_02.pdf"
 
 
-def test_item_metadata_from_csv_row(aspace_delimited_csv, aspace_mapping):
+def test_item_metadata_from_csv_row_aspace_mapping(
+    aspace_delimited_csv, aspace_mapping
+):
     row = next(aspace_delimited_csv)
     item = models.Item.metadata_from_csv_row(row, aspace_mapping)
+    assert attr.asdict(item)["metadata"] == [
+        {"key": "dc.title", "value": "Tast Item", "language": "en_US"},
+        {"key": "dc.contributor.author", "value": "Smith, John", "language": None},
+        {"key": "dc.contributor.author", "value": "Smith, Jane", "language": None},
+        {
+            "key": "dc.description",
+            "value": "More info at /repo/0/ao/456",
+            "language": "en_US",
+        },
+        {"key": "dc.rights", "value": "Totally Free", "language": "en_US"},
+        {"key": "dc.rights.uri", "value": "http://free.gov", "language": None},
+    ]
+
+
+def test_item_metadata_from_csv_row_no_file_identifier(
+    aspace_delimited_csv, mapping_no_file_identifier
+):
+    row = next(aspace_delimited_csv)
+    item = models.Item.metadata_from_csv_row(row, mapping_no_file_identifier)
+    assert attr.asdict(item)["metadata"] == [
+        {"key": "dc.title", "value": "Tast Item", "language": "en_US"},
+        {"key": "dc.contributor.author", "value": "Smith, John", "language": None},
+        {"key": "dc.contributor.author", "value": "Smith, Jane", "language": None},
+        {
+            "key": "dc.description",
+            "value": "More info at /repo/0/ao/456",
+            "language": "en_US",
+        },
+        {"key": "dc.rights", "value": "Totally Free", "language": "en_US"},
+        {"key": "dc.rights.uri", "value": "http://free.gov", "language": None},
+    ]
+
+
+def test_item_metadata_from_csv_row_no_source_system_identifier(
+    aspace_delimited_csv, mapping_no_source_system_identifier
+):
+    row = next(aspace_delimited_csv)
+    item = models.Item.metadata_from_csv_row(row, mapping_no_source_system_identifier)
     assert attr.asdict(item)["metadata"] == [
         {"key": "dc.title", "value": "Tast Item", "language": "en_US"},
         {"key": "dc.contributor.author", "value": "Smith, John", "language": None},

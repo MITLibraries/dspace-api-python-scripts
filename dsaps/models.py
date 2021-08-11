@@ -213,6 +213,8 @@ class Item(BaseRecord):
     def metadata_from_csv_row(cls, row, field_map):
         """Create metadata for an item based on a CSV row and a JSON mapping field map."""
         metadata = []
+        file_identifier = None
+        source_system_identifier = None
         for f in field_map:
             field = row[field_map[f]["csv_field_name"]]
             if f == "file_identifier":

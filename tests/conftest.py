@@ -49,6 +49,20 @@ def aspace_mapping():
 
 
 @pytest.fixture()
+def mapping_no_file_identifier():
+    with open("tests/fixtures/mapping_no_file_identifier.json") as f:
+        mapping = json.load(f)
+        yield mapping
+
+
+@pytest.fixture()
+def mapping_no_source_system_identifier():
+    with open("tests/fixtures/mapping_no_source_system_identifier.json") as f:
+        mapping = json.load(f)
+        yield mapping
+
+
+@pytest.fixture()
 def output_dir(tmp_path):
     output_dir = tmp_path / "output"
     output_dir.mkdir()
