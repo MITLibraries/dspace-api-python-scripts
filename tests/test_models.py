@@ -35,25 +35,16 @@ def test_get_record(client):
     assert attr.asdict(rec_obj)["metadata"] == {"title": "Sample title"}
 
 
-def test_post_bitstream(client, input_dir):
-    """Test post_bitstream method."""
-    item_uuid = "e5f6"
-    bitstream = models.Bitstream(
-        name="test_01.pdf", file_path=f"{input_dir}test_01.pdf"
-    )
-    bit_uuid = client.post_bitstream(item_uuid, bitstream)
-    assert bit_uuid == "g7h8"
-
-
-def test_post_coll_to_comm(client):
-    """Test post_coll_to_comm method."""
-    comm_handle = "111.1111"
+def test_collection_post_to_community(client):
+    """Test post_coll_to_community method."""
+    collection = models.Collection()
+    community_handle = "111.1111"
     coll_name = "Test Collection"
-    coll_uuid = client.post_coll_to_comm(comm_handle, coll_name)
+    coll_uuid = collection.post_to_community(client, community_handle, coll_name)
     assert coll_uuid == "c3d4"
 
 
-def test_post_item_to_collection(client, input_dir):
+def test_item_post_to_collection(client, input_dir):
     """Test post_item_to_collection method."""
     item = models.Item()
     item.bitstreams = [
@@ -67,7 +58,7 @@ def test_post_item_to_collection(client, input_dir):
         models.MetadataEntry(key="dc.relation.isversionof", value="repo/0/ao/123"),
     ]
     coll_uuid = "c3d4"
-    item_uuid, item_handle = client.post_item_to_collection(coll_uuid, item)
+    item_uuid, item_handle = item.post_to_collection(client, coll_uuid, item)
     assert item_uuid == "e5f6"
     assert item_handle == "222.2222"
 
@@ -189,3 +180,13 @@ def test_bitstream_delete(client):
     bitstream = models.Bitstream(uuid="o5p6")
     response = bitstream.delete(client)
     assert response == 200
+
+
+def test_bitstream_post_to_item(client, input_dir):
+    """Test post_bitstream method."""
+    item_uuid = "e5f6"
+    bitstream = models.Bitstream(
+        name="test_01.pdf", file_path=f"{input_dir}test_01.pdf"
+    )
+    bit_uuid = bitstream.post_bitstream(client, item_uuid, bitstream)
+    assert bit_uuid == "g7h8"
