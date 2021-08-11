@@ -88,49 +88,6 @@ class Client:
             exit()
         return rec_obj
 
-    def post_bitstream(self, item_uuid, bitstream):
-        """Post a bitstream to a specified item and return the bitstream
-        ID."""
-        endpoint = f"{self.url}/items/{item_uuid}" f"/bitstreams?name={bitstream.name}"
-        header_upload = {"accept": "application/json"}
-        data = open(bitstream.file_path, "rb")
-        response = requests.post(
-            endpoint, headers=header_upload, cookies=self.cookies, data=data
-        ).json()
-        bitstream.uuid = response["uuid"]
-        return bitstream.uuid
-
-    def post_coll_to_comm(self, comm_handle, coll_name):
-        """Post a collection to a specified community."""
-        hdl_endpoint = f"{self.url}/handle/{comm_handle}"
-        community = requests.get(
-            hdl_endpoint, headers=self.header, cookies=self.cookies
-        ).json()
-        comm_uuid = community["uuid"]
-        uuid_endpoint = f"{self.url}/communities/{comm_uuid}/collections"
-        coll_uuid = requests.post(
-            uuid_endpoint,
-            headers=self.header,
-            cookies=self.cookies,
-            json={"name": coll_name},
-        ).json()
-        coll_uuid = coll_uuid["uuid"]
-        logger.info(f"Collection posted: {coll_uuid}")
-        return coll_uuid
-
-    def post_item_to_collection(self, collection_uuid, item):
-        """Post item to a specified collection and return the item ID."""
-        endpoint = f"{self.url}/collections/{collection_uuid}/items"
-        post_response = requests.post(
-            endpoint,
-            headers=self.header,
-            cookies=self.cookies,
-            json={"metadata": attr.asdict(item)["metadata"]},
-        ).json()
-        item_uuid = post_response["uuid"]
-        item_handle = post_response["handle"]
-        return item_uuid, item_handle
-
     def _populate_class_instance(self, class_type, rec_obj):
         """Populate class instance with data from record."""
         fields = [op(field) for field in attr.fields(class_type)]
@@ -169,15 +126,33 @@ class Collection(BaseRecord):
     def post_items(self, client):
         """Post items to collection."""
         for item in self.items:
-            item_uuid, item_handle = client.post_item_to_collection(self.uuid, item)
+            item_uuid, item_handle = item.post_to_collection(client, self.uuid, item)
             item.uuid = item_uuid
             item.handle = item_handle
             logger.info(f"Item posted: {item_uuid}")
             for bitstream in item.bitstreams:
-                bitstream_uuid = client.post_bitstream(item_uuid, bitstream)
+                bitstream_uuid = bitstream.post_bitstream(client, item_uuid, bitstream)
                 bitstream.uuid = bitstream_uuid
                 logger.info(f"Bitstream posted: {bitstream_uuid}")
             yield item
+
+    def post_to_community(self, client, community_handle, coll_name):
+        """Post a collection to a specified community."""
+        hdl_endpoint = f"{client.url}/handle/{community_handle}"
+        community = requests.get(
+            hdl_endpoint, headers=client.header, cookies=client.cookies
+        ).json()
+        community_uuid = community["uuid"]
+        uuid_endpoint = f"{client.url}/communities/{community_uuid}/collections"
+        coll_uuid = requests.post(
+            uuid_endpoint,
+            headers=client.header,
+            cookies=client.cookies,
+            json={"name": coll_name},
+        ).json()
+        coll_uuid = coll_uuid["uuid"]
+        logger.info(f"Collection posted: {coll_uuid}")
+        return coll_uuid
 
     @classmethod
     def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
@@ -247,6 +222,19 @@ class Item(BaseRecord):
             source_system_identifier=source_system_identifier,
         )
 
+    def post_to_collection(self, client, collection_uuid, item):
+        """Post item to a specified collection and return the item ID."""
+        endpoint = f"{client.url}/collections/{collection_uuid}/items"
+        post_response = requests.post(
+            endpoint,
+            headers=client.header,
+            cookies=client.cookies,
+            json={"metadata": attr.asdict(item)["metadata"]},
+        ).json()
+        item_uuid = post_response["uuid"]
+        item_handle = post_response["handle"]
+        return item_uuid, item_handle
+
 
 @attr.s
 class Bitstream(BaseRecord):
@@ -260,6 +248,20 @@ class Bitstream(BaseRecord):
             endpoint, headers=client.header, cookies=client.cookies
         )
         return response.status_code
+
+    def post_bitstream(self, client, item_uuid, bitstream):
+        """Post a bitstream to a specified item and return the bitstream
+        ID."""
+        endpoint = (
+            f"{client.url}/items/{item_uuid}" f"/bitstreams?name={bitstream.name}"
+        )
+        header_upload = {"accept": "application/json"}
+        data = open(bitstream.file_path, "rb")
+        response = requests.post(
+            endpoint, headers=header_upload, cookies=client.cookies, data=data
+        ).json()
+        bitstream.uuid = response["uuid"]
+        return bitstream.uuid
 
 
 @attr.s

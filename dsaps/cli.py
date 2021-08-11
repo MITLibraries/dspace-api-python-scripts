@@ -175,7 +175,10 @@ def newcollection(ctx, community_handle, collection_name):
     with the additems CLI command to populate the new collection with
     items."""
     client = ctx.obj["client"]
-    collection_uuid = client.post_coll_to_comm(community_handle, collection_name)
+    collection = Collection()
+    collection_uuid = collection.post_to_community(
+        client, community_handle, collection_name
+    )
     ctx.obj["collection_uuid"] = collection_uuid
 
 
