@@ -15,7 +15,7 @@ logger = structlog.get_logger()
 
 
 def validate_path(ctx, param, value):
-    """Validates the formatting of the submitted path"""
+    """Validate the formatting of the submitted path"""
     if value[-1] == "/":
         return value
     else:
@@ -95,13 +95,12 @@ def main(ctx, url, email, password):
     "--content-directory",
     required=True,
     type=click.Path(exists=True, dir_okay=True, file_okay=False),
-    help="The full path to the content, either a directory of files "
-    "or a URL for the storage location.",
+    help="The full path to the content, either a directory of files or a URL.",
 )
 @click.option(
     "-t",
     "--file-type",
-    help="The file type to be uploaded, if limited to one file " "type.",
+    help="The file type to be uploaded, if limited to one file type.",
     default="*",
 )
 @click.option(
@@ -111,9 +110,17 @@ def main(ctx, url, email, password):
     help="Create ingest report for updating other systems.",
 )
 @click.option(
+    "-o",
+    "--output-directory",
+    type=click.Path(exists=True, file_okay=False),
+    default=f"{os.getcwd()}/",
+    callback=validate_path,
+    help="The path of the output files, include / at the end of the " "path.",
+)
+@click.option(
     "-c",
     "--collection-handle",
-    help="The handle of the collection to which items are being " "added.",
+    help="The handle of the collection to which items are being added.",
     default=None,
 )
 @click.pass_context
@@ -124,6 +131,7 @@ def additems(
     content_directory,
     file_type,
     ingest_report,
+    output_directory,
     collection_handle,
 ):
     """Add items to a specified collection from a metadata CSV, a field
@@ -150,8 +158,8 @@ def additems(
     collection.uuid = collection_uuid
     items = collection.post_items(client)
     if ingest_report:
-        report_name = metadata_csv.replace(".csv", "-ingest.csv")
-        helpers.create_ingest_report(items, report_name)
+        report_name = os.path.basename(metadata_csv).replace(".csv", "-ingest.csv")
+        helpers.create_ingest_report(items, report_name, output_directory)
     elapsed_time = datetime.timedelta(seconds=time.time() - start_time)
     logger.info(f"Total runtime : {elapsed_time}")
 

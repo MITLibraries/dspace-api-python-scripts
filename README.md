@@ -34,6 +34,7 @@ Option (short) | Option (long)             | Description
 -d | --content-directory | The full path to the content, either a directory of files or a URL for the storage location.
 -t | --file-type | The file type to be uploaded, if limited to one file type.
 -r | --ingest-report| Create ingest report for updating other systems.
+-o | --output-directory | The path of the output files, include / at the end of the path.
 -c | --collection-handle | The handle of the collection to which items are being added.
 
 

@@ -25,7 +25,7 @@ def test_create_ingest_report(runner, output_dir):
     """Test create_ingest_report function."""
     file_name = "ingest_report.csv"
     items = [Item(source_system_identifier="/repo/0/ao/123", handle="111.1111")]
-    helpers.create_ingest_report(items, f"{output_dir}{file_name}")
+    helpers.create_ingest_report(items, f"{file_name}", output_dir)
     with open(f"{output_dir}{file_name}") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:

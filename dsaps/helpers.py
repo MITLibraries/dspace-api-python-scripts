@@ -19,10 +19,10 @@ def create_file_list(file_path, file_type):
     return file_list
 
 
-def create_ingest_report(items, file_name):
+def create_ingest_report(items, file_name, output_directory):
     """Create ingest report that matches external systems' identifiers with newly
     created DSpace handles."""
-    with open(f"{file_name}", "w") as writecsv:
+    with open(f"{output_directory}{file_name}", "w") as writecsv:
         writer = csv.writer(writecsv)
         writer.writerow(["uri", "link"])
         for item in items:

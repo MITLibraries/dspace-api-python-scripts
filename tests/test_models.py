@@ -1,10 +1,10 @@
 import attr
+import pytest
 
 from dsaps import models
 
 
 def test_authenticate(client):
-    """Test authenticate method."""
     email = "test@test.mock"
     password = "1234"
     client.authenticate(email, password)
@@ -13,7 +13,6 @@ def test_authenticate(client):
 
 
 def test_filtered_item_search(client):
-    """Test filtered_item_search method."""
     key = "dc.title"
     string = "test"
     query_type = "contains"
@@ -24,19 +23,60 @@ def test_filtered_item_search(client):
 
 
 def test_get_uuid_from_handle(client):
-    """Test get_uuid_from_handle method."""
     id = client.get_uuid_from_handle("111.1111")
     assert id == "a1b2"
 
 
-def test_get_record(client):
-    """Test get_record method."""
+def test_get_record_collection(client):
+    rec_obj = client.get_record("c3d4", "collections")
+    assert attr.asdict(rec_obj) == {
+        "handle": None,
+        "items": [],
+        "link": None,
+        "name": "Collection title",
+        "objtype": "collection",
+        "uuid": "c3d4",
+    }
+
+
+def test_get_record_community(client):
+    rec_obj = client.get_record("a1b2", "communities")
+    assert attr.asdict(rec_obj) == {
+        "handle": None,
+        "collections": [],
+        "link": None,
+        "name": "Community title",
+        "objtype": "community",
+        "uuid": "a1b2",
+    }
+
+
+def test_get_record_invalid(client):
+    with pytest.raises(SystemExit):
+        client.get_record("dc", "registries/schema")
+
+
+def test_get_record_item(client):
     rec_obj = client.get_record("123", "items")
     assert attr.asdict(rec_obj)["metadata"] == {"title": "Sample title"}
 
 
+def test__build_uuid_list(client):
+    rec_obj = {"items": [{"uuid": "1234"}]}
+    children = "items"
+    child_list = client._build_uuid_list(rec_obj, children)
+    assert "1234" in child_list
+
+
+def test__populate_class_instance(client):
+    class_type = models.Collection
+    rec_obj = {"name": "Test title", "type": "collection", "items": []}
+    rec_obj = client._populate_class_instance(class_type, rec_obj)
+    assert type(rec_obj) == class_type
+    assert rec_obj.name == "Test title"
+
+
 def test_collection_post_to_community(client):
-    """Test post_coll_to_community method."""
     collection = models.Collection()
     community_handle = "111.1111"
     coll_name = "Test Collection"
@@ -45,7 +85,6 @@ def test_collection_post_to_community(client):
 
 
 def test_item_post_to_collection(client, input_dir):
-    """Test post_item_to_collection method."""
     item = models.Item()
     item.bitstreams = [
         models.Bitstream(name="test_01.pdf", file_path=f"{input_dir}test_01.pdf")
@@ -63,23 +102,6 @@ def test_item_post_to_collection(client, input_dir):
     assert item_handle == "222.2222"
 
 
-def test__populate_class_instance(client):
-    """Test _populate_class_instance method."""
-    class_type = models.Collection
-    rec_obj = {"name": "Test title", "type": "collection", "items": []}
-    rec_obj = client._populate_class_instance(class_type, rec_obj)
-    assert type(rec_obj) == class_type
-    assert rec_obj.name == "Test title"
-
-
-def test__build_uuid_list(client):
-    """Test _build_uuid_list method."""
-    rec_obj = {"items": [{"uuid": "1234"}]}
-    children = "items"
-    child_list = client._build_uuid_list(rec_obj, children)
-    assert "1234" in child_list
-
-
 def test_collection_create_metadata_for_items_from_csv(
     aspace_delimited_csv, aspace_mapping
 ):
@@ -93,11 +115,14 @@ def test_collection_post_items(client, input_dir, aspace_delimited_csv, aspace_m
     collection = models.Collection.create_metadata_for_items_from_csv(
         aspace_delimited_csv, aspace_mapping
     )
+    for item in collection.items:
+        item.bitstreams_in_directory(input_dir)
     collection.uuid = "c3d4"
     items = collection.post_items(client)
-    for item in items:
-        assert item.handle == "222.2222"
-        assert item.uuid == "e5f6"
+    item = next(items)
+    assert item.handle == "222.2222"
+    assert item.uuid == "e5f6"
+    assert item.bitstreams[0].uuid == "q7r8"
 
 
 def test_item_delete(client):
@@ -183,7 +208,6 @@ def test_bitstream_delete(client):
 
 
 def test_bitstream_post_to_item(client, input_dir):
-    """Test post_bitstream method."""
     item_uuid = "e5f6"
     bitstream = models.Bitstream(
         name="test_01.pdf", file_path=f"{input_dir}test_01.pdf"

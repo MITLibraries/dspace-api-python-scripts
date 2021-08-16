@@ -31,6 +31,8 @@ def input_dir(tmp_path):
         pass
     with open(f"{input_dir}/test_01.jpg", "w"):
         pass
+    with open(f"{input_dir}/tast_01.jpg", "w"):
+        pass
     return str(f"{input_dir}/")
 
 
@@ -91,21 +93,40 @@ def web_mock():
         )
         rec_json = {"uuid": "a1b2"}
         m.get("mock://example.com/handle/111.1111", json=rec_json)
-        collection_json = {"uuid": "c3d4"}
+        community_json = {
+            "uuid": "a1b2",
+            "name": "Community title",
+            "type": "community",
+            "collections": [],
+        }
+        m.get("mock://example.com/communities/a1b2?expand=all", json=community_json)
+        collection_json = {
+            "uuid": "c3d4",
+            "name": "Collection title",
+            "type": "collection",
+            "items": [],
+        }
         m.post("mock://example.com/communities/a1b2/collections", json=collection_json)
+        m.get("mock://example.com/collections/c3d4?expand=all", json=collection_json)
         item_json = {"uuid": "e5f6", "handle": "222.2222"}
         m.post("mock://example.com/collections/c3d4/items", json=item_json)
         bitstream_json_1 = {"uuid": "g7h8"}
-        url_1 = "mock://example.com/items/e5f6/bitstreams?name=test_01.pdf"
-        m.post(url_1, json=bitstream_json_1)
+        bitstream_url_1 = "mock://example.com/items/e5f6/bitstreams?name=test_01.pdf"
+        m.post(bitstream_url_1, json=bitstream_json_1)
         bitstream_json_2 = {"uuid": "i9j0"}
-        url_2 = "mock://example.com/items/e5f6/bitstreams?name=test_02.pdf"
-        m.post(url_2, json=bitstream_json_2)
+        bitstream_url_2 = "mock://example.com/items/e5f6/bitstreams?name=test_02.pdf"
+        m.post(bitstream_url_2, json=bitstream_json_2)
+        bitstream_json_3 = {"uuid": "q7r8"}
+        bitstream_url_3 = "mock://example.com/items/e5f6/bitstreams?name=tast_01.jpg"
+        m.post(bitstream_url_3, json=bitstream_json_3)
+        bitstream_json_4 = {"uuid": "s9t0"}
+        bitstream_url_4 = "mock://example.com/items/e5f6/bitstreams?name=test_01.jpg"
+        m.post(bitstream_url_4, json=bitstream_json_4)
         m.get("mock://remoteserver.com/files/test_01.pdf", content=b"Sample")
-        collection_json = {"uuid": "k1l2"}
         m.get("mock://example.com/handle/333.3333", json=collection_json)
         item_json_2 = {"uuid": "e5f6", "handle": "222.2222"}
         m.post("mock://example.com/collections/k1l2/items", json=item_json_2)
         m.delete("mock://example.com/items/m3n4", status_code=200)
         m.delete("mock://example.com/bitstreams/o5p6", status_code=200)
+        m.get("mock://example.com/registries/schema/dc?expand=all", json={})
         yield m

@@ -88,26 +88,26 @@ class Client:
             exit()
         return rec_obj
 
-    def _populate_class_instance(self, class_type, rec_obj):
-        """Populate class instance with data from record."""
-        fields = [op(field) for field in attr.fields(class_type)]
-        kwargs = {k: v for k, v in rec_obj.items() if k in fields}
-        kwargs["objtype"] = rec_obj["type"]
-        if class_type == Community:
-            collections = self._build_uuid_list(rec_obj, kwargs, "collections")
-            rec_obj["collections"] = collections
-        elif class_type == Collection:
-            items = self._build_uuid_list(rec_obj, "items")
-            rec_obj["items"] = items
-        rec_obj = class_type(**kwargs)
-        return rec_obj
-
     def _build_uuid_list(self, rec_obj, children):
         """Build list of the uuids of the object's children."""
         child_list = []
         for child in rec_obj[children]:
             child_list.append(child["uuid"])
         return child_list
+
+    def _populate_class_instance(self, class_type, rec_obj):
+        """Populate class instance with data from record."""
+        fields = [op(field) for field in attr.fields(class_type)]
+        kwargs = {k: v for k, v in rec_obj.items() if k in fields}
+        kwargs["objtype"] = rec_obj["type"]
+        if class_type == Community:
+            collections = self._build_uuid_list(rec_obj, "collections")
+            rec_obj["collections"] = collections
+        elif class_type == Collection:
+            items = self._build_uuid_list(rec_obj, "items")
+            rec_obj["items"] = items
+        rec_obj = class_type(**kwargs)
+        return rec_obj
 
 
 @attr.s
