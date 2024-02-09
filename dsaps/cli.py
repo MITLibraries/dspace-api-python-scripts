@@ -62,7 +62,7 @@ def main(ctx, url, email, password):
         logger_factory=structlog.stdlib.LoggerFactory(),
     )
     logging.basicConfig(
-        format="%(message)s",
+        format="%(asctime)s %(message)s",
         handlers=[logging.FileHandler(f"logs/log-{log_suffix}", "w")],
         level=logging.INFO,
     )
@@ -94,7 +94,6 @@ def main(ctx, url, email, password):
     "-d",
     "--content-directory",
     required=True,
-    type=click.Path(exists=True, dir_okay=True, file_okay=False),
     help="The full path to the content, either a directory of files "
     "or a URL for the storage location.",
 )
@@ -146,12 +145,10 @@ def additems(
         mapping = json.load(jsonfile)
         collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
     for item in collection.items:
-        item.bitstreams_in_directory(content_directory, file_type)
+        item.bitstreams_in_directory(content_directory, client.s3_client, file_type)
     collection.uuid = collection_uuid
-    items = collection.post_items(client)
-    if ingest_report:
-        report_name = metadata_csv.replace(".csv", "-ingest.csv")
-        helpers.create_ingest_report(items, report_name)
+    for item in collection.post_items(client):
+        logger.info(item.file_identifier)
     elapsed_time = datetime.timedelta(seconds=time.time() - start_time)
     logger.info(f"Total runtime : {elapsed_time}")
 
@@ -190,7 +187,6 @@ def newcollection(ctx, community_handle, collection_name):
 @click.option(
     "-o",
     "--output-directory",
-    type=click.Path(exists=True, file_okay=False),
     default=f"{os.getcwd()}/",
     callback=validate_path,
     help="The path of the output files, include / at the end of the " "path.",
@@ -208,12 +204,14 @@ def newcollection(ctx, community_handle, collection_name):
     help="The file type to be uploaded, if limited to one file " "type.",
     default="*",
 )
-def reconcile(metadata_csv, output_directory, content_directory, file_type):
+@click.pass_context
+def reconcile(ctx, metadata_csv, output_directory, content_directory, file_type):
     """Run a reconciliation of the specified files and metadata to produce
     reports of files with no metadata, metadata with no files, metadata
     matched to files, and an updated version of the metadata CSV with only
     the records that have matching files."""
-    file_ids = helpers.create_file_list(content_directory, file_type)
+    client = ctx.obj["client"]
+    file_ids = helpers.create_file_list(content_directory, client.s3_client, file_type)
     metadata_ids = helpers.create_metadata_id_list(metadata_csv)
     metadata_matches = helpers.match_metadata_to_files(file_ids, metadata_ids)
     file_matches = helpers.match_files_to_metadata(file_ids, metadata_ids)

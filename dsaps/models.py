@@ -1,11 +1,13 @@
-import glob
 import operator
-import os
 from functools import partial
 
 import attr
+import boto3
 import requests
+import smart_open
 import structlog
+
+from dsaps.helpers import create_file_list
 
 Field = partial(attr.ib, default=None)
 Group = partial(attr.ib, default=[])
@@ -20,6 +22,7 @@ class Client:
         self.url = url.rstrip("/")
         self.cookies = None
         self.header = header
+        self.s3_client = boto3.client("s3")
         logger.info("Initializing client")
 
     def authenticate(self, email, password):
@@ -27,11 +30,11 @@ class Client:
         header = self.header
         data = {"email": email, "password": password}
         session = requests.post(
-            f"{self.url}/login", headers=header, params=data
+            f"{self.url}/login", headers=header, params=data, timeout=30
         ).cookies["JSESSIONID"]
         cookies = {"JSESSIONID": session}
         status = requests.get(
-            f"{self.url}/status", headers=header, cookies=cookies
+            f"{self.url}/status", headers=header, cookies=cookies, timeout=30
         ).json()
         self.user_full_name = status["fullname"]
         self.cookies = cookies
@@ -55,7 +58,11 @@ class Client:
             }
             logger.info(params)
             response = requests.get(
-                endpoint, headers=self.header, params=params, cookies=self.cookies
+                endpoint,
+                headers=self.header,
+                params=params,
+                cookies=self.cookies,
+                timeout=30,
             )
             logger.info(f"Response url: {response.url}")
             response = response.json()
@@ -69,14 +76,16 @@ class Client:
         """Get UUID for an object based on its handle."""
         hdl_endpoint = f"{self.url}/handle/{handle}"
         rec_obj = requests.get(
-            hdl_endpoint, headers=self.header, cookies=self.cookies
+            hdl_endpoint, headers=self.header, cookies=self.cookies, timeout=30
         ).json()
         return rec_obj["uuid"]
 
     def get_record(self, uuid, record_type):
         """Get an individual record of a specified type."""
         url = f"{self.url}/{record_type}/{uuid}?expand=all"
-        record = requests.get(url, headers=self.header, cookies=self.cookies).json()
+        record = requests.get(
+            url, headers=self.header, cookies=self.cookies, timeout=30
+        ).json()
         if record_type == "items":
             rec_obj = self._populate_class_instance(Item, record)
         elif record_type == "communities":
@@ -93,18 +102,25 @@ class Client:
         ID."""
         endpoint = f"{self.url}/items/{item_uuid}" f"/bitstreams?name={bitstream.name}"
         header_upload = {"accept": "application/json"}
-        data = open(bitstream.file_path, "rb")
-        response = requests.post(
-            endpoint, headers=header_upload, cookies=self.cookies, data=data
-        ).json()
-        bitstream_uuid = response["uuid"]
-        return bitstream_uuid
+        with smart_open.open(bitstream.file_path, "rb") as data:
+            post_response = requests.post(
+                endpoint,
+                headers=header_upload,
+                cookies=self.cookies,
+                data=data,
+                timeout=30,
+            )
+            logger.info(f"Bitstream POST status: {post_response}")
+            response = post_response.json()
+            logger.info(f"Bitstream POST response: {response}")
+            bitstream_uuid = response["uuid"]
+            return bitstream_uuid
 
     def post_coll_to_comm(self, comm_handle, coll_name):
         """Post a collection to a specified community."""
         hdl_endpoint = f"{self.url}/handle/{comm_handle}"
         community = requests.get(
-            hdl_endpoint, headers=self.header, cookies=self.cookies
+            hdl_endpoint, headers=self.header, cookies=self.cookies, timeout=30
         ).json()
         comm_uuid = community["uuid"]
         uuid_endpoint = f"{self.url}/communities/{comm_uuid}/collections"
@@ -113,6 +129,7 @@ class Client:
             headers=self.header,
             cookies=self.cookies,
             json={"name": coll_name},
+            timeout=30,
         ).json()
         coll_uuid = coll_uuid["uuid"]
         logger.info(f"Collection posted: {coll_uuid}")
@@ -121,12 +138,17 @@ class Client:
     def post_item_to_collection(self, collection_uuid, item):
         """Post item to a specified collection and return the item ID."""
         endpoint = f"{self.url}/collections/{collection_uuid}/items"
-        post_response = requests.post(
+        logger.info(endpoint)
+        post_resp = requests.post(
             endpoint,
             headers=self.header,
             cookies=self.cookies,
             json={"metadata": attr.asdict(item)["metadata"]},
-        ).json()
+            timeout=30,
+        )
+        logger.info(f"Item POST status: {post_resp}")
+        post_response = post_resp.json()
+        logger.info(f"Item POST response: {post_response}")
         item_uuid = post_response["uuid"]
         item_handle = post_response["handle"]
         return item_uuid, item_handle
@@ -169,6 +191,7 @@ class Collection(BaseRecord):
     def post_items(self, client):
         """Post items to collection."""
         for item in self.items:
+            logger.info(f"Posting item: {item}")
             item_uuid, item_handle = client.post_item_to_collection(self.uuid, item)
             item.uuid = item_uuid
             item.handle = item_handle
@@ -199,13 +222,13 @@ class Item(BaseRecord):
     file_identifier = Field()
     source_system_identifier = Field()
 
-    def bitstreams_in_directory(self, directory, file_type="*"):
+    def bitstreams_in_directory(self, directory, s3_client, file_type=None):
         """Create a list of bitstreams from the specified directory and sort the list."""
-        files = glob.iglob(
-            f"{directory}/**/{self.file_identifier}*.{file_type}", recursive=True
-        )
+        files = create_file_list(directory, s3_client, file_type)
         self.bitstreams = [
-            Bitstream(name=os.path.basename(f), file_path=f) for f in files
+            Bitstream(name=file, file_path=f"{directory}/{file}")
+            for file in files
+            if file.startswith(self.file_identifier) and file.endswith(file_type)
         ]
         self.bitstreams.sort(key=lambda x: x.name)
 
@@ -215,24 +238,27 @@ class Item(BaseRecord):
         metadata = []
         for f in field_map:
             field = row[field_map[f]["csv_field_name"]]
-            if f == "file_identifier":
-                file_identifier = field
-                continue  # file_identifier is not included in DSpace metadata
-            if f == "source_system_identifier":
-                source_system_identifier = field
-                continue  # source_system_identifier is not included in DSpace
-                # metadata
-            delimiter = field_map[f]["delimiter"]
-            language = field_map[f]["language"]
-            if delimiter:
-                metadata.extend(
-                    [
-                        MetadataEntry(key=f, value=v, language=language)
-                        for v in field.split(delimiter)
-                    ]
-                )
-            else:
-                metadata.append(MetadataEntry(key=f, value=field, language=language))
+            if field != "":
+                if f == "file_identifier":
+                    file_identifier = field
+                    continue  # file_identifier is not included in DSpace metadata
+                if f == "source_system_identifier":
+                    source_system_identifier = field
+                    continue  # source_system_identifier is not included in DSpace
+                metadata
+                delimiter = field_map[f]["delimiter"]
+                language = field_map[f]["language"]
+                if delimiter:
+                    metadata.extend(
+                        [
+                            MetadataEntry(key=f, value=v, language=language)
+                            for v in field.split(delimiter)
+                        ]
+                    )
+                else:
+                    metadata.append(
+                        MetadataEntry(key=f, value=field, language=language)
+                    )
         return cls(
             metadata=metadata,
             file_identifier=file_identifier,

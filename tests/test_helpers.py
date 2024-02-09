@@ -14,9 +14,9 @@ def test_create_csv_from_list(output_dir):
             assert row["id"] == "123"
 
 
-def test_create_file_list(input_dir):
+def test_create_file_list(mocked_s3, s3_client):
     """Test create_file_list function."""
-    file_list = helpers.create_file_list(input_dir, "pdf")
+    file_list = helpers.create_file_list("s3://test-bucket", s3_client, "pdf")
     for file_id in ["test_02.pdf", "test_01.pdf", "best_01.pdf"]:
         assert file_id in file_list
 
@@ -33,7 +33,7 @@ def test_create_ingest_report(runner, output_dir):
             assert row["link"] == "https://hdl.handle.net/111.1111"
 
 
-def test_create_metadata_id_list(input_dir):
+def test_create_metadata_id_list():
     """Test create_metadata_id_list function."""
     metadata_path = "tests/fixtures/aspace_metadata_delimited.csv"
     metadata_ids = helpers.create_metadata_id_list(metadata_path)
@@ -59,7 +59,7 @@ def test_match_metadata_to_files():
     assert "test" in file_matches
 
 
-def test_update_metadata_csv(input_dir, output_dir):
+def test_update_metadata_csv(output_dir):
     """Test update_metadata_csv function."""
     metadata_matches = ["test"]
     helpers.update_metadata_csv(

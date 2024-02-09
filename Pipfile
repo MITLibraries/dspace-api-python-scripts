@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 requests-mock = "*"
-black = "==21.7b0"
+black = "*"
 isort = "*"
 flake8 = "*"
 bandit = "*"
@@ -19,7 +19,9 @@ structlog = "*"
 attrs = "*"
 click = "*"
 lxml = "*"
-
+smart-open = {extras = ["s3"], version = "*"}
+boto3 = "*"
+moto = {extras = ["s3"], version = "*"}
 
 [requires]
 python_version = "3.9"

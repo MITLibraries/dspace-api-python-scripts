@@ -1,11 +1,55 @@
 import csv
 import json
 
+import boto3
 import pytest
 import requests_mock
 from click.testing import CliRunner
+from moto import mock_aws
 
 from dsaps import models
+
+
+# Env fixtures
+@pytest.fixture(autouse=True)
+def _test_environment(monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
+    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
+
+
+@pytest.fixture()
+def mocked_s3():
+    with mock_aws():
+        s3_instance = boto3.client("s3", region_name="us-east-1")
+        s3_instance.create_bucket(Bucket="test-bucket")
+        s3_instance.put_object(
+            Body="",
+            Bucket="test-bucket",
+            Key="test_01.pdf",
+        )
+        s3_instance.put_object(
+            Body="",
+            Bucket="test-bucket",
+            Key="test_02.pdf",
+        )
+        s3_instance.put_object(
+            Body="",
+            Bucket="test-bucket",
+            Key="best_01.pdf",
+        )
+        s3_instance.put_object(
+            Body="",
+            Bucket="test-bucket",
+            Key="test_01.jpg",
+        )
+        yield s3_instance
+
+
+@pytest.fixture()
+def s3_client():
+    return boto3.client("s3", region_name="us-east-1")
 
 
 @pytest.fixture()
@@ -15,23 +59,6 @@ def client():
     client.cookies = {}
     client.user_full_name = ""
     return client
-
-
-@pytest.fixture()
-def input_dir(tmp_path):
-    input_dir = tmp_path / "files"
-    input_dir.mkdir()
-    input_2nd_lvl = input_dir / "more_files"
-    input_2nd_lvl.mkdir()
-    with open(f"{input_dir}/test_01.pdf", "w"):
-        pass
-    with open(f"{input_2nd_lvl}/test_02.pdf", "w"):
-        pass
-    with open(f"{input_dir}/best_01.pdf", "w"):
-        pass
-    with open(f"{input_dir}/test_01.jpg", "w"):
-        pass
-    return str(f"{input_dir}/")
 
 
 @pytest.fixture()

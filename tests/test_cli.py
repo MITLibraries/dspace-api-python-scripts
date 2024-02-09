@@ -1,7 +1,10 @@
+from moto import mock_aws
+
 from dsaps.cli import main
 
 
-def test_additems(runner, input_dir):
+@mock_aws
+def test_additems(runner, mocked_s3):
     """Test adding items to a collection."""
     result = runner.invoke(
         main,
@@ -18,7 +21,7 @@ def test_additems(runner, input_dir):
             "--field-map",
             "config/aspace_mapping.json",
             "--content-directory",
-            input_dir,
+            "s3://test-bucket",
             "--file-type",
             "pdf",
             "--collection-handle",
@@ -46,7 +49,7 @@ def test_additems(runner, input_dir):
             "--field-map",
             "config/aspace_mapping.json",
             "--content-directory",
-            input_dir,
+            "s3://test-bucket",
             "--file-type",
             "pdf",
         ],
@@ -54,7 +57,7 @@ def test_additems(runner, input_dir):
     assert result.exit_code == 0
 
 
-def test_newcollection(runner, input_dir):
+def test_newcollection(runner):
     """Test newcoll command."""
     result = runner.invoke(
         main,
@@ -75,7 +78,8 @@ def test_newcollection(runner, input_dir):
     assert result.exit_code == 0
 
 
-def test_reconcile(runner, input_dir, output_dir):
+@mock_aws
+def test_reconcile(runner, mocked_s3, output_dir):
     """Test reconcile command."""
     result = runner.invoke(
         main,
@@ -92,7 +96,7 @@ def test_reconcile(runner, input_dir, output_dir):
             "--output-directory",
             output_dir,
             "--content-directory",
-            input_dir,
+            "s3://test-bucket",
             "--file-type",
             "pdf",
         ],

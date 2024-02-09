@@ -1,5 +1,4 @@
 import csv
-import glob
 import os
 
 
@@ -12,11 +11,19 @@ def create_csv_from_list(list_name, output):
             writer.writerow([item])
 
 
-def create_file_list(file_path, file_type):
+def create_file_list(file_path, s3_client, file_type):
     """Create a list of file names."""
-    files = glob.glob(f"{file_path}/**/*.{file_type}", recursive=True)
-    file_list = [os.path.basename(file) for file in files]
-    return file_list
+    files = []
+    paginator = s3_client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=file_path.removeprefix("s3://")):
+        files.extend(
+            [
+                file["Key"]
+                for file in page["Contents"]
+                if file["Key"].endswith(f".{file_type}")
+            ]
+        )
+    return files
 
 
 def create_ingest_report(items, file_name):

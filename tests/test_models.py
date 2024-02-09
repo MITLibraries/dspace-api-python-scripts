@@ -1,4 +1,5 @@
 import attr
+from moto import mock_aws
 
 from dsaps import models
 
@@ -35,11 +36,11 @@ def test_get_record(client):
     assert attr.asdict(rec_obj)["metadata"] == {"title": "Sample title"}
 
 
-def test_post_bitstream(client, input_dir):
+def test_post_bitstream(client, mocked_s3):
     """Test post_bitstream method."""
     item_uuid = "e5f6"
     bitstream = models.Bitstream(
-        name="test_01.pdf", file_path=f"{input_dir}test_01.pdf"
+        name="test_01.pdf", file_path="s3://test-bucket/test_01.pdf"
     )
     bit_uuid = client.post_bitstream(item_uuid, bitstream)
     assert bit_uuid == "g7h8"
@@ -53,11 +54,12 @@ def test_post_coll_to_comm(client):
     assert coll_uuid == "c3d4"
 
 
-def test_post_item_to_collection(client, input_dir):
+@mock_aws
+def test_post_item_to_collection(client, mocked_s3):
     """Test post_item_to_collection method."""
     item = models.Item()
     item.bitstreams = [
-        models.Bitstream(name="test_01.pdf", file_path=f"{input_dir}test_01.pdf")
+        models.Bitstream(name="test_01.pdf", file_path="s3://test-bucket/test_01.pdf")
     ]
     item.metadata = [
         models.MetadataEntry(key="file_identifier", value="test"),
@@ -77,7 +79,7 @@ def test__populate_class_instance(client):
     class_type = models.Collection
     rec_obj = {"name": "Test title", "type": "collection", "items": []}
     rec_obj = client._populate_class_instance(class_type, rec_obj)
-    assert type(rec_obj) == class_type
+    assert type(rec_obj) is class_type
     assert rec_obj.name == "Test title"
 
 
@@ -98,7 +100,13 @@ def test_collection_create_metadata_for_items_from_csv(
     assert 2 == len(collection.items)
 
 
-def test_collection_post_items(client, input_dir, aspace_delimited_csv, aspace_mapping):
+@mock_aws
+def test_collection_post_items(
+    mocked_s3,
+    client,
+    aspace_delimited_csv,
+    aspace_mapping,
+):
     collection = models.Collection.create_metadata_for_items_from_csv(
         aspace_delimited_csv, aspace_mapping
     )
@@ -109,14 +117,10 @@ def test_collection_post_items(client, input_dir, aspace_delimited_csv, aspace_m
         assert item.uuid == "e5f6"
 
 
-def test_item_bitstreams_in_directory(input_dir):
+@mock_aws
+def test_item_bitstreams_in_directory(mocked_s3, s3_client):
     item = models.Item(file_identifier="test")
-    item.bitstreams_in_directory(input_dir)
-    assert 3 == len(item.bitstreams)
-    assert item.bitstreams[0].name == "test_01.jpg"
-    assert item.bitstreams[1].name == "test_01.pdf"
-    assert item.bitstreams[2].name == "test_02.pdf"
-    item.bitstreams_in_directory(input_dir, "pdf")
+    item.bitstreams_in_directory("s3://test-bucket", s3_client, "pdf")
     assert 2 == len(item.bitstreams)
     assert item.bitstreams[0].name == "test_01.pdf"
     assert item.bitstreams[1].name == "test_02.pdf"
