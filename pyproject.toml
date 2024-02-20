@@ -1,0 +1,70 @@
+# We do our best to sync this template with the latest version in our internal documentation.
+# For MIT developers, we strongly recommend copying the pyproject.toml template from:
+# https://mitlibraries.atlassian.net/wiki/spaces/IN/pages/3432415247/Python+Project+Linters#Template-for-pyproject.toml
+
+[tool.black]
+line-length = 90
+
+[tool.mypy]
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+exclude = ["tests/"]
+
+[tool.pytest.ini_options]
+log_level = "INFO"
+
+[tool.ruff]
+target-version = "py311"
+
+# set max line length
+line-length = 90
+
+# enumerate all fixed violations
+show-fixes = true
+
+[tool.ruff.lint]
+select = ["ALL", "PT"]
+ignore = [
+    # default
+    "ANN101", 
+    "ANN102", 
+    "COM812", 
+    "D107", 
+    "N812", 
+    "PTH", 
+
+    # project-specific
+    "C90",
+    "D100",
+    "D101", 
+    "D102",
+    "D103",
+    "D104", 
+    "PLR0912",
+    "PLR0913", 
+    "PLR0915",
+    "S320",
+    "S321", 
+]
+
+# allow autofix behavior for specified rules
+fixable = ["E", "F", "I", "Q"]
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = [
+    "ANN",
+    "ARG001",
+    "S101",
+]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 90
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
