@@ -27,13 +27,17 @@ def validate_path(ctx, param, value):
     "--url",
     envvar="DSPACE_URL",
     required=True,
+    help="The url for the DSpace REST API. Defaults to env var DSPACE_URL if not set.",
 )
 @click.option(
     "-e",
     "--email",
     envvar="DSPACE_EMAIL",
     required=True,
-    help="The email of the user for authentication.",
+    help=(
+        "The email associated with the DSpace user account used for authentication. "
+        "Defaults to env var DSPACE_EMAIL if not set."
+    ),
 )
 @click.option(
     "-p",
@@ -41,7 +45,10 @@ def validate_path(ctx, param, value):
     envvar="DSPACE_PASSWORD",
     required=True,
     hide_input=True,
-    help="The password for authentication.",
+    help=(
+        "The password associated with the DSpace user account used for authentication. "
+        "Defaults to env var DSPACE_PASSWORD if not set."
+    ),
 )
 @click.pass_context
 def main(ctx, url, email, password):
@@ -81,26 +88,25 @@ def main(ctx, url, email, password):
     "--metadata-csv",
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
-    help="The path to the CSV file of metadata for the items.",
+    help="The filepath to a CSV file containing metadata for Dspace uploads.",
 )
 @click.option(
     "-f",
     "--field-map",
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
-    help="The path to JSON field mapping file.",
+    help="The filepath to a JSON document that maps columns in the metadata CSV file to a DSpace schema.",
 )
 @click.option(
     "-d",
     "--content-directory",
     required=True,
-    help="The full path to the content, either a directory of files "
-    "or a URL for the storage location.",
+    help="The name of the S3 bucket containing files for DSpace uploads.",
 )
 @click.option(
     "-t",
     "--file-type",
-    help="The file type to be uploaded, if limited to one file " "type.",
+    help="The file type for DSpace uploads (i.e., the file extension, excluding the dot).",
     default="*",
 )
 @click.option(
@@ -112,7 +118,7 @@ def main(ctx, url, email, password):
 @click.option(
     "-c",
     "--collection-handle",
-    help="The handle of the collection to which items are being " "added.",
+    help="The handle identifying a DSpace collection into which uploads are deposited.",
     default=None,
 )
 @click.pass_context
@@ -125,9 +131,11 @@ def additems(
     ingest_report,
     collection_handle,
 ):
-    """Add items to a specified collection from a metadata CSV, a field
-    mapping file, and a directory of files. May be run in conjunction with the
-    newcollection CLI command."""
+    """Add items to a DSpace collection.
+
+    The method relies on a CSV file with metadata for uploads, a JSON document that maps
+    metadata to a DSpace schema, and a directory containing the files to be uploaded.
+    """
     client = ctx.obj["client"]
     start_time = ctx.obj["start_time"]
     if "collection_uuid" not in ctx.obj and collection_handle is None:
@@ -158,19 +166,17 @@ def additems(
     "-c",
     "--community-handle",
     required=True,
-    help="The handle of the community in which to create the ," "collection.",
+    help="The handle identifying a DSpace community in which a new collection is created.",
 )
 @click.option(
     "-n",
     "--collection-name",
     required=True,
-    help="The name of the collection to be created.",
+    help="The name assigned to the DSpace collection being created.",
 )
 @click.pass_context
 def newcollection(ctx, community_handle, collection_name):
-    """Post a new collection to a specified community. Used in conjunction
-    with the additems CLI command to populate the new collection with
-    items."""
+    """Create a new DSpace collection within a community."""
     client = ctx.obj["client"]
     collection_uuid = client.post_coll_to_comm(community_handle, collection_name)
     ctx.obj["collection_uuid"] = collection_uuid
@@ -182,34 +188,41 @@ def newcollection(ctx, community_handle, collection_name):
     "--metadata-csv",
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
-    help="The path of the CSV file of metadata.",
+    help="The filepath to a CSV file containing metadata for Dspace uploads.",
 )
 @click.option(
     "-o",
     "--output-directory",
     default=f"{os.getcwd()}/",
     callback=validate_path,
-    help="The path of the output files, include / at the end of the " "path.",
+    help="The filepath where output files are written.",
 )
 @click.option(
     "-d",
     "--content-directory",
     required=True,
-    help="The full path to the content, either a directory of files "
-    "or a URL for the storage location.",
+    help="The name of the S3 bucket containing files for DSpace uploads.",
 )
 @click.option(
     "-t",
     "--file-type",
-    help="The file type to be uploaded, if limited to one file " "type.",
+    help="The file type for DSpace uploads (i.e., the file extension, excluding the dot).",
     default="*",
 )
 @click.pass_context
 def reconcile(ctx, metadata_csv, output_directory, content_directory, file_type):
-    """Run a reconciliation of the specified files and metadata to produce
-    reports of files with no metadata, metadata with no files, metadata
-    matched to files, and an updated version of the metadata CSV with only
-    the records that have matching files."""
+    """Match files in the content directory with entries in the metadata CSV file.
+
+    Running this method creates the following CSV files:
+
+        * metadata_matches.csv: File identifiers for entries in metadata CSV file with a corresponding file in the content directory.
+
+        * no_files.csv: File identifiers for entries in metadata CSV file without a corresponding file in the content directory.
+
+        * no_metadata.csv: File identifiers for files in the content directory without a corresponding entry in the metadata CSV file.
+
+        * updated-<metadata-csv>.csv: Entries from the metadata CSV file with a corresponding file in the content directory.
+    """
     client = ctx.obj["client"]
     file_ids = helpers.create_file_list(content_directory, client.s3_client, file_type)
     metadata_ids = helpers.create_metadata_id_list(metadata_csv)
