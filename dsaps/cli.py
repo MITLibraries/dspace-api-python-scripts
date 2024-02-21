@@ -219,7 +219,5 @@ def reconcile(ctx, metadata_csv, output_directory, content_directory, file_type)
     no_metadata = set(file_ids) - set(file_matches)
     helpers.create_csv_from_list(no_metadata, f"{output_directory}no_metadata")
     helpers.create_csv_from_list(no_files, f"{output_directory}no_files")
-    helpers.create_csv_from_list(
-        metadata_matches, f"{output_directory}metadata_matches"
-    )
+    helpers.create_csv_from_list(metadata_matches, f"{output_directory}metadata_matches")
     helpers.update_metadata_csv(metadata_csv, output_directory, metadata_matches)

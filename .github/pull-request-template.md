@@ -1,31 +1,29 @@
-#### What does this PR do?
-A few sentences describing the overall goals of the pull request's commits.
-Why are we making these changes? Is there more work to be done to fully
-achieve these goals? 
+### Purpose and background context
+Describe the overall purpose of the PR changes and any useful background context.
 
-#### Helpful background context
-
-Describe any additional context beyond what the PR accomplishes if it is likely
-to be useful to a reviewer.
-
-Delete this section if it isn't applicable to the PR.
-
-#### How can a reviewer manually see the effects of these changes?
-
+### How can a reviewer manually see the effects of these changes?
 Explain how to see the proposed changes in the application if possible.
 
 Delete this section if it isn't applicable to the PR.
 
-#### What are the relevant tickets?
-
-- https://mitlibraries.atlassian.net/browse/DIP-
-
-#### Screenshots (if appropriate)
-
-Delete this section if it isn't applicable to the PR.
-
-#### Requires Database Migrations?
+### Includes new or updated dependencies?
 YES | NO
 
-#### Includes new or updated dependencies?
+### Changes expectations for external applications?
 YES | NO
+
+### What are the relevant tickets?
+- Include links to Jira Software and/or Jira Service Management tickets here.
+
+### Developer
+- [ ] All new ENV is documented in README
+- [ ] All new ENV has been added to staging and production environments
+- [ ] All related Jira tickets are linked in commit message(s)
+- [ ] Stakeholder approval has been confirmed (or is not needed)
+
+### Code Reviewer(s)
+- [ ] The commit message is clear and follows our guidelines (not just this PR message)
+- [ ] There are appropriate tests covering any new functionality
+- [ ] The provided documentation is sufficient for understanding any new functionality introduced
+- [ ] Any manual tests have been performed **or** provided examples verified
+- [ ] New dependencies are appropriate or there were no changes

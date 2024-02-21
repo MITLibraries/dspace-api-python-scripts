@@ -256,9 +256,7 @@ class Item(BaseRecord):
                         ]
                     )
                 else:
-                    metadata.append(
-                        MetadataEntry(key=f, value=field, language=language)
-                    )
+                    metadata.append(MetadataEntry(key=f, value=field, language=language))
         return cls(
             metadata=metadata,
             file_identifier=file_identifier,
