@@ -13,7 +13,25 @@ Note: Previously, the repository comprised of self-contained scripts that could 
 - To lint the repo: `make lint`
 - To run the app: `pipenv run dsaps --help`
 
-The example below shows how to run the `reconcile` command:
+### Reconciling files with metadata CSV
+
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD reconcile -m <metadata-csv> -o /output -d <content-directory> -t <file-type>
+```
+
+### Creating a new collection within a DSpace community
+
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD newcollection -c <community-handle> -n <collection-name>
+```
+
+### Adding items to a DSpace collection
+
+The command below shows `newcollection` and `additems` being run in conjunction with each other. Note that the invocation must call `newcollection` first. In practice, this is the command that is usually run:
+
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD newcollection -c <community-handle> -n <collection-name> additems -m <metadata-csv> -f config/<field-mapping>.json -d <s3-bucket-name> -t <file-type> 
+``` 
 
 ## Environment 
 
@@ -88,13 +106,6 @@ Options:
   --help                        Show this message and exit.
 ```
 
-**Example method call**:
-
-```bash
-pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD reconcile -m <metadata-csv> -o /output -d <content-directory> -t <file-type>
-```
-
-
 ### `dsaps newcollection`
 ```
 Usage: -c newcollection [OPTIONS]
@@ -108,14 +119,6 @@ Options:
                                being created.  [required]
   --help                       Show this message and exit.
 ```
-
-**Example method call**:
-
-```bash
-pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD newcollection -c <community-handle> -n <collection-name>
-```
-
-
 
 ### `dsaps additems`
 
@@ -143,11 +146,5 @@ Options:
   -c, --collection-handle TEXT  The handle identifying a DSpace collection
                                 into which uploads are deposited.
   --help                        Show this message and exit.
-```
-
-**Example method call**: 
-
-```bash
-pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD additems -m <metadata-csv> -f config/<field-mapping>.json -d <s3-bucket-name> -t <file-type> -c <collection-handle>
 ```
 
