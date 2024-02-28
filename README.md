@@ -15,10 +15,6 @@ Note: Previously, the repository comprised of self-contained scripts that could 
 
 The example below shows how to run the `reconcile` command:
 
-```
-pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD reconcile -m <metadata-csv> -o /output -d <content-directory> -t <file-type>
-```
-
 ## Environment 
 
 ### Required
@@ -92,7 +88,14 @@ Options:
   --help                        Show this message and exit.
 ```
 
-### `dsaps new collection`
+**Example method call**:
+
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD reconcile -m <metadata-csv> -o /output -d <content-directory> -t <file-type>
+```
+
+
+### `dsaps newcollection`
 ```
 Usage: -c newcollection [OPTIONS]
 
@@ -105,6 +108,14 @@ Options:
                                being created.  [required]
   --help                       Show this message and exit.
 ```
+
+**Example method call**:
+
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD newcollection -c <community-handle> -n <collection-name>
+```
+
+
 
 ### `dsaps additems`
 
@@ -133,3 +144,10 @@ Options:
                                 into which uploads are deposited.
   --help                        Show this message and exit.
 ```
+
+**Example method call**: 
+
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD additems -m <metadata-csv> -f config/<field-mapping>.json -d <s3-bucket-name> -t <file-type> -c <collection-handle>
+```
+
