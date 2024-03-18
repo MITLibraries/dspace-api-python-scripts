@@ -1,72 +1,150 @@
-# dsaps
+# DSpace API Python Scripts
 
-This command line application provides several ways of interacting with the [DSpace](https://github.com/DSpace/DSpace) API. This application was written for DSpace 6.3, it has not been tested against other DSpace versions. Previously, this branch of the repository was a set of self-contained scripts that could be run independently, those scripts can be found as a [release](https://github.com/MITLibraries/dspace-api-python-scripts/releases/tag/v1.0).
+DSpace API Python Scripts (DSAPS) is a Python CLI application for managing uploads to DSpace. DSAPS has only been used on instances running DSpace 6.3 and has not been tested on other versions.
 
-## Installation
-Clone the repository and install using [pipenv](https://github.com/pypa/pipenv):
-```
-pipenv install
-```
-After installation, run the application with:
-```
-pipenv run dsaps
-```
+Note: Previously, the repository comprised of self-contained scripts that could be run independently. Those scripts can be found as a [release](https://github.com/MITLibraries/dspace-api-python-scripts/releases/tag/v1.0).
 
-## Authentication
+## Development
 
-To authenticate, use the following parameters
+- To preview a list of available Makefile commands: `make help`
+- To install with dev dependencies: `make install`
+- To update dependencies: `make update`
+- To run unit tests: `make test`
+- To lint the repo: `make lint`
+- To run the app: `pipenv run dsaps --help`
 
-Option (short) | Option (long)     | Description
------- | ------ | -----------
-N/A | --url | The DSpace API URL (e.g. https://dspace.mit.edu/rest), defaults to the DSPACE_URL environmental variable if nothing is specified
--e | --email | The email of the user for authentication.
--p | --password | The password for authentication.
+### Reconciling files with metadata CSV
 
-## Commands
-
-### additems
-Adds items to a specified collection from a metadata CSV, a field mapping file, and a directory of files. May be run in conjunction with the newcollection CLI command.
-
-Option (short) | Option (long)             | Description
------- | ------ | -------
--m | --metadata-csv | The path to the CSV file of metadata for the items.
--f | --field-map | The path to JSON field mapping file.
--d | --content-directory | The full path to the content, either a directory of files or a URL for the storage location.
--t | --file-type | The file type to be uploaded, if limited to one file type.
--r | --ingest-report| Create ingest report for updating other systems.
--c | --collection-handle | The handle of the collection to which items are being added.
-
-
-#### Example Usage
-```
-pipenv run dsaps --url https://dspace.com/rest -e abc@def.com -p ******** additems -m coll_metadata.csv -f config/aspace_mapping.json -d /files/pdfs -t pdf -r -c 111.1/111111
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD reconcile -m <metadata-csv> -o /output -d <content-directory> -t <file-type>
 ```
 
-### newcollection
-Posts a new collection to a specified community. Used in conjunction with the additems CLI command to populate the new collection with items.
+### Creating a new collection within a DSpace community
 
-Option (short) | Option (long)            | Description
------- | ------ | -------
--c | --community-handle | The handle of the community in which to create the collection.
--n | --collection-name | The name of the collection to be created.
-
-#### Example Usage
-```
-pipenv run dsaps --url https://dspace.com/rest -e abc@def.com -p ******** newcollection -c 222.2/222222 -n Test\ Collection additems -m coll_metadata.csv -f config/aspace_mapping.json -d /files/pdfs -t pdf -r
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD newcollection -c <community-handle> -n <collection-name>
 ```
 
-### reconcile
-Runs a reconciliation of the specified files and metadata that produces reports of files with no metadata, metadata with no files, metadata matched to files, and an updated version of the metadata CSV with only the records that have matching files.
+### Adding items to a DSpace collection
 
+The command below shows `newcollection` and `additems` being run in conjunction with each other. Note that the invocation must call `newcollection` first. In practice, this is the command that is usually run:
 
-Option (short) | Option (long)             | Description
------- | ------ | -------
--m | --metadata-csv | The path of the CSV file of metadata.
--o | --output-directory | The path of the output files, include / at the end of the path.
--d | --content-directory | The full path to the content, either a directory of files or a URL for the storage location.
--t | --file-type | The file type to be uploaded.
+```bash
+pipenv run dsaps --url $DSPACE_URL -e $DSPACE_EMAIL -p $DSPACE_PASSWORD newcollection -c <community-handle> -n <collection-name> additems -m <metadata-csv> -f config/<field-mapping>.json -d <s3-bucket-name> -t <file-type> 
+``` 
 
-#### Example Usage
+## Environment 
+
+### Required
+
+```shell
+# The url for the DSpace REST API
+DSPACE_URL=
+
+# The email associated with the DSpace user account used for authentication
+DSPACE_EMAIL=
+
+# The password associated with the DSpace user account used for authentication
+DSPACE_PASSWORD=
 ```
-pipenv run dsaps --url https://dspace.com/rest -e abc@def.com -p ******** reconcile -m coll_metadata.csv -o /output -d /files/pdfs -t pdf
+
+## CLI commands
+
+All CLI commands can be run with `pipenv run <COMMAND>`.
+
+### `dsaps`
+
 ```
+Usage: -c [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
+
+Options:
+  --url TEXT           The url for the DSpace REST API. Defaults to env var
+                       DSPACE_URL if not set.  [required]
+  -e, --email TEXT     The email associated with the DSpace user account used
+                       for authentication. Defaults to env var DSPACE_EMAIL if
+                       not set.  [required]
+  -p, --password TEXT  The password associated with the DSpace user account
+                       used for authentication. Defaults to env var
+                       DSPACE_PASSWORD if not set.  [required]
+  --help               Show this message and exit.
+
+Commands:
+  additems       Add items to a DSpace collection.
+  newcollection  Create a new DSpace collection within a community.
+  reconcile      Match files in the content directory with entries in the metadata CSV file.
+```
+
+### `dsaps reconcile`
+
+```
+Usage: -c reconcile [OPTIONS]
+
+  Match files in the content directory with entries in the metadata CSV file.
+
+  Running this method creates the following CSV files:
+
+      * metadata_matches.csv: File identifiers for entries in metadata CSV
+      file with a corresponding file in the content directory.
+
+      * no_files.csv: File identifiers for entries in metadata CSV file
+      without a corresponding file in the content directory.
+
+      * no_metadata.csv: File identifiers for files in the content directory
+      without a corresponding entry in the metadata CSV file.
+
+      * updated-<metadata-csv>.csv: Entries from the metadata CSV file with a
+      corresponding file in the content directory.
+
+Options:
+  -m, --metadata-csv FILE       The filepath to a CSV file containing metadata
+                                for Dspace uploads.  [required]
+  -o, --output-directory TEXT   The filepath where output files are written.
+  -d, --content-directory TEXT  The name of the S3 bucket containing files for
+                                DSpace uploads.  [required]
+  -t, --file-type TEXT          The file type for DSpace uploads (i.e., the
+                                file extension, excluding the dot).
+  --help                        Show this message and exit.
+```
+
+### `dsaps newcollection`
+```
+Usage: -c newcollection [OPTIONS]
+
+  Create a new DSpace collection within a community.
+
+Options:
+  -c, --community-handle TEXT  The handle identifying a DSpace community in
+                               which a new collection is created.  [required]
+  -n, --collection-name TEXT   The name assigned to the DSpace collection
+                               being created.  [required]
+  --help                       Show this message and exit.
+```
+
+### `dsaps additems`
+
+```
+Usage: -c additems [OPTIONS]
+
+  Add items to a DSpace collection.
+
+  The method relies on a CSV file with metadata for uploads, a JSON document
+  that maps metadata to a DSpace schema, and a directory containing the files
+  to be uploaded.
+
+Options:
+  -m, --metadata-csv FILE       The filepath to a CSV file containing metadata
+                                for Dspace uploads.  [required]
+  -f, --field-map FILE          The filepath to a JSON document that maps
+                                columns in the metadata CSV file to a DSpace
+                                schema.  [required]
+  -d, --content-directory TEXT  The name of the S3 bucket containing files for
+                                DSpace uploads.  [required]
+  -t, --file-type TEXT          The file type for DSpace uploads (i.e., the
+                                file extension, excluding the dot).
+  -r, --ingest-report           Create ingest report for updating other
+                                systems.
+  -c, --collection-handle TEXT  The handle identifying a DSpace collection
+                                into which uploads are deposited.
+  --help                        Show this message and exit.
+```
+
