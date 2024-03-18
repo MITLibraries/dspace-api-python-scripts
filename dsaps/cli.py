@@ -75,7 +75,7 @@ def main(ctx, url, email, password):
     )
     logger.info("Application start")
     client = Client(url)
-    s3_client = S3Client
+    s3_client = S3Client()
     client.authenticate(email, password)
     start_time = time.time()
     ctx.obj["client"] = client
@@ -156,7 +156,7 @@ def additems(
         mapping = json.load(jsonfile)
         collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
     for item in collection.items:
-        item.bitstreams_in_directory(content_directory, s3_client, file_type)
+        item.bitstreams_in_directory(s3_client, content_directory)
     collection.uuid = collection_uuid
     for item in collection.post_items(client):
         logger.info(item.file_identifier)

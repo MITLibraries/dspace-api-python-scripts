@@ -1,5 +1,6 @@
 import operator
 from functools import partial
+from typing import Optional
 
 import attr
 import boto3
@@ -7,7 +8,7 @@ import requests
 import smart_open
 import structlog
 
-from dsaps.helpers import create_file_list
+from dsaps.helpers import filter_files_by_prefix
 
 Field = partial(attr.ib, default=None)
 Group = partial(attr.ib, default=[])
@@ -238,14 +239,31 @@ class Item(BaseRecord):
     file_identifier = Field()
     source_system_identifier = Field()
 
-    def bitstreams_in_directory(self, directory, s3_client, file_type=None):
-        """Create a list of bitstreams from the specified directory and sort the list."""
-        files = create_file_list(directory, s3_client, file_type)
-        self.bitstreams = [
-            Bitstream(name=file, file_path=f"{directory}/{file}")
-            for file in files
-            if file.startswith(self.file_identifier) and file.endswith(file_type)
-        ]
+    def bitstreams_in_directory(
+        self, s3_client, bucket: str, prefix="", search_in="", delimiter: str = "-"
+    ):
+        """Create a list of bitstreams from S3 file objects.
+
+        Args:
+            s3_client (S3Client): S3Client object.
+            bucket (str): Name of S3 bucket containing files.
+            prefix (str): Folder (or prefix pattern) within the S3 bucket in which
+                to look for files.
+            delimiter (str, optional): Delimiter used to retrieve the file identifier from the filename.
+                Defaults to "-".
+        """
+        file_paths = s3_client.list_objects(bucket=bucket, prefix=prefix)
+        if search_in:
+            file_paths = filter_files_by_prefix(file_paths, prefixes=search_in)
+
+        for file_path in file_paths:
+            file_name = file_path.split("/")[-1]
+            file_identifier = "".join(file_name.split(delimiter)[-2:]).split(".")[0]
+            file_directory = "/".join([bucket, *file_path.split("/")[:-1]])
+            if file_identifier == self.file_identifier:
+                self.bitstreams.append(
+                    Bitstream(name=file_name, file_path=f"{file_directory}/{file_name}")
+                )
         self.bitstreams.sort(key=lambda x: x.name)
 
     @classmethod

@@ -14,6 +14,18 @@ def test_create_csv_from_list(output_dir):
             assert row["id"] == "123"
 
 
+def test_get_files_from_folders():
+    file_paths = [
+        "bucket/prefix1/prefix2/test.xml",
+        "bucket/prefix1/prefix2/objects/test_01.pdf",
+        "bucket/prefix1/prefix2/objects/test_02.xml",
+    ]
+    assert (helpers.filter_files_by_prefix(file_paths, prefixes="objects")) == [
+        "bucket/prefix1/prefix2/objects/test_01.pdf",
+        "bucket/prefix1/prefix2/objects/test_02.xml",
+    ]
+
+
 def test_create_file_list(mocked_s3, s3_client):
     """Test create_file_list function."""
     file_list = helpers.create_file_list(

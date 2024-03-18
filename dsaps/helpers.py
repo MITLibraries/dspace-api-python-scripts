@@ -50,6 +50,32 @@ def create_metadata_id_list(metadata_csv):
     return metadata_ids
 
 
+def filter_files_by_prefix(file_paths, prefixes):
+    """Filter file paths to a subset including specified prefixes.
+
+    A prefix represents a subfolder in the filepath, separated by
+    a forward slash ("/").
+
+    Args:
+        file_paths (list[str]): List of file paths.
+        prefixes (str | list): List of prefixes to look for in a given file path.
+
+    Returns:
+        list[str]: A subset of file paths that include the specified prefixes.
+    """
+    filtered_file_paths = []
+    if isinstance(prefixes, str):
+        prefixes = [prefixes]
+    else:
+        prefixes = prefixes
+
+    for file in file_paths:
+        file_prefix = file.split("/")
+        if set(prefixes).intersection(set(file_prefix)):
+            filtered_file_paths.append(file)
+    return filtered_file_paths
+
+
 def match_files_to_metadata(file_list, metadata_ids):
     """Create list of files matched to metadata records."""
     file_matches = [
