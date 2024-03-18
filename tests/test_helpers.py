@@ -16,7 +16,9 @@ def test_create_csv_from_list(output_dir):
 
 def test_create_file_list(mocked_s3, s3_client):
     """Test create_file_list function."""
-    file_list = helpers.create_file_list("s3://test-bucket", s3_client, "pdf")
+    file_list = helpers.create_file_list(
+        "s3://test-bucket", s3_client.get_client(), "pdf"
+    )
     for file_id in ["test_02.pdf", "test_01.pdf", "best_01.pdf"]:
         assert file_id in file_list
 

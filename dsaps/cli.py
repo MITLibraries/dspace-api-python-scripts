@@ -9,7 +9,7 @@ import click
 import structlog
 
 from dsaps import helpers
-from dsaps.models import Client, Collection
+from dsaps.models import Client, S3Client, Collection
 
 logger = structlog.get_logger()
 
@@ -75,9 +75,11 @@ def main(ctx, url, email, password):
     )
     logger.info("Application start")
     client = Client(url)
+    s3_client = S3Client
     client.authenticate(email, password)
     start_time = time.time()
     ctx.obj["client"] = client
+    ctx.obj["s3_client"] = s3_client
     ctx.obj["start_time"] = start_time
     ctx.obj["log_suffix"] = log_suffix
 
@@ -137,6 +139,7 @@ def additems(
     metadata to a DSpace schema, and a directory containing the files to be uploaded.
     """
     client = ctx.obj["client"]
+    s3_client = ctx.obj["s3_client"]
     start_time = ctx.obj["start_time"]
     if "collection_uuid" not in ctx.obj and collection_handle is None:
         raise click.UsageError(
@@ -153,7 +156,7 @@ def additems(
         mapping = json.load(jsonfile)
         collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
     for item in collection.items:
-        item.bitstreams_in_directory(content_directory, client.s3_client, file_type)
+        item.bitstreams_in_directory(content_directory, s3_client, file_type)
     collection.uuid = collection_uuid
     for item in collection.post_items(client):
         logger.info(item.file_identifier)
@@ -223,8 +226,10 @@ def reconcile(ctx, metadata_csv, output_directory, content_directory, file_type)
 
         * updated-<metadata-csv>.csv: Entries from the metadata CSV file with a corresponding file in the content directory.
     """
-    client = ctx.obj["client"]
-    file_ids = helpers.create_file_list(content_directory, client.s3_client, file_type)
+    s3_client = ctx.obj["s3_client"]
+    file_ids = helpers.create_file_list(
+        content_directory, s3_client.get_client(), file_type
+    )
     metadata_ids = helpers.create_metadata_id_list(metadata_csv)
     metadata_matches = helpers.match_metadata_to_files(file_ids, metadata_ids)
     file_matches = helpers.match_files_to_metadata(file_ids, metadata_ids)

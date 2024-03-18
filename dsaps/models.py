@@ -22,7 +22,6 @@ class Client:
         self.url = url.rstrip("/")
         self.cookies = None
         self.header = header
-        self.s3_client = boto3.client("s3")
         logger.info("Initializing client")
 
     def authenticate(self, email, password):
@@ -173,6 +172,23 @@ class Client:
         for child in rec_obj[children]:
             child_list.append(child["uuid"])
         return child_list
+
+
+class S3Client:
+    @classmethod
+    def get_client(cls):
+        return boto3.client("s3")
+
+    @classmethod
+    def list_objects(cls, bucket: str, prefix: str) -> list:
+        client = cls.get_client()
+        s3_objects = []
+        paginator = client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(
+            Bucket=bucket.removeprefix("s3://"), Prefix=prefix
+        ):
+            s3_objects.extend([file["Key"] for file in page["Contents"]])
+        return s3_objects
 
 
 @attr.s
