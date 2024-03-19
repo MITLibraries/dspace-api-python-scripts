@@ -8,10 +8,9 @@ import requests
 import smart_open
 import structlog
 
-from dsaps.helpers import filter_files_by_prefix
+from attrs import field
 
-Field = partial(attr.ib, default=None)
-Group = partial(attr.ib, default=[])
+from dsaps.helpers import filter_files_by_prefix
 
 logger = structlog.get_logger()
 op = operator.attrgetter("name")
@@ -194,16 +193,16 @@ class S3Client:
 
 @attr.s
 class BaseRecord:
-    uuid = Field()
-    name = Field()
-    handle = Field()
-    link = Field()
-    objtype = Field()
+    uuid: str = field(default=None)
+    name: str = field(default=None)
+    handle: str = field(default=None)
+    link: str = field(default=None)
+    objtype: str = field(default=None)
 
 
 @attr.s
 class Collection(BaseRecord):
-    items = Group()
+    items = field(factory=list)
 
     def post_items(self, client):
         """Post items to collection."""
@@ -229,15 +228,15 @@ class Collection(BaseRecord):
 
 @attr.s
 class Community(BaseRecord):
-    collections = Field()
+    collections = field(default=None)
 
 
 @attr.s
 class Item(BaseRecord):
-    metadata = Group()
-    bitstreams = Group()
-    file_identifier = Field()
-    source_system_identifier = Field()
+    metadata: list = field(factory=list)
+    bitstreams: list = field(factory=list)
+    file_identifier: str = field(default=None)
+    source_system_identifier: str = field(default=None)
 
     def bitstreams_in_directory(
         self, s3_client, bucket: str, prefix="", search_in="", delimiter: str = "-"
@@ -300,12 +299,12 @@ class Item(BaseRecord):
 
 @attr.s
 class Bitstream:
-    name = Field()
-    file_path = Field()
+    name: str = field(default=None)
+    file_path = field(default=None)
 
 
 @attr.s
 class MetadataEntry:
-    key = Field()
-    value = Field()
-    language = Field()
+    key = field(default=None)
+    value = field(default=None)
+    language = field(default=None)
