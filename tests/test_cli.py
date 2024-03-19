@@ -4,8 +4,9 @@ from dsaps.cli import main
 
 
 @mock_aws
-def test_additems(runner, mocked_s3):
+def test_additems(runner, mocked_s3, caplog):
     """Test adding items to a collection."""
+    caplog.set_level("DEBUG")
     result = runner.invoke(
         main,
         [
