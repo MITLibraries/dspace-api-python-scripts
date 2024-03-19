@@ -10,7 +10,7 @@ import structlog
 
 from attrs import field
 
-from dsaps.helpers import filter_files_by_prefix
+from dsaps.helpers import filter_files_by_prefix, parse_id_from_file_name
 
 logger = structlog.get_logger()
 op = operator.attrgetter("name")
@@ -239,7 +239,12 @@ class Item(BaseRecord):
     source_system_identifier: str = field(default=None)
 
     def bitstreams_in_directory(
-        self, s3_client, bucket: str, prefix="", search_in="", delimiter: str = "-"
+        self,
+        s3_client,
+        source_settings,
+        bucket: str,
+        prefix="",
+        search_in="",
     ):
         """Create a list of bitstreams from S3 file objects.
 
@@ -258,9 +263,22 @@ class Item(BaseRecord):
         for file_path in file_paths:
             file_name = file_path.split("/")[-1]
             file_directory = "/".join([bucket, *file_path.split("/")[:-1]])
-            self.bitstreams.append(
-                Bitstream(name=file_name, file_path=f"{file_directory}/{file_name}")
-            )
+
+            if source_settings.get("id"):
+                file_identifier = parse_id_from_file_name(
+                    file_name, source_settings["id"]
+                )
+
+                if file_identifier == self.file_identifier:
+                    self.bitstreams.append(
+                        Bitstream(
+                            name=file_name, file_path=f"{file_directory}/{file_name}"
+                        )
+                    )
+            else:
+                self.bitstreams.append(
+                    Bitstream(name=file_name, file_path=f"{file_directory}/{file_name}")
+                )
         self.bitstreams.sort(key=lambda x: x.name)
 
     @classmethod

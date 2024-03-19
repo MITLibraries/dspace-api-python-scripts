@@ -8,6 +8,7 @@ from click.testing import CliRunner
 from moto import mock_aws
 
 from dsaps import models
+from dsaps.config import Config
 
 
 # Env fixtures
@@ -17,10 +18,33 @@ def _test_environment(monkeypatch):
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
     monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
-    monkeypatch.setenv("SOURCE_CONFIG", "tests/fixtures/config/source.json")
+    monkeypatch.setenv("SOURCE_CONFIG", "tests/fixtures/config/source_simple.json")
     monkeypatch.setenv("DSPACE_URL", "mock://example.com/")
     monkeypatch.setenv("DSPACE_EMAIL", "test@test.mock")
     monkeypatch.setenv("DSPACE_PASSWORD", "1234")
+
+
+@pytest.fixture
+def simple_config():
+    return Config(config_file="tests/fixtures/config/source_simple.json")
+
+
+@pytest.fixture
+def complex_config():
+    return Config(config_file="tests/fixtures/config/source_complex.json")
+
+
+@pytest.fixture()
+def mocked_s3_ddc():
+    with mock_aws():
+        s3_instance = boto3.client("s3", region_name="us-east-1")
+        s3_instance.create_bucket(Bucket="test-bucket-ddc")
+        s3_instance.put_object(
+            Body="",
+            Bucket="test-bucket-ddc",
+            Key="aaaa-bbbb-cccc-dddd-eeee-02-000012345.pdf",
+        )
+        yield s3_instance
 
 
 @pytest.fixture()

@@ -76,6 +76,7 @@ def main(ctx: click.Context, source_config, url, email, password, verbose):
     start_time = time.time()
     ctx.obj["client"] = client
     ctx.obj["s3_client"] = s3_client
+    ctx.obj["source_settings"] = CONFIG.source_settings
     ctx.obj["start_time"] = start_time
 
 
@@ -135,6 +136,7 @@ def additems(
     """
     client = ctx.obj["client"]
     s3_client = ctx.obj["s3_client"]
+    source_settings = ctx.obj["source_settings"]
     start_time = ctx.obj["start_time"]
     if "collection_uuid" not in ctx.obj and collection_handle is None:
         raise click.UsageError(
@@ -151,7 +153,7 @@ def additems(
         mapping = json.load(jsonfile)
         collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
     for item in collection.items:
-        item.bitstreams_in_directory(s3_client, content_directory)
+        item.bitstreams_in_directory(s3_client, source_settings, content_directory)
     collection.uuid = collection_uuid
     for item in collection.post_items(client):
         logger.info(item.file_identifier)

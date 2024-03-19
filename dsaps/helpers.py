@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 
 
 def create_csv_from_list(list_name, output):
@@ -74,6 +75,12 @@ def filter_files_by_prefix(file_paths, prefixes):
         if set(prefixes).intersection(set(file_prefix)):
             filtered_file_paths.append(file)
     return filtered_file_paths
+
+
+def parse_id_from_file_name(file_name: str, source_settings: dict):
+    if pattern := source_settings.get("regex"):
+        id_pattern = re.compile(pattern)
+        return id_pattern.search(file_name).group(1)
 
 
 def match_files_to_metadata(file_list, metadata_ids):

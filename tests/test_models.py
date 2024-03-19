@@ -118,12 +118,31 @@ def test_collection_post_items(
 
 
 @mock_aws
-def test_item_bitstreams_in_directory(mocked_s3, s3_client, caplog):
+def test_item_bitstreams_in_directory(mocked_s3, s3_client, simple_config, caplog):
     caplog.set_level("DEBUG")
     item = models.Item(file_identifier="test")
-    item.bitstreams_in_directory(s3_client=s3_client, bucket="s3://test-bucket")
+    item.bitstreams_in_directory(
+        s3_client=s3_client,
+        source_settings=simple_config.source_settings,
+        bucket="s3://test-bucket",
+    )
     assert item.bitstreams[0].name == "best_01.pdf"
     assert item.bitstreams[1].name == "test_01.jpg"
+
+
+@mock_aws
+def test_item_bitstreams_in_directory_aspace(
+    mocked_s3_ddc, s3_client, complex_config, caplog
+):
+    caplog.set_level("DEBUG")
+    item = models.Item(file_identifier="02-000012345")
+    item.bitstreams_in_directory(
+        s3_client=s3_client,
+        source_settings=complex_config.source_settings,
+        bucket="s3://test-bucket-ddc",
+    )
+
+    assert item.bitstreams[0].name == "aaaa-bbbb-cccc-dddd-eeee-02-000012345.pdf"
 
 
 def test_item_metadata_from_csv_row(aspace_delimited_csv, aspace_mapping):

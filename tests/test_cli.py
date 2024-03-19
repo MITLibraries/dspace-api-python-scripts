@@ -10,6 +10,8 @@ def test_additems(runner, mocked_s3, caplog):
     result = runner.invoke(
         main,
         [
+            "--source-config",
+            "tests/fixtures/config/source_simple.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -33,6 +35,8 @@ def test_additems(runner, mocked_s3, caplog):
     result = runner.invoke(
         main,
         [
+            "--source-config",
+            "tests/fixtures/config/source_simple.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -64,7 +68,7 @@ def test_newcollection(runner):
         main,
         [
             "--source-config",
-            "tests/fixtures/config/source.json",
+            "tests/fixtures/config/source_simple.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -88,7 +92,7 @@ def test_reconcile(runner, mocked_s3, output_dir):
         main,
         [
             "--source-config",
-            "tests/fixtures/config/source.json",
+            "tests/fixtures/config/source_simple.json",
             "--url",
             "mock://example.com/",
             "--email",
