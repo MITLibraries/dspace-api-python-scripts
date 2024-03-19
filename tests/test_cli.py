@@ -63,6 +63,8 @@ def test_newcollection(runner):
     result = runner.invoke(
         main,
         [
+            "--source-config",
+            "tests/fixtures/config/source.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -85,6 +87,8 @@ def test_reconcile(runner, mocked_s3, output_dir):
     result = runner.invoke(
         main,
         [
+            "--source-config",
+            "tests/fixtures/config/source.json",
             "--url",
             "mock://example.com/",
             "--email",

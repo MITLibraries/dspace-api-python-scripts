@@ -17,6 +17,10 @@ def _test_environment(monkeypatch):
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
     monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
+    monkeypatch.setenv("SOURCE_CONFIG", "tests/fixtures/config/source.json")
+    monkeypatch.setenv("DSPACE_URL", "mock://example.com/")
+    monkeypatch.setenv("DSPACE_EMAIL", "test@test.mock")
+    monkeypatch.setenv("DSPACE_PASSWORD", "1234")
 
 
 @pytest.fixture()

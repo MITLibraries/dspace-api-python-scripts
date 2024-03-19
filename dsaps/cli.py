@@ -1,17 +1,19 @@
 import csv
-import datetime
 import json
 import logging
 import os
 import time
 
+from datetime import datetime, timedelta, timezone
+
 import click
 import structlog
 
 from dsaps import helpers
+from dsaps.config import Config, configure_logger
 from dsaps.models import Client, S3Client, Collection
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 def validate_path(ctx, param, value):
@@ -23,6 +25,7 @@ def validate_path(ctx, param, value):
 
 
 @click.group(chain=True)
+@click.option("-sc", "--source-config", envvar="SOURCE_CONFIG", required=True)
 @click.option(
     "--url",
     envvar="DSPACE_URL",
@@ -50,30 +53,23 @@ def validate_path(ctx, param, value):
         "Defaults to env var DSPACE_PASSWORD if not set."
     ),
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    help="Pass to log at DEBUG level instead of INFO.",
+)
 @click.pass_context
-def main(ctx, url, email, password):
-    ctx.obj = {}
-    if os.path.isdir("logs") is False:
-        os.mkdir("logs")
-    dt = datetime.datetime.utcnow().isoformat(timespec="seconds")
-    log_suffix = f"{dt}.log"
-    structlog.configure(
-        processors=[
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.add_log_level,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.JSONRenderer(),
-        ],
-        context_class=dict,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-    )
-    logging.basicConfig(
-        format="%(asctime)s %(message)s",
-        handlers=[logging.FileHandler(f"logs/log-{log_suffix}", "w")],
-        level=logging.INFO,
-    )
+def main(ctx: click.Context, source_config, url, email, password, verbose):
+    ctx.ensure_object(dict)
     logger.info("Application start")
+    root_logger = logging.getLogger()
+    current_epoch = datetime.now(timezone.utc).strftime("%s")
+    logger.info(
+        configure_logger(root_logger, verbose, output_file=f"log-{current_epoch}")
+    )
+    CONFIG = Config(config_file=source_config)
+    CONFIG.check_required_env_vars()
     client = Client(url)
     s3_client = S3Client()
     client.authenticate(email, password)
@@ -81,7 +77,6 @@ def main(ctx, url, email, password):
     ctx.obj["client"] = client
     ctx.obj["s3_client"] = s3_client
     ctx.obj["start_time"] = start_time
-    ctx.obj["log_suffix"] = log_suffix
 
 
 @main.command()
@@ -160,7 +155,7 @@ def additems(
     collection.uuid = collection_uuid
     for item in collection.post_items(client):
         logger.info(item.file_identifier)
-    elapsed_time = datetime.timedelta(seconds=time.time() - start_time)
+    elapsed_time = timedelta(seconds=time.time() - start_time)
     logger.info(f"Total runtime : {elapsed_time}")
 
 

@@ -34,11 +34,11 @@ class Config:
 
     @property
     def source_settings(self) -> dict:
-        return self.load_source_config(self.config_file)["settings"]
+        return self.load_source_config(self.config_file).get("settings")
 
     @property
     def source_field_mapping(self) -> dict:
-        return self.load_source_config(self.config_file)["mapping"]
+        return self.load_source_config(self.config_file).get("mapping")
 
 
 def configure_logger(logger: logging.Logger, verbose: bool, output_file: str):
