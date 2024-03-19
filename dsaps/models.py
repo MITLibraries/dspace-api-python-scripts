@@ -257,12 +257,10 @@ class Item(BaseRecord):
 
         for file_path in file_paths:
             file_name = file_path.split("/")[-1]
-            file_identifier = "".join(file_name.split(delimiter)[-2:]).split(".")[0]
             file_directory = "/".join([bucket, *file_path.split("/")[:-1]])
-            if file_identifier == self.file_identifier:
-                self.bitstreams.append(
-                    Bitstream(name=file_name, file_path=f"{file_directory}/{file_name}")
-                )
+            self.bitstreams.append(
+                Bitstream(name=file_name, file_path=f"{file_directory}/{file_name}")
+            )
         self.bitstreams.sort(key=lambda x: x.name)
 
     @classmethod
