@@ -2,19 +2,19 @@ import operator
 from functools import partial
 
 import attr
-import boto3
 import requests
 import smart_open
 import structlog
 
-Field = partial(attr.ib, default=None)
+from attrs import field, define
+
 Group = partial(attr.ib, default=[])
 
 logger = structlog.get_logger()
 op = operator.attrgetter("name")
 
 
-class Client:
+class DSpaceClient:
     def __init__(self, url):
         header = {"content-type": "application/json", "accept": "application/json"}
         self.url = url.rstrip("/")
@@ -84,11 +84,11 @@ class Client:
             url, headers=self.header, cookies=self.cookies, timeout=30
         ).json()
         if record_type == "items":
-            rec_obj = self._populate_class_instance(Item, record)
+            rec_obj = self._populate_class_instance(DSpaceItem, record)
         elif record_type == "communities":
-            rec_obj = self._populate_class_instance(Community, record)
+            rec_obj = self._populate_class_instance(DSpaceCommunity, record)
         elif record_type == "collections":
-            rec_obj = self._populate_class_instance(Collection, record)
+            rec_obj = self._populate_class_instance(DSpaceCollection, record)
         else:
             logger.info("Invalid record type.")
             exit()
@@ -155,10 +155,10 @@ class Client:
         fields = [op(field) for field in attr.fields(class_type)]
         kwargs = {k: v for k, v in rec_obj.items() if k in fields}
         kwargs["objtype"] = rec_obj["type"]
-        if class_type == Community:
+        if class_type == DSpaceCommunity:
             collections = self._build_uuid_list(rec_obj, kwargs, "collections")
             rec_obj["collections"] = collections
-        elif class_type == Collection:
+        elif class_type == DSpaceCollection:
             items = self._build_uuid_list(rec_obj, "items")
             rec_obj["items"] = items
         rec_obj = class_type(**kwargs)
@@ -172,18 +172,31 @@ class Client:
         return child_list
 
 
-@attr.s
-class BaseRecord:
-    uuid = Field()
-    name = Field()
-    handle = Field()
-    link = Field()
-    objtype = Field()
+@define
+class Bitstream:
+    name = field(default=None)
+    file_path = field(default=None)
 
 
-@attr.s
-class Collection(BaseRecord):
-    items = Group()
+@define
+class MetadataEntry:
+    key = field(default=None)
+    value = field(default=None)
+    language = field(default=None)
+
+
+@define
+class DSpaceObject:
+    uuid = field(default=None)
+    name = field(default=None)
+    handle = field(default=None)
+    link = field(default=None)
+    objtype = field(default=None)
+
+
+@define
+class DSpaceCollection(DSpaceObject):
+    items = field(factory=list)
 
     def post_items(self, client):
         """Post items to collection."""
@@ -203,21 +216,21 @@ class Collection(BaseRecord):
     def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
         """Create metadata for the collection's items based on a CSV and a JSON mapping
         field map."""
-        items = [Item.metadata_from_csv_row(row, field_map) for row in csv_reader]
+        items = [DSpaceItem.metadata_from_csv_row(row, field_map) for row in csv_reader]
         return cls(items=items)
 
 
-@attr.s
-class Community(BaseRecord):
-    collections = Field()
+@define
+class DSpaceCommunity(DSpaceObject):
+    collections = field(default=None)
 
 
-@attr.s
-class Item(BaseRecord):
-    metadata = Group()
-    bitstreams = Group()
-    file_identifier = Field()
-    source_system_identifier = Field()
+@define
+class DSpaceItem(DSpaceObject):
+    metadata = field(factory=list)
+    bitstreams = field(factory=list)
+    file_identifier = field(default=None)
+    source_system_identifier = field(default=None)
 
     def bitstreams_in_directory(self, directory, s3_client, file_type=None):
         """Create a list of bitstreams from the specified directory and sort the list."""
@@ -252,16 +265,3 @@ class Item(BaseRecord):
             file_identifier=file_identifier,
             # source_system_identifier=source_system_identifier,
         )
-
-
-@attr.s
-class Bitstream:
-    name = Field()
-    file_path = Field()
-
-
-@attr.s
-class MetadataEntry:
-    key = Field()
-    value = Field()
-    language = Field()

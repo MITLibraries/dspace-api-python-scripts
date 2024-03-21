@@ -91,12 +91,12 @@ def s3_client():
 
 
 @pytest.fixture()
-def client():
-    client = dspace.Client("mock://example.com/")
-    client.header = {}
-    client.cookies = {}
-    client.user_full_name = ""
-    return client
+def dspace_client():
+    dspace_client = dspace.DSpaceClient("mock://example.com/")
+    dspace_client.header = {}
+    dspace_client.cookies = {}
+    dspace_client.user_full_name = ""
+    return dspace_client
 
 
 @pytest.fixture()

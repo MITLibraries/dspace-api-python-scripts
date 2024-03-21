@@ -10,7 +10,7 @@ import structlog
 
 from dsaps import helpers
 from dsaps.s3 import S3Client
-from dsaps.dspace import Client, Collection
+from dsaps.dspace import DSpaceClient, DSpaceCollection
 
 
 logger = structlog.get_logger()
@@ -79,12 +79,12 @@ def main(ctx, config_file, url, email, password):
         level=logging.INFO,
     )
     logger.info("Application start")
-    client = Client(url)
+    client = DSpaceClient(url)
     s3_client = S3Client.get_client()
     client.authenticate(email, password)
     start_time = time.time()
     ctx.obj["config"] = helpers.load_source_config(config_file)
-    ctx.obj["client"] = client
+    ctx.obj["dspace_client"] = client
     ctx.obj["s3_client"] = s3_client
     ctx.obj["start_time"] = start_time
     ctx.obj["log_suffix"] = log_suffix
@@ -144,7 +144,7 @@ def additems(
     The method relies on a CSV file with metadata for uploads, a JSON document that maps
     metadata to a DSpace schema, and a directory containing the files to be uploaded.
     """
-    client = ctx.obj["client"]
+    dspace_client = ctx.obj["dspace_client"]
     s3_client = ctx.obj["s3_client"]
     start_time = ctx.obj["start_time"]
     if "collection_uuid" not in ctx.obj and collection_handle is None:
@@ -156,15 +156,17 @@ def additems(
     elif "collection_uuid" in ctx.obj:
         collection_uuid = ctx.obj["collection_uuid"]
     else:
-        collection_uuid = client.get_uuid_from_handle(collection_handle)
+        collection_uuid = dspace_client.get_uuid_from_handle(collection_handle)
     with open(metadata_csv, "r") as csvfile, open(field_map, "r") as jsonfile:
         metadata = csv.DictReader(csvfile)
         mapping = json.load(jsonfile)
-        collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
+        collection = DSpaceCollection.create_metadata_for_items_from_csv(
+            metadata, mapping
+        )
     for item in collection.items:
         item.bitstreams_in_directory(content_directory, s3_client, file_type)
     collection.uuid = collection_uuid
-    for item in collection.post_items(client):
+    for item in collection.post_items(dspace_client):
         logger.info(item.file_identifier)
     elapsed_time = datetime.timedelta(seconds=time.time() - start_time)
     logger.info(f"Total runtime : {elapsed_time}")
@@ -186,8 +188,8 @@ def additems(
 @click.pass_context
 def newcollection(ctx, community_handle, collection_name):
     """Create a new DSpace collection within a community."""
-    client = ctx.obj["client"]
-    collection_uuid = client.post_coll_to_comm(community_handle, collection_name)
+    dspace_client = ctx.obj["dspace_client"]
+    collection_uuid = dspace_client.post_coll_to_comm(community_handle, collection_name)
     ctx.obj["collection_uuid"] = collection_uuid
 
 
@@ -231,7 +233,6 @@ def reconcile(ctx, metadata_csv, output_directory, content_directory):
         corresponding file in the content directory.
     """
     source_settings = ctx.obj["config"]["settings"]
-    client = ctx.obj["client"]
     s3_client = ctx.obj["s3_client"]
     files_dict = helpers.get_files_from_s3(
         s3_path=content_directory,

@@ -3,8 +3,6 @@ import os
 import re
 import yaml
 
-from typing import Literal
-
 import smart_open
 
 S3_BUCKET_REGEX = re.compile(r"^([^\/]*)")
