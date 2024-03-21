@@ -20,7 +20,6 @@ class Client:
         self.url = url.rstrip("/")
         self.cookies = None
         self.header = header
-        self.s3_client = boto3.client("s3")
         logger.info("Initializing client")
 
     def authenticate(self, email, password):

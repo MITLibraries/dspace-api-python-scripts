@@ -9,7 +9,9 @@ import click
 import structlog
 
 from dsaps import helpers
+from dsaps.s3 import S3Client
 from dsaps.dspace import Client, Collection
+
 
 logger = structlog.get_logger()
 
@@ -78,10 +80,12 @@ def main(ctx, config_file, url, email, password):
     )
     logger.info("Application start")
     client = Client(url)
+    s3_client = S3Client.get_client()
     client.authenticate(email, password)
     start_time = time.time()
     ctx.obj["config"] = helpers.load_source_config(config_file)
     ctx.obj["client"] = client
+    ctx.obj["s3_client"] = s3_client
     ctx.obj["start_time"] = start_time
     ctx.obj["log_suffix"] = log_suffix
 
@@ -141,6 +145,7 @@ def additems(
     metadata to a DSpace schema, and a directory containing the files to be uploaded.
     """
     client = ctx.obj["client"]
+    s3_client = ctx.obj["s3_client"]
     start_time = ctx.obj["start_time"]
     if "collection_uuid" not in ctx.obj and collection_handle is None:
         raise click.UsageError(
@@ -157,7 +162,7 @@ def additems(
         mapping = json.load(jsonfile)
         collection = Collection.create_metadata_for_items_from_csv(metadata, mapping)
     for item in collection.items:
-        item.bitstreams_in_directory(content_directory, client.s3_client, file_type)
+        item.bitstreams_in_directory(content_directory, s3_client, file_type)
     collection.uuid = collection_uuid
     for item in collection.post_items(client):
         logger.info(item.file_identifier)
@@ -227,9 +232,10 @@ def reconcile(ctx, metadata_csv, output_directory, content_directory):
     """
     source_settings = ctx.obj["config"]["settings"]
     client = ctx.obj["client"]
+    s3_client = ctx.obj["s3_client"]
     files_dict = helpers.get_files_from_s3(
         s3_path=content_directory,
-        s3_client=client.s3_client,
+        s3_client=s3_client,
         bitstream_folders=source_settings.get("bitstream_folders"),
         id_regex=source_settings["id_regex"],
     )
