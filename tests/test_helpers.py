@@ -11,7 +11,7 @@ from dsaps.helpers import (
     parse_value_from_text,
     update_metadata_csv,
 )
-from dsaps.models import Item
+from dsaps.dspace import Item
 
 REGEX_ID_BETWEEN_UNDERSCORES = "_(.*)_"
 REGEX_ID_BEFORE_UNDERSCORES = "(.*?)_"

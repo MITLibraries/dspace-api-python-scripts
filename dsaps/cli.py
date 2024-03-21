@@ -9,7 +9,7 @@ import click
 import structlog
 
 from dsaps import helpers
-from dsaps.models import Client, Collection
+from dsaps.dspace import Client, Collection
 
 logger = structlog.get_logger()
 

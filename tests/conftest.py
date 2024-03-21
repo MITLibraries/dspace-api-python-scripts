@@ -7,7 +7,7 @@ import requests_mock
 from click.testing import CliRunner
 from moto import mock_aws
 
-from dsaps import models
+from dsaps import dspace
 
 
 # Env fixtures
@@ -92,7 +92,7 @@ def s3_client():
 
 @pytest.fixture()
 def client():
-    client = models.Client("mock://example.com/")
+    client = dspace.Client("mock://example.com/")
     client.header = {}
     client.cookies = {}
     client.user_full_name = ""

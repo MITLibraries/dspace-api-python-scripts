@@ -1,7 +1,7 @@
 import attr
 from moto import mock_aws
 
-from dsaps import models
+from dsaps import dspace
 
 
 def test_authenticate(client):
@@ -39,7 +39,7 @@ def test_get_record(client):
 def test_post_bitstream(client, mocked_s3):
     """Test post_bitstream method."""
     item_uuid = "e5f6"
-    bitstream = models.Bitstream(
+    bitstream = dspace.Bitstream(
         name="test_01.pdf", file_path="s3://test-bucket/test_01.pdf"
     )
     bit_uuid = client.post_bitstream(item_uuid, bitstream)
@@ -57,16 +57,16 @@ def test_post_coll_to_comm(client):
 @mock_aws
 def test_post_item_to_collection(client, mocked_s3):
     """Test post_item_to_collection method."""
-    item = models.Item()
+    item = dspace.Item()
     item.bitstreams = [
-        models.Bitstream(name="test_01.pdf", file_path="s3://test-bucket/test_01.pdf")
+        dspace.Bitstream(name="test_01.pdf", file_path="s3://test-bucket/test_01.pdf")
     ]
     item.metadata = [
-        models.MetadataEntry(key="file_identifier", value="test"),
-        models.MetadataEntry(
+        dspace.MetadataEntry(key="file_identifier", value="test"),
+        dspace.MetadataEntry(
             key="dc.title", value="Monitoring Works: Getting Teachers", language="en_US"
         ),
-        models.MetadataEntry(key="dc.relation.isversionof", value="repo/0/ao/123"),
+        dspace.MetadataEntry(key="dc.relation.isversionof", value="repo/0/ao/123"),
     ]
     coll_uuid = "c3d4"
     item_uuid, item_handle = client.post_item_to_collection(coll_uuid, item)
@@ -76,7 +76,7 @@ def test_post_item_to_collection(client, mocked_s3):
 
 def test__populate_class_instance(client):
     """Test _populate_class_instance method."""
-    class_type = models.Collection
+    class_type = dspace.Collection
     rec_obj = {"name": "Test title", "type": "collection", "items": []}
     rec_obj = client._populate_class_instance(class_type, rec_obj)
     assert type(rec_obj) is class_type
@@ -94,7 +94,7 @@ def test__build_uuid_list(client):
 def test_collection_create_metadata_for_items_from_csv(
     aspace_delimited_csv, aspace_mapping
 ):
-    collection = models.Collection.create_metadata_for_items_from_csv(
+    collection = dspace.Collection.create_metadata_for_items_from_csv(
         aspace_delimited_csv, aspace_mapping
     )
     assert 2 == len(collection.items)
@@ -107,7 +107,7 @@ def test_collection_post_items(
     aspace_delimited_csv,
     aspace_mapping,
 ):
-    collection = models.Collection.create_metadata_for_items_from_csv(
+    collection = dspace.Collection.create_metadata_for_items_from_csv(
         aspace_delimited_csv, aspace_mapping
     )
     collection.uuid = "c3d4"
@@ -119,7 +119,7 @@ def test_collection_post_items(
 
 def test_item_metadata_from_csv_row(aspace_delimited_csv, aspace_mapping):
     row = next(aspace_delimited_csv)
-    item = models.Item.metadata_from_csv_row(row, aspace_mapping)
+    item = dspace.Item.metadata_from_csv_row(row, aspace_mapping)
     assert attr.asdict(item)["metadata"] == [
         {"key": "dc.title", "value": "Tast Item", "language": "en_US"},
         {"key": "dc.contributor.author", "value": "Smith, John", "language": None},
