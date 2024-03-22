@@ -7,8 +7,6 @@ import requests
 import smart_open
 import structlog
 
-from dsaps.helpers import create_file_list
-
 Field = partial(attr.ib, default=None)
 Group = partial(attr.ib, default=[])
 
@@ -224,13 +222,7 @@ class Item(BaseRecord):
 
     def bitstreams_in_directory(self, directory, s3_client, file_type=None):
         """Create a list of bitstreams from the specified directory and sort the list."""
-        files = create_file_list(directory, s3_client, file_type)
-        self.bitstreams = [
-            Bitstream(name=file, file_path=f"{directory}/{file}")
-            for file in files
-            if file.startswith(self.file_identifier) and file.endswith(file_type)
-        ]
-        self.bitstreams.sort(key=lambda x: x.name)
+        pass
 
     @classmethod
     def metadata_from_csv_row(cls, row, field_map):
@@ -243,9 +235,8 @@ class Item(BaseRecord):
                     file_identifier = field
                     continue  # file_identifier is not included in DSpace metadata
                 if f == "source_system_identifier":
-                    source_system_identifier = field
+                    # source_system_identifier = field
                     continue  # source_system_identifier is not included in DSpace
-                metadata
                 delimiter = field_map[f]["delimiter"]
                 language = field_map[f]["language"]
                 if delimiter:
@@ -260,7 +251,7 @@ class Item(BaseRecord):
         return cls(
             metadata=metadata,
             file_identifier=file_identifier,
-            source_system_identifier=source_system_identifier,
+            # source_system_identifier=source_system_identifier,
         )
 
 

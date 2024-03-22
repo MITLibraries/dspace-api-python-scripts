@@ -19,6 +19,44 @@ def _test_environment(monkeypatch):
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
 
 
+@pytest.fixture
+def mocked_s3_bucket():
+    bucket_name = "mocked-bucket"
+    with mock_aws():
+        s3 = boto3.client("s3")
+        s3.create_bucket(Bucket=bucket_name)
+        s3.put_object(Body="", Bucket=bucket_name, Key="one-to-one/aaaa_001_01.pdf")
+        s3.put_object(
+            Body="",
+            Bucket=bucket_name,
+            Key="one-to-one/aaaa_002_01.pdf",
+        )
+        s3.put_object(
+            Body="",
+            Bucket=bucket_name,
+            Key="many-to-one/bbbb_003_01.pdf",
+        )
+        s3.put_object(
+            Body="",
+            Bucket=bucket_name,
+            Key="many-to-one/bbbb_003_02.pdf",
+        )
+        s3.put_object(
+            Body="",
+            Bucket=bucket_name,
+            Key="many-to-one/bbbb_004_01.pdf",
+        )
+        s3.put_object(
+            Body="",
+            Bucket=bucket_name,
+            Key="many-to-one/bbbb_003_01.jpg",
+        )
+        s3.put_object(
+            Body="", Bucket=bucket_name, Key="nested/prefix/objects/include_005_01.pdf"
+        )
+        yield
+
+
 @pytest.fixture()
 def mocked_s3():
     with mock_aws():

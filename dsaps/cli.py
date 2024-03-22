@@ -24,6 +24,9 @@ def validate_path(ctx, param, value):
 
 @click.group(chain=True)
 @click.option(
+    "--config-file", required=True, help="File path to source configuration JSON."
+)
+@click.option(
     "--url",
     envvar="DSPACE_URL",
     required=True,
@@ -51,7 +54,7 @@ def validate_path(ctx, param, value):
     ),
 )
 @click.pass_context
-def main(ctx, url, email, password):
+def main(ctx, config_file, url, email, password):
     ctx.obj = {}
     if os.path.isdir("logs") is False:
         os.mkdir("logs")
@@ -77,6 +80,7 @@ def main(ctx, url, email, password):
     client = Client(url)
     client.authenticate(email, password)
     start_time = time.time()
+    ctx.obj["config"] = helpers.load_source_config(config_file)
     ctx.obj["client"] = client
     ctx.obj["start_time"] = start_time
     ctx.obj["log_suffix"] = log_suffix
@@ -203,34 +207,40 @@ def newcollection(ctx, community_handle, collection_name):
     required=True,
     help="The name of the S3 bucket containing files for DSpace uploads.",
 )
-@click.option(
-    "-t",
-    "--file-type",
-    help="The file type for DSpace uploads (i.e., the file extension, excluding the dot).",
-    default="*",
-)
 @click.pass_context
-def reconcile(ctx, metadata_csv, output_directory, content_directory, file_type):
+def reconcile(ctx, metadata_csv, output_directory, content_directory):
     """Match files in the content directory with entries in the metadata CSV file.
 
     Running this method creates the following CSV files:
 
-        * metadata_matches.csv: File identifiers for entries in metadata CSV file with a corresponding file in the content directory.
+        * metadata_matches.csv: File identifiers for entries in metadata CSV file with a
+        corresponding file in the content directory.
 
-        * no_files.csv: File identifiers for entries in metadata CSV file without a corresponding file in the content directory.
+        * no_files.csv: File identifiers for entries in metadata CSV file without a
+        corresponding file in the content directory.
 
-        * no_metadata.csv: File identifiers for files in the content directory without a corresponding entry in the metadata CSV file.
+        * no_metadata.csv: File identifiers for files in the content directory without a
+        corresponding entry in the metadata CSV file.
 
-        * updated-<metadata-csv>.csv: Entries from the metadata CSV file with a corresponding file in the content directory.
+        * updated-<metadata-csv>.csv: Entries from the metadata CSV file with a
+        corresponding file in the content directory.
     """
+    source_settings = ctx.obj["config"]["settings"]
     client = ctx.obj["client"]
-    file_ids = helpers.create_file_list(content_directory, client.s3_client, file_type)
+    files_dict = helpers.get_files_from_s3(
+        s3_path=content_directory,
+        s3_client=client.s3_client,
+        bitstream_folders=source_settings.get("bitstream_folders"),
+        id_regex=source_settings["id_regex"],
+    )
     metadata_ids = helpers.create_metadata_id_list(metadata_csv)
-    metadata_matches = helpers.match_metadata_to_files(file_ids, metadata_ids)
-    file_matches = helpers.match_files_to_metadata(file_ids, metadata_ids)
+    metadata_matches = helpers.match_metadata_to_files(files_dict.keys(), metadata_ids)
+    file_matches = helpers.match_files_to_metadata(files_dict.keys(), metadata_ids)
     no_files = set(metadata_ids) - set(metadata_matches)
-    no_metadata = set(file_ids) - set(file_matches)
+    no_metadata = set(files_dict.keys()) - set(file_matches)
     helpers.create_csv_from_list(no_metadata, f"{output_directory}no_metadata")
     helpers.create_csv_from_list(no_files, f"{output_directory}no_files")
     helpers.create_csv_from_list(metadata_matches, f"{output_directory}metadata_matches")
-    helpers.update_metadata_csv(metadata_csv, output_directory, metadata_matches)
+    helpers.update_metadata_csv(
+        metadata_csv, output_directory, metadata_matches, files_dict
+    )

@@ -9,6 +9,8 @@ def test_additems(runner, mocked_s3):
     result = runner.invoke(
         main,
         [
+            "--config-file",
+            "tests/fixtures/source_config.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -32,6 +34,8 @@ def test_additems(runner, mocked_s3):
     result = runner.invoke(
         main,
         [
+            "--config-file",
+            "tests/fixtures/source_config.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -62,6 +66,8 @@ def test_newcollection(runner):
     result = runner.invoke(
         main,
         [
+            "--config-file",
+            "tests/fixtures/source_config.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -84,6 +90,8 @@ def test_reconcile(runner, mocked_s3, output_dir):
     result = runner.invoke(
         main,
         [
+            "--config-file",
+            "tests/fixtures/source_config.json",
             "--url",
             "mock://example.com/",
             "--email",
@@ -97,8 +105,6 @@ def test_reconcile(runner, mocked_s3, output_dir):
             output_dir,
             "--content-directory",
             "s3://test-bucket",
-            "--file-type",
-            "pdf",
         ],
     )
     assert result.exit_code == 0
