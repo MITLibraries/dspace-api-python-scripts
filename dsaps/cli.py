@@ -3,7 +3,9 @@ import datetime
 import json
 import logging
 import os
-import time
+
+from datetime import timedelta
+from time import perf_counter
 
 import click
 import structlog
@@ -31,14 +33,14 @@ def validate_path(ctx, param, value):
 @click.option(
     "--url",
     envvar="DSPACE_URL",
-    required=True,
+    required=False,
     help="The url for the DSpace REST API. Defaults to env var DSPACE_URL if not set.",
 )
 @click.option(
     "-e",
     "--email",
     envvar="DSPACE_EMAIL",
-    required=True,
+    required=False,
     help=(
         "The email associated with the DSpace user account used for authentication. "
         "Defaults to env var DSPACE_EMAIL if not set."
@@ -48,7 +50,7 @@ def validate_path(ctx, param, value):
     "-p",
     "--password",
     envvar="DSPACE_PASSWORD",
-    required=True,
+    required=False,
     hide_input=True,
     help=(
         "The password associated with the DSpace user account used for authentication. "
@@ -78,16 +80,15 @@ def main(ctx, config_file, url, email, password):
         handlers=[logging.FileHandler(f"logs/log-{log_suffix}", "w")],
         level=logging.INFO,
     )
-    logger.info("Application start")
-    client = DSpaceClient(url)
-    s3_client = S3Client.get_client()
-    client.authenticate(email, password)
-    start_time = time.time()
-    ctx.obj["config"] = helpers.load_source_config(config_file)
-    ctx.obj["dspace_client"] = client
-    ctx.obj["s3_client"] = s3_client
-    ctx.obj["start_time"] = start_time
-    ctx.obj["log_suffix"] = log_suffix
+    logger.info("Running process")
+    source_config = helpers.load_source_config(config_file)
+    if url:
+        dspace_client = DSpaceClient(url)
+        dspace_client.authenticate(email, password)
+        ctx.obj["dspace_client"] = dspace_client
+    ctx.obj["config"] = source_config
+    ctx.obj["s3_client"] = S3Client.get_client()
+    ctx.obj["start_time"] = perf_counter()
 
 
 @main.command()
@@ -144,9 +145,9 @@ def additems(
     The method relies on a CSV file with metadata for uploads, a JSON document that maps
     metadata to a DSpace schema, and a directory containing the files to be uploaded.
     """
-    dspace_client = ctx.obj["dspace_client"]
     s3_client = ctx.obj["s3_client"]
-    start_time = ctx.obj["start_time"]
+    dspace_client = ctx.obj["dspace_client"]
+
     if "collection_uuid" not in ctx.obj and collection_handle is None:
         raise click.UsageError(
             "collection_handle option must be used or "
@@ -168,8 +169,10 @@ def additems(
     collection.uuid = collection_uuid
     for item in collection.post_items(dspace_client):
         logger.info(item.file_identifier)
-    elapsed_time = datetime.timedelta(seconds=time.time() - start_time)
-    logger.info(f"Total runtime : {elapsed_time}")
+    logger.info(
+        "Total elapsed: %s",
+        str(timedelta(seconds=perf_counter() - ctx.obj["start_time"])),
+    )
 
 
 @main.command()
