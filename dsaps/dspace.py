@@ -1,3 +1,4 @@
+import ast
 import operator
 from functools import partial
 
@@ -97,8 +98,9 @@ class DSpaceClient:
     def post_bitstream(self, item_uuid, bitstream):
         """Post a bitstream to a specified item and return the bitstream
         ID."""
-        endpoint = f"{self.url}/items/{item_uuid}" f"/bitstreams?name={bitstream.name}"
+        endpoint = f"{self.url}/items/{item_uuid}/bitstreams?name={bitstream.name}"
         header_upload = {"accept": "application/json"}
+        logger.info(endpoint)
         with smart_open.open(bitstream.file_path, "rb") as data:
             post_response = requests.post(
                 endpoint,
@@ -198,20 +200,6 @@ class DSpaceObject:
 class DSpaceCollection(DSpaceObject):
     items = field(factory=list)
 
-    def post_items(self, client):
-        """Post items to collection."""
-        for item in self.items:
-            logger.info(f"Posting item: {item}")
-            item_uuid, item_handle = client.post_item_to_collection(self.uuid, item)
-            item.uuid = item_uuid
-            item.handle = item_handle
-            logger.info(f"Item posted: {item_uuid}")
-            for bitstream in item.bitstreams:
-                bitstream_uuid = client.post_bitstream(item_uuid, bitstream)
-                bitstream.uuid = bitstream_uuid
-                logger.info(f"Bitstream posted: {bitstream_uuid}")
-            yield item
-
     @classmethod
     def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
         """Create metadata for the collection's items based on a CSV and a JSON mapping
@@ -229,39 +217,46 @@ class DSpaceCommunity(DSpaceObject):
 class DSpaceItem(DSpaceObject):
     metadata = field(factory=list)
     bitstreams = field(factory=list)
-    file_identifier = field(default=None)
+    item_identifier = field(default=None)
     source_system_identifier = field(default=None)
 
-    def bitstreams_in_directory(self, directory, s3_client, file_type=None):
-        """Create a list of bitstreams from the specified directory and sort the list."""
-        pass
-
     @classmethod
-    def metadata_from_csv_row(cls, row, field_map):
+    def metadata_from_csv_row(cls, record, mapping):
         """Create metadata for an item based on a CSV row and a JSON mapping field map."""
         metadata = []
-        for f in field_map:
-            field = row[field_map[f]["csv_field_name"]]
-            if field != "":
-                if f == "file_identifier":
-                    file_identifier = field
+        for field_name, field_mapping in mapping.items():
+            field_value = record[field_mapping["csv_field_name"]]
+
+            if field_value:
+                if field_name == "item_identifier":
+                    item_identifier = field_value
                     continue  # file_identifier is not included in DSpace metadata
-                if f == "source_system_identifier":
+                if field_name == "source_system_identifier":
                     # source_system_identifier = field
                     continue  # source_system_identifier is not included in DSpace
-                delimiter = field_map[f]["delimiter"]
-                language = field_map[f]["language"]
+                delimiter = field_mapping["delimiter"]
+                language = field_mapping["language"]
                 if delimiter:
                     metadata.extend(
                         [
-                            MetadataEntry(key=f, value=v, language=language)
-                            for v in field.split(delimiter)
+                            MetadataEntry(
+                                key=field_name,
+                                value=value,
+                                language=language,
+                            )
+                            for value in field_value.split(delimiter)
                         ]
                     )
                 else:
-                    metadata.append(MetadataEntry(key=f, value=field, language=language))
+                    metadata.append(
+                        MetadataEntry(
+                            key=field_name,
+                            value=field_value,
+                            language=language,
+                        )
+                    )
         return cls(
             metadata=metadata,
-            file_identifier=file_identifier,
+            item_identifier=item_identifier,
             # source_system_identifier=source_system_identifier,
         )
