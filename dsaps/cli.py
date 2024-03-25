@@ -12,7 +12,7 @@ import structlog
 
 from dsaps import helpers
 from dsaps.s3 import S3Client
-from dsaps.dspace import DSpaceClient, DSpaceCollection
+from dsaps.dspace import Bitstream, DSpaceClient, DSpaceCollection
 
 
 logger = structlog.get_logger()
@@ -100,23 +100,10 @@ def main(ctx, config_file, url, email, password):
     help="The filepath to a CSV file containing metadata for Dspace uploads.",
 )
 @click.option(
-    "-f",
-    "--field-map",
-    required=True,
-    type=click.Path(exists=True, file_okay=True, dir_okay=False),
-    help="The filepath to a JSON document that maps columns in the metadata CSV file to a DSpace schema.",
-)
-@click.option(
     "-d",
     "--content-directory",
     required=True,
     help="The name of the S3 bucket containing files for DSpace uploads.",
-)
-@click.option(
-    "-t",
-    "--file-type",
-    help="The file type for DSpace uploads (i.e., the file extension, excluding the dot).",
-    default="*",
 )
 @click.option(
     "-r",
@@ -134,9 +121,7 @@ def main(ctx, config_file, url, email, password):
 def additems(
     ctx,
     metadata_csv,
-    field_map,
     content_directory,
-    file_type,
     ingest_report,
     collection_handle,
 ):
@@ -145,7 +130,7 @@ def additems(
     The method relies on a CSV file with metadata for uploads, a JSON document that maps
     metadata to a DSpace schema, and a directory containing the files to be uploaded.
     """
-    s3_client = ctx.obj["s3_client"]
+    mapping = ctx.obj["config"]["mapping"]
     dspace_client = ctx.obj["dspace_client"]
 
     if "collection_uuid" not in ctx.obj and collection_handle is None:
@@ -158,17 +143,38 @@ def additems(
         collection_uuid = ctx.obj["collection_uuid"]
     else:
         collection_uuid = dspace_client.get_uuid_from_handle(collection_handle)
-    with open(metadata_csv, "r") as csvfile, open(field_map, "r") as jsonfile:
+
+    if "bitstreams" not in ctx.obj and metadata_csv is None:
+        raise click.UsageError(
+            "Option '--metadata-csv' must be used or " "run 'reconcile' before 'additems'"
+        )
+    elif "bitstreams" in ctx.obj:
+        bitstream_file_paths = ctx.obj["bitstreams"]
+    else:
+        bitstream_file_paths = helpers.get_bitstreams_from_csv(metadata_csv)
+
+    dspace_collection = DSpaceCollection(uuid=collection_uuid)
+
+    with open(metadata_csv, "r") as csvfile:
         metadata = csv.DictReader(csvfile)
-        mapping = json.load(jsonfile)
-        collection = DSpaceCollection.create_metadata_for_items_from_csv(
+        dspace_collection = dspace_collection.create_metadata_for_items_from_csv(
             metadata, mapping
         )
-    for item in collection.items:
-        item.bitstreams_in_directory(content_directory, s3_client, file_type)
-    collection.uuid = collection_uuid
-    for item in collection.post_items(dspace_client):
-        logger.info(item.file_identifier)
+
+    for item in dspace_collection.items:
+        logger.info(f"Posting item: {item}")
+        item_uuid, item_handle = dspace_client.post_item_to_collection(
+            collection_uuid, item
+        )
+        item.uuid = item_uuid
+        item.handle = item_handle
+        logger.info(f"Item posted: {item_uuid}")
+        for file_path in bitstream_file_paths.get(item.item_identifier):
+            file_name = file_path.split("/")[-1]
+            bitstream = Bitstream(name=file_name, file_path=file_path)
+            logger.info(f"Posting bitstream: {bitstream}")
+            dspace_client.post_bitstream(item.uuid, bitstream)
+
     logger.info(
         "Total elapsed: %s",
         str(timedelta(seconds=perf_counter() - ctx.obj["start_time"])),
@@ -237,20 +243,21 @@ def reconcile(ctx, metadata_csv, output_directory, content_directory):
     """
     source_settings = ctx.obj["config"]["settings"]
     s3_client = ctx.obj["s3_client"]
-    files_dict = helpers.get_files_from_s3(
+    bitstreams = helpers.get_files_from_s3(
         s3_path=content_directory,
         s3_client=s3_client,
         bitstream_folders=source_settings.get("bitstream_folders"),
         id_regex=source_settings["id_regex"],
     )
     metadata_ids = helpers.create_metadata_id_list(metadata_csv)
-    metadata_matches = helpers.match_metadata_to_files(files_dict.keys(), metadata_ids)
-    file_matches = helpers.match_files_to_metadata(files_dict.keys(), metadata_ids)
+    metadata_matches = helpers.match_metadata_to_files(bitstreams.keys(), metadata_ids)
+    file_matches = helpers.match_files_to_metadata(bitstreams.keys(), metadata_ids)
     no_files = set(metadata_ids) - set(metadata_matches)
-    no_metadata = set(files_dict.keys()) - set(file_matches)
+    no_metadata = set(bitstreams.keys()) - set(file_matches)
     helpers.create_csv_from_list(no_metadata, f"{output_directory}no_metadata")
     helpers.create_csv_from_list(no_files, f"{output_directory}no_files")
     helpers.create_csv_from_list(metadata_matches, f"{output_directory}metadata_matches")
     helpers.update_metadata_csv(
-        metadata_csv, output_directory, metadata_matches, files_dict
+        metadata_csv, output_directory, metadata_matches, bitstreams
     )
+    ctx.obj["bitstreams"] = bitstreams
