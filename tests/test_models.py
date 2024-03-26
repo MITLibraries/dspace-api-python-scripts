@@ -1,7 +1,7 @@
 import attr
 from moto import mock_aws
 
-from dsaps.dspace import Bitstream, DSpaceCollection, DSpaceItem, MetadataEntry
+from dsaps.dspace import Bitstream, Collection, Item, MetadataEntry
 
 
 def test_authenticate(dspace_client):
@@ -54,7 +54,7 @@ def test_post_coll_to_comm(dspace_client):
 @mock_aws
 def test_post_item_to_collection(dspace_client, mocked_s3_bucket):
     """Test post_item_to_collection method."""
-    item = DSpaceItem()
+    item = Item()
     item.bitstreams = [
         Bitstream(name="aaaa_001_01.pdf", file_path="s3://mocked-bucket/aaaa_001_01.pdf")
     ]
@@ -70,7 +70,7 @@ def test_post_item_to_collection(dspace_client, mocked_s3_bucket):
 
 def test__populate_class_instance(dspace_client):
     """Test _populate_class_instance method."""
-    class_type = DSpaceCollection
+    class_type = Collection
     rec_obj = {"name": "Test title", "type": "collection", "items": []}
     rec_obj = dspace_client._populate_class_instance(class_type, rec_obj)
     assert type(rec_obj) is class_type
@@ -88,7 +88,7 @@ def test__build_uuid_list(dspace_client):
 def test_collection_create_metadata_for_items_from_csv(
     source_metadata_csv, source_config
 ):
-    collection = DSpaceCollection.create_metadata_for_items_from_csv(
+    collection = Collection.create_metadata_for_items_from_csv(
         source_metadata_csv, source_config["mapping"]
     )
     assert len(collection.items) == 5
@@ -114,7 +114,7 @@ def test_collection_create_metadata_for_items_from_csv(
 
 def test_item_metadata_from_csv_row(source_metadata_csv, source_config):
     record = next(source_metadata_csv)
-    item = DSpaceItem.metadata_from_csv_row(record, source_config["mapping"])
+    item = Item.metadata_from_csv_row(record, source_config["mapping"])
     assert attr.asdict(item)["metadata"] == [
         {"key": "dc.title", "value": "Title 1", "language": "en_US"},
         {"key": "dc.contributor.author", "value": "May Smith", "language": None},

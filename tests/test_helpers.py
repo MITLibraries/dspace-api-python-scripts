@@ -11,7 +11,7 @@ from dsaps.helpers import (
     parse_value_from_text,
     update_metadata_csv,
 )
-from dsaps.dspace import DSpaceItem
+from dsaps import dspace
 
 REGEX_ID_BETWEEN_UNDERSCORES = "_(.*)_"
 REGEX_ID_BEFORE_UNDERSCORES = "(.*?)_"
@@ -123,7 +123,7 @@ def test_get_files_from_s3_without_bitstream_folders(mocked_s3_bucket, s3_client
 def test_create_ingest_report(runner, output_dir):
     """Test create_ingest_report function."""
     file_name = "ingest_report.csv"
-    items = [DSpaceItem(source_system_identifier="/repo/0/ao/123", handle="111.1111")]
+    items = [dspace.Item(source_system_identifier="/repo/0/ao/123", handle="111.1111")]
     create_ingest_report(items, f"{output_dir}{file_name}")
     with open(f"{output_dir}{file_name}") as csvfile:
         reader = csv.DictReader(csvfile)

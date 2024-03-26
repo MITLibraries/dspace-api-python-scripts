@@ -1,6 +1,4 @@
-import ast
 import operator
-from functools import partial
 
 import attr
 import requests
@@ -8,8 +6,6 @@ import smart_open
 import structlog
 
 from attrs import field, define
-
-Group = partial(attr.ib, default=[])
 
 logger = structlog.get_logger()
 op = operator.attrgetter("name")
@@ -85,11 +81,11 @@ class DSpaceClient:
             url, headers=self.header, cookies=self.cookies, timeout=30
         ).json()
         if record_type == "items":
-            rec_obj = self._populate_class_instance(DSpaceItem, record)
+            rec_obj = self._populate_class_instance(Item, record)
         elif record_type == "communities":
-            rec_obj = self._populate_class_instance(DSpaceCommunity, record)
+            rec_obj = self._populate_class_instance(Community, record)
         elif record_type == "collections":
-            rec_obj = self._populate_class_instance(DSpaceCollection, record)
+            rec_obj = self._populate_class_instance(Collection, record)
         else:
             logger.info("Invalid record type.")
             exit()
@@ -157,10 +153,10 @@ class DSpaceClient:
         fields = [op(field) for field in attr.fields(class_type)]
         kwargs = {k: v for k, v in rec_obj.items() if k in fields}
         kwargs["objtype"] = rec_obj["type"]
-        if class_type == DSpaceCommunity:
+        if class_type == Community:
             collections = self._build_uuid_list(rec_obj, kwargs, "collections")
             rec_obj["collections"] = collections
-        elif class_type == DSpaceCollection:
+        elif class_type == Collection:
             items = self._build_uuid_list(rec_obj, "items")
             rec_obj["items"] = items
         rec_obj = class_type(**kwargs)
@@ -188,7 +184,7 @@ class MetadataEntry:
 
 
 @define
-class DSpaceObject:
+class Object:
     uuid = field(default=None)
     name = field(default=None)
     handle = field(default=None)
@@ -197,24 +193,7 @@ class DSpaceObject:
 
 
 @define
-class DSpaceCollection(DSpaceObject):
-    items = field(factory=list)
-
-    @classmethod
-    def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
-        """Create metadata for the collection's items based on a CSV and a JSON mapping
-        field map."""
-        items = [DSpaceItem.metadata_from_csv_row(row, field_map) for row in csv_reader]
-        return cls(items=items)
-
-
-@define
-class DSpaceCommunity(DSpaceObject):
-    collections = field(default=None)
-
-
-@define
-class DSpaceItem(DSpaceObject):
+class Item(Object):
     metadata = field(factory=list)
     bitstreams = field(factory=list)
     item_identifier = field(default=None)
@@ -260,3 +239,20 @@ class DSpaceItem(DSpaceObject):
             item_identifier=item_identifier,
             # source_system_identifier=source_system_identifier,
         )
+
+
+@define
+class Collection(Object):
+    items = field(factory=list)
+
+    @classmethod
+    def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
+        """Create metadata for the collection's items based on a CSV and a JSON mapping
+        field map."""
+        items = [Item.metadata_from_csv_row(row, field_map) for row in csv_reader]
+        return cls(items=items)
+
+
+@define
+class Community(Object):
+    collections = field(default=None)

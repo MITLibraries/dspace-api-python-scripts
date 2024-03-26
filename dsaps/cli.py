@@ -1,6 +1,5 @@
 import csv
 import datetime
-import json
 import logging
 import os
 
@@ -10,9 +9,9 @@ from time import perf_counter
 import click
 import structlog
 
+from dsaps import dspace
 from dsaps import helpers
 from dsaps.s3 import S3Client
-from dsaps.dspace import Bitstream, DSpaceClient, DSpaceCollection
 
 
 logger = structlog.get_logger()
@@ -83,7 +82,7 @@ def main(ctx, config_file, url, email, password):
     logger.info("Running process")
     source_config = helpers.load_source_config(config_file)
     if url:
-        dspace_client = DSpaceClient(url)
+        dspace_client = dspace.DSpaceClient(url)
         dspace_client.authenticate(email, password)
         ctx.obj["dspace_client"] = dspace_client
     ctx.obj["config"] = source_config
@@ -144,16 +143,13 @@ def additems(
     else:
         collection_uuid = dspace_client.get_uuid_from_handle(collection_handle)
 
-    if "bitstreams" not in ctx.obj and metadata_csv is None:
+    if metadata_csv is None:
         raise click.UsageError(
             "Option '--metadata-csv' must be used or " "run 'reconcile' before 'additems'"
         )
-    elif "bitstreams" in ctx.obj:
-        bitstream_file_paths = ctx.obj["bitstreams"]
-    else:
-        bitstream_file_paths = helpers.get_bitstreams_from_csv(metadata_csv)
 
-    dspace_collection = DSpaceCollection(uuid=collection_uuid)
+    bitstream_file_paths = helpers.get_bitstreams_from_csv(metadata_csv)
+    dspace_collection = dspace.Collection(uuid=collection_uuid)
 
     with open(metadata_csv, "r") as csvfile:
         metadata = csv.DictReader(csvfile)
@@ -171,7 +167,7 @@ def additems(
         logger.info(f"Item posted: {item_uuid}")
         for file_path in bitstream_file_paths.get(item.item_identifier):
             file_name = file_path.split("/")[-1]
-            bitstream = Bitstream(name=file_name, file_path=file_path)
+            bitstream = dspace.Bitstream(name=file_name, file_path=file_path)
             logger.info(f"Posting bitstream: {bitstream}")
             dspace_client.post_bitstream(item.uuid, bitstream)
 
@@ -260,4 +256,3 @@ def reconcile(ctx, metadata_csv, output_directory, content_directory):
     helpers.update_metadata_csv(
         metadata_csv, output_directory, metadata_matches, bitstreams
     )
-    ctx.obj["bitstreams"] = bitstreams
