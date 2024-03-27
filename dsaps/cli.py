@@ -27,7 +27,10 @@ def validate_path(ctx, param, value):
 
 @click.group(chain=True)
 @click.option(
-    "--config-file", required=True, help="File path to source configuration JSON."
+    "--config-file",
+    envvar="CONFIG_FILE",
+    required=True,
+    help="File path to source configuration JSON with settings for bitstream retrieval and field mappings.",
 )
 @click.option(
     "--url",
@@ -96,7 +99,7 @@ def main(ctx, config_file, url, email, password):
     "--metadata-csv",
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
-    help="The filepath to a CSV file containing metadata for Dspace uploads.",
+    help="File path to a CSV file describing the metadata and bitstreams for DSpace uploads.",
 )
 @click.option(
     "-d",
@@ -126,8 +129,10 @@ def additems(
 ):
     """Add items to a DSpace collection.
 
-    The method relies on a CSV file with metadata for uploads, a JSON document that maps
-    metadata to a DSpace schema, and a directory containing the files to be uploaded.
+    The updated metadata CSV file from running 'reconcile' is used for this process.
+    The method will first add an item to the specified DSpace collection. The bitstreams
+    (i.e., files) associated with the item are read from the metadata CSV file, and
+    uploaded to the newly created item on DSpace.
     """
     mapping = ctx.obj["config"]["mapping"]
     dspace_client = ctx.obj["dspace_client"]
