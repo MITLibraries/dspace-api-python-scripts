@@ -17,7 +17,7 @@ class DSpaceClient:
         self.url = url.rstrip("/")
         self.cookies = None
         self.header = header
-        logger.info("Initializing client")
+        logger.info("Initializing DSpace client")
 
     def authenticate(self, email, password):
         """Authenticate user to DSpace API."""
@@ -111,7 +111,7 @@ class DSpaceClient:
             bitstream_uuid = response["uuid"]
             return bitstream_uuid
 
-    def post_coll_to_comm(self, comm_handle, coll_name):
+    def post_collection_to_community(self, comm_handle, coll_name):
         """Post a collection to a specified community."""
         hdl_endpoint = f"{self.url}/handle/{comm_handle}"
         community = requests.get(
@@ -152,7 +152,7 @@ class DSpaceClient:
         """Populate class instance with data from record."""
         fields = [op(field) for field in attr.fields(class_type)]
         kwargs = {k: v for k, v in rec_obj.items() if k in fields}
-        kwargs["objtype"] = rec_obj["type"]
+        kwargs["type"] = rec_obj["type"]
         if class_type == Community:
             collections = self._build_uuid_list(rec_obj, kwargs, "collections")
             rec_obj["collections"] = collections
@@ -189,7 +189,7 @@ class Object:
     name = field(default=None)
     handle = field(default=None)
     link = field(default=None)
-    objtype = field(default=None)
+    type = field(default=None)
 
 
 @define

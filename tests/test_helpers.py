@@ -168,7 +168,6 @@ def test_update_metadata_csv(output_dir, mocked_s3_bucket_bitstreams):
     with open(f"{output_dir}/updated-source_metadata.csv") as csvfile:
         reader = csv.DictReader(csvfile)
         record = next(reader)
-        assert record is not None
         assert record == {
             "item_identifier": "001",
             "title": "Title 1",

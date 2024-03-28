@@ -9,8 +9,7 @@ from time import perf_counter
 import click
 import structlog
 
-from dsaps import dspace
-from dsaps import helpers
+from dsaps import dspace, helpers
 from dsaps.s3 import S3Client
 
 
@@ -89,6 +88,7 @@ def main(ctx, config_file, url, email, password):
         dspace_client.authenticate(email, password)
         ctx.obj["dspace_client"] = dspace_client
     ctx.obj["config"] = source_config
+    logger.info("Initializing S3 client")
     ctx.obj["s3_client"] = S3Client.get_client()
     ctx.obj["start_time"] = perf_counter()
 
@@ -199,7 +199,9 @@ def additems(
 def newcollection(ctx, community_handle, collection_name):
     """Create a new DSpace collection within a community."""
     dspace_client = ctx.obj["dspace_client"]
-    collection_uuid = dspace_client.post_coll_to_comm(community_handle, collection_name)
+    collection_uuid = dspace_client.post_collection_to_community(
+        community_handle, collection_name
+    )
     ctx.obj["collection_uuid"] = collection_uuid
 
 
@@ -243,10 +245,9 @@ def reconcile(ctx, metadata_csv, output_directory, content_directory):
         corresponding file in the content directory.
     """
     source_settings = ctx.obj["config"]["settings"]
-    s3_client = ctx.obj["s3_client"]
     bitstreams = helpers.get_files_from_s3(
         s3_path=content_directory,
-        s3_client=s3_client,
+        s3_client=ctx.obj["s3_client"],
         bitstream_folders=source_settings.get("bitstream_folders"),
         id_regex=source_settings["id_regex"],
     )
