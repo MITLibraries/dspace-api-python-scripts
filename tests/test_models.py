@@ -78,19 +78,45 @@ def test_build_uuid_list(dspace_client):
     assert "1234" in child_list
 
 
-def test_collection_create_metadata_for_items_from_csv(
-    source_metadata_csv, source_config
-):
-    collection = Collection.create_metadata_for_items_from_csv(
-        source_metadata_csv, source_config["mapping"]
-    )
+def test_collection_add_items(source_metadata_csv, source_config):
+    collection = Collection.add_items(source_metadata_csv, source_config["mapping"])
     assert len(collection.items) == 5
 
 
-def test_item_metadata_from_csv_row(source_metadata_csv, source_config):
+def test_item_create(source_metadata_csv_with_bitstreams, source_config):
+    record = next(source_metadata_csv_with_bitstreams)
+    assert attr.asdict(Item.create(record, source_config["mapping"])) == {
+        "uuid": None,
+        "name": None,
+        "handle": None,
+        "link": None,
+        "type": None,
+        "metadata": [
+            {"key": "dc.title", "value": "Title 1", "language": "en_US"},
+            {"key": "dc.contributor.author", "value": "May Smith", "language": None},
+        ],
+        "bitstreams": ["s3://mocked-bucket/one-to-one/aaaa_001_01.pdf"],
+        "item_identifier": "001",
+        "source_system_identifier": None,
+    }
+
+
+def test_item_get_ids(source_metadata_csv, source_config):
     record = next(source_metadata_csv)
-    item = Item.metadata_from_csv_row(record, source_config["mapping"])
-    assert attr.asdict(item)["metadata"] == [
+    assert Item.get_ids(record, source_config["mapping"]) == {"item_identifier": "001"}
+
+
+def test_item_get_bitstreams(source_metadata_csv_with_bitstreams, source_config):
+    record = next(source_metadata_csv_with_bitstreams)
+    assert Item.get_bitstreams(record) == [
+        "s3://mocked-bucket/one-to-one/aaaa_001_01.pdf"
+    ]
+
+
+def test_item_get_metadata(source_metadata_csv, source_config):
+    record = next(source_metadata_csv)
+    metadata = Item.get_metadata(record, source_config["mapping"])
+    assert [attr.asdict(m) for m in metadata] == [
         {"key": "dc.title", "value": "Title 1", "language": "en_US"},
         {"key": "dc.contributor.author", "value": "May Smith", "language": None},
     ]

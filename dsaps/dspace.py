@@ -1,11 +1,15 @@
-import operator
+from __future__ import annotations
 
+import ast
 import attr
+import operator
 import requests
-import smart_open
 import structlog
 
+import smart_open
+
 from attrs import field, define
+
 
 logger = structlog.get_logger()
 op = operator.attrgetter("name")
@@ -200,19 +204,39 @@ class Item(Object):
     source_system_identifier = field(default=None)
 
     @classmethod
-    def metadata_from_csv_row(cls, record, mapping):
+    def create(cls, record, mapping) -> Item:
+        return cls(
+            metadata=cls.get_metadata(record, mapping),
+            bitstreams=cls.get_bitstreams(record),
+            **cls.get_ids(record, mapping),
+        )
+
+    @classmethod
+    def get_bitstreams(cls, record) -> list:
+        if bitstreams := record.get("bitstreams"):
+            return ast.literal_eval(bitstreams)
+
+    @classmethod
+    def get_ids(cls, record, mapping) -> dict:
+        ids = {}
+        if item_id_mapping := mapping.get("item_identifier"):
+            ids["item_identifier"] = record.get(item_id_mapping["csv_field_name"])
+        if source_system_id_mapping := mapping.get("source_system_identifier"):
+            ids["source_system_identifier"] = record.get(
+                source_system_id_mapping["csv_field_name"]
+            )
+        return ids
+
+    @classmethod
+    def get_metadata(cls, record, mapping) -> list:
         """Create metadata for an item based on a CSV row and a JSON mapping field map."""
         metadata = []
         for field_name, field_mapping in mapping.items():
+            if field_name in ["item_identifier", "source_system_identifier"]:
+                continue
             field_value = record[field_mapping["csv_field_name"]]
 
             if field_value:
-                if field_name == "item_identifier":
-                    item_identifier = field_value
-                    continue  # file_identifier is not included in DSpace metadata
-                if field_name == "source_system_identifier":
-                    # source_system_identifier = field
-                    continue  # source_system_identifier is not included in DSpace
                 delimiter = field_mapping["delimiter"]
                 language = field_mapping["language"]
                 if delimiter:
@@ -234,11 +258,7 @@ class Item(Object):
                             language=language,
                         )
                     )
-        return cls(
-            metadata=metadata,
-            item_identifier=item_identifier,
-            # source_system_identifier=source_system_identifier,
-        )
+        return metadata
 
 
 @define
@@ -246,10 +266,10 @@ class Collection(Object):
     items = field(factory=list)
 
     @classmethod
-    def create_metadata_for_items_from_csv(cls, csv_reader, field_map):
+    def add_items(cls, csv_reader, field_map) -> Collection:
         """Create metadata for the collection's items based on a CSV and a JSON mapping
         field map."""
-        items = [Item.metadata_from_csv_row(row, field_map) for row in csv_reader]
+        items = [Item.create(row, field_map) for row in csv_reader]
         return cls(items=items)
 
 

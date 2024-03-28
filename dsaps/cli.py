@@ -153,14 +153,11 @@ def additems(
             "Option '--metadata-csv' must be used or " "run 'reconcile' before 'additems'"
         )
 
-    bitstream_file_paths = helpers.get_bitstreams_from_csv(metadata_csv)
     dspace_collection = dspace.Collection(uuid=collection_uuid)
 
     with open(metadata_csv, "r") as csvfile:
         metadata = csv.DictReader(csvfile)
-        dspace_collection = dspace_collection.create_metadata_for_items_from_csv(
-            metadata, mapping
-        )
+        dspace_collection = dspace_collection.add_items(metadata, mapping)
 
     for item in dspace_collection.items:
         logger.info(f"Posting item: {item}")
@@ -170,7 +167,7 @@ def additems(
         item.uuid = item_uuid
         item.handle = item_handle
         logger.info(f"Item posted: {item_uuid}")
-        for file_path in bitstream_file_paths.get(item.item_identifier):
+        for file_path in item.bitstreams:
             file_name = file_path.split("/")[-1]
             bitstream = dspace.Bitstream(name=file_name, file_path=file_path)
             logger.info(f"Posting bitstream: {bitstream}")
